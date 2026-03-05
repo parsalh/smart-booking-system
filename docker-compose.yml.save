@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  # 1. Η Βάση Δεδομένων (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: smart_booking_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password  # Ο κωδικός σου
+      POSTGRES_DB: smart_booking_db # Το όνομα της βάσης
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: smart_booking_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
