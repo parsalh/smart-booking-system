@@ -13,4 +13,7 @@ This project was developed as part of my final year project.
 ### ⚡️ Core Features (In Development)
 * **Google OAuth2 Integration:** Secure login and synchronization with Google Calendar.
 * **Smart Scheduling Algorithm:** Dynamic calculation of the optimal meeting times based on the availability of all selected participants.
-* **Automated Room Allocation:** Suggests and books the appropriate physical meeting room based on capacity and availability
+* **Automated Room Allocation:** Suggests and books the appropriate physical meeting room based on capacity, amenities and availability
+
+### 👨‍💻 Author
+* **Stavroula Parsali** - Student at Harokopio University, department of Informatics & Telematics
