@@ -16,4 +16,4 @@ This project was developed as part of my final year project.
 * **Automated Room Allocation:** Suggests and books the appropriate physical meeting room based on capacity, amenities and availability
 
 ### 👨‍💻 Author
-* **Stavroula Parsali** - Student at Harokopio University, department of Informatics & Telematics
+* **Stavroula Parsali** - IT Student @ HUA
