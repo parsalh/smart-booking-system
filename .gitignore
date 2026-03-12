@@ -33,9 +33,12 @@ build/
 .vscode/
 
 # Docker data
-postgres_data/
+/postgres_data/
+/db-data/
+/data/
 
 # Environment variables & Secrets
 .env
+application-secret.properties
 *.properties.local
 *.yml.local

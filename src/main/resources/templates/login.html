@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBooking - Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-900">
+
+<div class="max-w-7xl mx-auto px-6 py-12 space-y-20">
+
+    <section class="text-center max-w-4xl mx-auto pt-10">
+        <div class="flex justify-center mb-8">
+            <img th:src="@{/images/hua-logo.png}"
+                 alt="HUA Logo"
+                 class="w-20 h-20 object-contain"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+
+            <div class="hidden w-20 h-20 bg-white rounded-2xl shadow-sm items-center justify-center border border-gray-100 p-4">
+                <span class="text-blue-600 font-bold text-xl">HUA</span>
+            </div>
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-emerald-500/10 border border-blue-500/20 rounded-full mb-6 text-blue-600">
+            <i data-lucide="sparkles" class="w-4 h-4 text-emerald-500"></i>
+            <span class="text-sm font-semibold tracking-wide">AI-Powered Smart Scheduling</span>
+        </div>
+
+        <h1 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-tight text-gray-900">
+            Find the Perfect Meeting Time & Room
+            <br />
+            <span class="bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent italic">
+            Automatically
+        </span>
+        </h1>
+
+        <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+            Our intelligent system analyzes everyone's Google Calendar availability and matches you with the ideal meeting room based on your preferences.
+        </p>
+
+        <a href="/oauth2/authorization/google"
+           class="inline-flex items-center gap-3 px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl group">
+            <svg class="w-6 h-6" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M5 5h6v6H5z"/><path fill="#EA4335" d="M13 5h6v6h-6z"/><path fill="#FBBC04" d="M5 13h6v6H5z"/><path fill="#34A853" d="M13 13h6v6h-6z"/>
+            </svg>
+            <span class="text-lg">Sign in with Google</span>
+            <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+        </a>
+    </section>
+
+    <section class="bg-white border border-gray-200 rounded-xl p-8">
+        <div class="text-center mb-12">
+            <h2 class="text-2xl font-bold mb-2">How It Works</h2>
+            <p class="text-gray-600">Four simple steps to the perfect meeting</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-white">
+                    <i data-lucide="users" class="w-8 h-8"></i>
+                </div>
+                <div class="text-lg font-semibold text-gray-900 mb-2">1. Add Participants</div>
+                <p class="text-sm text-gray-600">Select team members and set preferences</p>
+            </div>
+
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-white">
+                    <i data-lucide="brain" class="w-8 h-8"></i>
+                </div>
+                <div class="text-lg font-semibold text-gray-900 mb-2">2. AI Analysis</div>
+                <p class="text-sm text-gray-600">Optimal times from Google Calendars</p>
+            </div>
+
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-white">
+                    <i data-lucide="map-pin" class="w-8 h-8"></i>
+                </div>
+                <div class="text-lg font-semibold text-gray-900 mb-2">3. Pick a Room</div>
+                <p class="text-sm text-gray-600">Choose from smart-ranked recommendations</p>
+            </div>
+
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-white">
+                    <i data-lucide="check-circle" class="w-8 h-8"></i>
+                </div>
+                <div class="text-lg font-semibold text-gray-900 mb-2">4. Confirm</div>
+                <p class="text-sm text-gray-600">Book instantly and send invites</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-xl p-8 text-white shadow-2xl relative overflow-hidden">
+        <div class="text-center mb-12 relative z-10">
+            <h2 class="text-white text-3xl font-bold mb-2">Scheduling Made Simple</h2>
+            <p class="text-blue-100 italic">Save time and reduce scheduling friction</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
+            <div class="text-center">
+                <div class="mb-4 bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20 h-48">
+                    <canvas id="matchChart"></canvas>
+                </div>
+                <div class="text-4xl font-bold mb-2">95%</div>
+                <p class="text-blue-100 text-sm">Average match score</p>
+            </div>
+
+            <div class="text-center">
+                <div class="mb-4 bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20 h-48">
+                    <canvas id="efficiencyChart"></canvas>
+                </div>
+                <div class="text-4xl font-bold mb-2">30 sec</div>
+                <p class="text-blue-100 text-sm">Average scheduling time</p>
+            </div>
+
+            <div class="text-center">
+                <div class="mb-4 bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20 h-48">
+                    <canvas id="syncChart"></canvas>
+                </div>
+                <div class="text-4xl font-bold mb-2">100%</div>
+                <p class="text-blue-100 text-sm">Automated synchronization</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    // Fake stats haha
+    new Chart(document.getElementById('matchChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
+            datasets: [{
+                data: [88, 91, 93, 94, 95],
+                backgroundColor: '#10b981',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { display: false, min: 80 },
+                x: { ticks: { color: 'rgba(255,255,255,0.7)', font: { size: 10 } }, grid: { display: false } }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('efficiencyChart'), {
+        type: 'line',
+        data: {
+            labels: ['W1', 'W2', 'W3', 'W4'],
+            datasets: [{
+                data: [45, 38, 32, 30],
+                borderColor: '#fbbf24',
+                borderWidth: 3,
+                pointBackgroundColor: '#fbbf24',
+                tension: 0.4,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { display: false },
+                x: { ticks: { color: 'rgba(255,255,255,0.7)', font: { size: 10 } }, grid: { display: false } }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('syncChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Synced', 'Failed'],
+            datasets: [{
+                data: [100, 0],
+                backgroundColor: ['#10b981', '#ef4444'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            cutout: '75%'
+        }
+    });
+</script>
+</body>
+</html>
