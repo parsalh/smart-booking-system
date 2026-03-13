@@ -103,7 +103,7 @@ public class GoogleCalendarService {
     }
 
     /**
-     * Maps a Google Event to our internal JPA Entity.
+     * Maps a Google Event to internal JPA Entity.
      */
     public com.hua.smartbooking.model.Event convertToEntity(Event googleEvent, User user) {
         com.hua.smartbooking.model.Event myEvent = new com.hua.smartbooking.model.Event();

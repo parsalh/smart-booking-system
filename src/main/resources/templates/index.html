@@ -11,7 +11,6 @@
     <style>
         body {
             background-color: #f8fafc;
-            /* Οριζόντιο subtle gradient: Μπλε (αριστερά) -> Πράσινο (δεξιά) */
             background-image: linear-gradient(to right,
             rgba(186, 230, 253, 0.25) 0%,
             rgba(248, 250, 252, 0) 50%,
@@ -22,12 +21,10 @@
         .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #f3f4f6 !important; }
         .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 700; color: #111827; }
 
-        /* Σήμερα: Απαλό μπλε αντί για μπεζ */
         .fc .fc-day-today {
             background-color: rgba(186, 230, 253, 0.3) !important;
         }
 
-        /* Σήμερα: Badge στον αριθμό */
         .fc .fc-day-today .fc-daygrid-day-number {
             color: #2563eb;
             font-weight: 800;
@@ -64,7 +61,6 @@
         }
         .fc-event:hover { transform: scale(1.02); cursor: pointer; }
 
-        /* Fix για το scrollbar στο Week View */
         .fc-scroller { overflow: auto !important; }
         .fc-scroller::-webkit-scrollbar { width: 4px; }
         .fc-scroller::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
