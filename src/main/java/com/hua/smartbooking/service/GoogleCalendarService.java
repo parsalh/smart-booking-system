@@ -55,11 +55,12 @@ public class GoogleCalendarService {
                 .setApplicationName("SmartBooking")
                 .build();
 
-        DateTime now = new DateTime(System.currentTimeMillis());
+        java.time.ZonedDateTime thirtyDaysAgo = java.time.ZonedDateTime.now().minusDays(30);
+        DateTime pastDate = new DateTime(thirtyDaysAgo.toInstant().toEpochMilli());
 
         Events events = service.events().list("primary")
-                .setMaxResults(15)
-                .setTimeMin(now)
+                .setMaxResults(50)
+                .setTimeMin(pastDate)
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
                 .execute();
@@ -77,16 +78,23 @@ public class GoogleCalendarService {
                 com.hua.smartbooking.model.Event entity = eventMapper.googleToEntity(gEvent, user);
 
                 Map<String, Object> map = new HashMap<>();
-                map.put("title", entity.getTitle());
+
+                String typeStr = entity.getType().toString();
+                String shortTitle = typeStr.substring(0, 1).toUpperCase() + typeStr.substring(1).toLowerCase().replace("_", " ");
+                map.put("title", shortTitle);
+
                 map.put("start", entity.getStartTime().toString());
                 map.put("end", entity.getEndTime() != null ? entity.getEndTime().toString() : null);
 
                 map.put("className", "event-" + entity.getType().toString().toLowerCase());
 
                 Map<String, Object> extendedProps = new HashMap<>();
+
+                extendedProps.put("fullTitle", entity.getTitle() != null ? entity.getTitle() : "Untitled Event");
+                extendedProps.put("fullLocation", gEvent.getLocation() != null ? gEvent.getLocation() : "No location specified");
                 extendedProps.put("description", gEvent.getDescription() != null ? gEvent.getDescription() : "No description available.");
                 extendedProps.put("type", entity.getType().toString());
-                extendedProps.put("locationName", entity.getRoom() != null ? entity.getRoom().getName() : "General Campus");
+                extendedProps.put("locationName", entity.getRoom() != null ? entity.getRoom().getName() : "No location specified");
                 extendedProps.put("roomFloor", entity.getRoom() != null ? entity.getRoom().getFloor() : null);
                 extendedProps.put("roomImage", entity.getRoom() != null ? entity.getRoom().getImageUrl() : "/images/default-room.jpg");
                 extendedProps.put("roomAmenities", entity.getRoom() != null ? entity.getRoom().getAmenities() : new ArrayList<>());

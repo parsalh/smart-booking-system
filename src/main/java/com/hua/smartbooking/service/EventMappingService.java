@@ -6,11 +6,14 @@ import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.EventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 
 import java.util.List;
 
 @Service
 public class EventMappingService {
+
+    LocalDateTime now = LocalDateTime.now();
 
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
@@ -40,6 +43,7 @@ public class EventMappingService {
     public long countMeetingsForUser(User user) {
         return eventRepository.findByUser(user).stream()
                 .filter(e -> e.getType() == Event.EventType.MEETING)
+                .filter(e -> e.getStartTime() != null && e.getStartTime().isAfter(now))
                 .count();
     }
 
