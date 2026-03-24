@@ -26,9 +26,14 @@ public class Room {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     private Integer capacity;
 
     private String location;
+
+    private String floor;
 
     @ElementCollection
     @CollectionTable(name = "room_amenities", joinColumns = @JoinColumn(name = "room_id"))

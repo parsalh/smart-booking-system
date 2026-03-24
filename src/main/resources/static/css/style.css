@@ -1,0 +1,270 @@
+/*
+==========================
+Global & Background Styles
+==========================
+ */
+body {
+    background-color: #f8fafc;
+    background-image:
+            radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.1) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
+            linear-gradient(to right, rgba(147, 197, 253, 0.2), rgba(167, 243, 208, 0.1));
+    background-attachment: fixed;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+    --fc-today-bg-color: rgba(37, 99, 235, 0.05) !important;
+}
+
+
+/*
+================================
+Calendar Container & Grid Layout
+================================
+ */
+#calendar {
+    border-radius: 1.5rem !important;
+    background: transparent;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+    border: 1px solid rgba(226, 232, 240, 0.4) !important;
+}
+
+.fc .fc-day-today {
+    background-color: var(--fc-today-bg-color) !important;
+}
+
+/*
+=====================
+Date Numbers & Badges
+=====================
+ */
+.fc .fc-daygrid-day-top {
+    display: flex !important;
+    justify-content: flex-end !important;
+    z-index: 5 !important;
+    position: relative;
+    margin-bottom: -15px !important;
+}
+
+.fc .fc-daygrid-day-number {
+    color: #475569 !important;
+    background: transparent !important;
+    border-radius: 50% !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    margin: 4px;
+    font-size: 0.8rem !important;
+    font-weight: bold !important;
+}
+
+
+.fc .fc-day-today .fc-daygrid-day-number {
+    color: white !important;
+    background: linear-gradient(to bottom right, #2563eb, #10b981) !important;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+}
+
+/*
+=================================
+Header Toolbar & Standard Buttons
+=================================
+ */
+.fc-header-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem !important;
+}
+
+#calendar .fc-header-toolbar .fc-toolbar-title .fc-day {
+    color: #0d4654 !important;
+    font-weight: 700 !important;
+    font-size: 1.5rem !important;
+    letter-spacing: -0.025em !important;
+    text-transform: capitalize !important;
+}
+
+.fc-toolbar-chunk, .fc .fc-button-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-direction: row !important;
+}
+
+.fc .fc-button-primary {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    color: #475569 !important;
+    border-radius: 14px !important;
+    font-weight: 700 !important;
+    padding: 10px 18px !important;
+    transition: all 0.2s ease-in-out !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    text-transform: capitalize !important;
+    margin: 0 !important;
+}
+
+.fc .fc-button-primary:not(.fc-today-button):hover {
+    background: rgba(226, 232, 240, 0.9) !important;
+    color: #1e293b !important;
+}
+
+.fc .fc-button:focus, .fc .fc-button-primary:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+    background: linear-gradient(135deg, #2563eb, #10b981) !important;
+    border: none !important;
+    color: white !important;
+}
+
+
+/*
+======================
+'Today' Button & Icons
+======================
+ */
+.fc .fc-today-button {
+    opacity: 1 !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    border-radius: 14px !important;
+    padding: 10px 18px !important;
+    margin: 0 !important;
+    font-weight: 800 !important;
+    text-transform: capitalize !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.2s ease !important;
+    background-image: linear-gradient(135deg, #2563eb, #10b981), linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)) !important;
+    background-clip: text, padding-box !important;
+    -webkit-background-clip: text, padding-box !important;
+    color: transparent !important;
+}
+
+.fc .fc-today-button:not(:disabled):hover {
+    background-image: linear-gradient(135deg, #2563eb, #10b981), linear-gradient(rgba(226, 232, 240, 0.9), rgba(226, 232, 240, 0.9)) !important;
+    color: transparent !important;
+}
+
+.fc .fc-today-button:disabled {
+    opacity: 0.6 !important;
+    cursor: default !important;
+}
+
+.fc .fc-icon {
+    background: linear-gradient(135deg, #2563eb, #10b981) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    font-weight: bold !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    font-size: 1.2rem !important;
+}
+
+
+/*
+==============================
+Event Blocks & Classifications
+==============================
+*/
+.event-lecture {
+    --evt-bg: rgba(221, 214, 254, 0.9);
+    --evt-border: #8b5cf6;
+    --evt-text: #4c1d95;
+}
+
+.event-lab {
+    --evt-bg: rgba(253, 230, 138, 0.9);
+    --evt-border: #f59e0b;
+    --evt-text: #78350f;
+}
+
+.event-meeting {
+    --evt-bg: rgba(167, 243, 208, 0.9);
+    --evt-border: #10b981;
+    --evt-text: #064e3b;
+}
+
+.event-office_hours {
+    --evt-bg: rgba(254, 205, 211, 0.9);
+    --evt-border: #f43f5e;
+    --evt-text: #881337;
+}
+
+.event-other {
+    --evt-bg: rgba(191, 219, 254, 0.9);
+    --evt-border: #3b82f6;
+    --evt-text: #1e3a8a;
+}
+
+.fc-event,
+.fc-event .fc-event-main,
+.fc-event .fc-event-title {
+    color: var(--evt-text, #1e3a8a) !important;
+}
+
+.fc-event {
+    border: none !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    background-color: var(--evt-bg, rgba(191, 219, 254, 0.9)) !important;
+    border-left: 4px solid var(--evt-border, #3b82f6) !important;
+}
+
+.fc-h-event {
+    padding: 4px 8px !important;
+}
+
+.fc-v-event .fc-event-main {
+    padding: 4px !important;
+    color: inherit !important;
+}
+
+.fc-event-time {
+    display: none !important;
+}
+
+
+/*
+=====================
+General UI Components
+=====================
+ */
+.glass-card {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(14px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 2rem;
+}
+
+.btn-gradient-text {
+    background: linear-gradient(135deg, #2563eb, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+.btn-admin {
+    background: rgba(255, 255, 255, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    color: #2563eb !important;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.btn-admin:hover {
+    background: linear-gradient(135deg, #2563eb, #10b981) !important;
+    color: white !important;
+    border: none !important;
+}

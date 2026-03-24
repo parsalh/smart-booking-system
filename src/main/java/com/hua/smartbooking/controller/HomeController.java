@@ -46,6 +46,8 @@ public class HomeController {
 
         User dbUser = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
+        model.addAttribute("role", dbUser.getRole().name());
+
         String currentRefreshToken = handleRefreshToken(token, dbUser);
 
         if (currentRefreshToken != null) {
@@ -71,9 +73,6 @@ public class HomeController {
         return "index";
     }
 
-    /**
-     * Helper μέθοδος για τη διαχείριση του token (για να μείνει καθαρός ο home)
-     */
     private String handleRefreshToken(OAuth2AuthenticationToken token, User dbUser) {
         OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
                 token.getAuthorizedClientRegistrationId(),

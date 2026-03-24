@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>SmartBooking - Manage Rooms</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-slate-50 min-h-screen p-8">
+
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900">Room Management</h1>
+            <p class="text-slate-500">Configure campus meeting rooms.</p>
+        </div>
+        <button onclick="openAddModal()" class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 flex items-center gap-2 shadow-lg transition-all">
+            <i data-lucide="plus"></i> Add New Room
+        </button>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-50 border-b border-slate-200">
+            <tr>
+                <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500">Room Name</th>
+                <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500">Floor</th>
+                <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500">Capacity</th>
+                <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500">Status</th>
+                <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500 text-center">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+            <tr th:each="room : ${rooms}" class="hover:bg-slate-50/50 transition-colors">
+                <td class="px-6 py-4 font-semibold text-slate-700" th:text="${room.name}"></td>
+                <td class="px-6 py-4 text-slate-600" th:text="${room.floor ?: '-'}"></td>
+                <td class="px-6 py-4 text-slate-600" th:text="${room.capacity ?: '-'}"></td>
+                <td class="px-6 py-4">
+                    <span th:class="${room.isAvailable ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} + ' px-3 py-1 rounded-full text-xs font-bold'">
+                        [[${room.isAvailable ? 'Available' : 'Unavailable'}]]
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <button th:onclick="'openEditModal(' + ${room.id} + ', \'' + ${room.name} + '\', \'' + ${room.floor} + '\', ' + ${room.capacity} + ')'"
+                            class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i data-lucide="edit-3" class="w-5 h-5"></i>
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="roomModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl overflow-y-auto max-h-[90vh]">
+        <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-slate-900">Create New Room</h2>
+
+        <form id="roomForm" th:action="@{/admin/rooms/add}" method="POST" class="space-y-4">
+            <input type="hidden" id="roomId" name="id">
+
+            <div>
+                <label class="block text-sm font-bold mb-2 text-slate-700">Room Name</label>
+                <input type="text" id="roomName" name="name" required class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2 text-slate-700">Floor</label>
+                    <input type="text" id="roomFloor" name="floor" placeholder="e.g. 1st" class="w-full p-3 border border-slate-200 rounded-xl">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2 text-slate-700">Capacity</label>
+                    <input type="number" id="roomCapacity" name="capacity" class="w-full p-3 border border-slate-200 rounded-xl">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold mb-2 text-slate-700">Photo URL</label>
+                <input type="text" id="roomImage" name="imageUrl" placeholder="https://..." class="w-full p-3 border border-slate-200 rounded-xl">
+            </div>
+
+            <div class="pt-2">
+                <label class="block text-sm font-bold mb-3 text-slate-700">Room Amenities</label>
+
+                <div class="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto p-1">
+                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                        <input type="checkbox" name="amenities" value="Projector" class="w-4 h-4 rounded text-blue-600">
+                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Projector</span>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                        <input type="checkbox" name="amenities" value="Interactive Whiteboard" class="w-4 h-4 rounded text-blue-600">
+                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Interactive Whiteboard</span>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                        <input type="checkbox" name="amenities" value="High-Speed WiFi" class="w-4 h-4 rounded text-blue-600">
+                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">High-Speed Wi-Fi</span>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                        <input type="checkbox" name="amenities" value="Power Outlets" class="w-4 h-4 rounded text-blue-600">
+                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Power Outlets</span>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                        <input type="checkbox" name="amenities" value="Video Conferencing" class="w-4 h-4 rounded text-blue-600">
+                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Video Conferencing</span>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                        <input type="checkbox" name="amenities" value="Ethernet Ports" class="w-4 h-4 rounded text-blue-600">
+                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Ethernet Ports</span>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                        <input type="checkbox" name="amenities" value="Soundproofing" class="w-4 h-4 rounded text-blue-600">
+                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Soundproofed</span>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                        <input type="checkbox" name="amenities" value="Wheelchair Accessible" class="w-4 h-4 rounded text-blue-600">
+                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Accessible</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button type="button" onclick="closeModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all">Cancel</button>
+                <button type="submit" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-md transition-all">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    const modal = document.getElementById('roomModal');
+    const form = document.getElementById('roomForm');
+    const modalTitle = document.getElementById('modalTitle');
+
+    function openAddModal() {
+        modalTitle.innerText = "Create New Room";
+        form.action = "/admin/rooms/add";
+        form.reset();
+        document.getElementById('roomId').value = "";
+        modal.classList.remove('hidden');
+    }
+
+    function openEditModal(id, name, floor, capacity) {
+        modalTitle.innerText = "Edit Room: " + name;
+        form.action = "/admin/rooms/update";
+        document.getElementById('roomId').value = id;
+        document.getElementById('roomName').value = name;
+        document.getElementById('roomFloor').value = floor === 'null' ? '' : floor;
+        document.getElementById('roomCapacity').value = capacity;
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+    }
+</script>
+</body>
+</html>

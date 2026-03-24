@@ -11,6 +11,7 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.UserCredentials;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.mapper.EventMapper;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -66,33 +67,36 @@ public class GoogleCalendarService {
         return events.getItems() != null ? events.getItems() : new ArrayList<>();
     }
 
+    @Transactional
     public String getEventsAsJsonForCalendar(String refreshToken, User user) throws Exception {
         List<com.google.api.services.calendar.model.Event> googleEvents = getUpcomingEvents(refreshToken);
         List<Map<String, Object>> calendarEvents = new ArrayList<>();
 
         for (com.google.api.services.calendar.model.Event gEvent : googleEvents) {
+            try {
+                com.hua.smartbooking.model.Event entity = eventMapper.googleToEntity(gEvent, user);
 
-            com.hua.smartbooking.model.Event entity = eventMapper.googleToEntity(gEvent, user);
+                Map<String, Object> map = new HashMap<>();
+                map.put("title", entity.getTitle());
+                map.put("start", entity.getStartTime().toString());
+                map.put("end", entity.getEndTime() != null ? entity.getEndTime().toString() : null);
 
-            Map<String, Object> map = new HashMap<>();
-            map.put("title", entity.getTitle());
-            map.put("start", entity.getStartTime().toString());
-            map.put("end", entity.getEndTime() != null ? entity.getEndTime().toString() : null);
-            map.put("description", gEvent.getDescription() != null ? gEvent.getDescription() : "No description available.");
+                map.put("className", "event-" + entity.getType().toString().toLowerCase());
 
-            map.put("locationName", entity.getRoom() != null ? entity.getRoom().getName() : null);
+                Map<String, Object> extendedProps = new HashMap<>();
+                extendedProps.put("description", gEvent.getDescription() != null ? gEvent.getDescription() : "No description available.");
+                extendedProps.put("type", entity.getType().toString());
+                extendedProps.put("locationName", entity.getRoom() != null ? entity.getRoom().getName() : "General Campus");
+                extendedProps.put("roomFloor", entity.getRoom() != null ? entity.getRoom().getFloor() : null);
+                extendedProps.put("roomImage", entity.getRoom() != null ? entity.getRoom().getImageUrl() : "/images/default-room.jpg");
+                extendedProps.put("roomAmenities", entity.getRoom() != null ? entity.getRoom().getAmenities() : new ArrayList<>());
 
-            String color = switch (entity.getType()) {
-                case LECTURE -> "#2563eb";
-                case LAB -> "#dc2626";
-                case MEETING -> "#059669";
-                case OFFICE_HOURS -> "#7c3aed";
-                default -> "#4b5563";
-            };
-            map.put("color", color);
-            map.put("textColor", "#ffffff");
+                map.put("extendedProps", extendedProps);
 
-            calendarEvents.add(map);
+                calendarEvents.add(map);
+            } catch (Exception e) {
+                System.err.println("Skipping event due to error: " + gEvent.getSummary() + " -> " + e.getMessage());
+            }
         }
         return new ObjectMapper().writeValueAsString(calendarEvents);
     }

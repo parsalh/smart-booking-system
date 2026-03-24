@@ -12,9 +12,12 @@ import java.time.LocalDateTime;
 public class EventMapper {
 
     private final RoomRepository roomRepository;
+    private final RoomMapper roomMapper;
 
-    public EventMapper(RoomRepository roomRepository) {
+    public EventMapper(RoomRepository roomRepository,
+                       RoomMapper roomMapper) {
         this.roomRepository = roomRepository;
+        this.roomMapper = roomMapper;
     }
 
     public Event googleToEntity(com.google.api.services.calendar.model.Event gEvent, User user) {
@@ -41,13 +44,10 @@ public class EventMapper {
         String locationName = gEvent.getLocation();
         if (locationName != null && !locationName.isEmpty()) {
             String cleanName = locationName.trim().toLowerCase();
-            Room room = roomRepository.findByName(locationName)
+            Room room = roomRepository.findByName(cleanName)
                     .orElseGet(() -> {
-                        Room newRoom = new Room();
-                        newRoom.setName(cleanName);
-                        newRoom.setIsAvailable(true);
-                        newRoom.setLocation("Auto-generated");
-                        return roomRepository.save(newRoom);
+                        Room newRoom = roomMapper.mapLocationToEntity(locationName);
+                        return roomRepository.saveAndFlush(newRoom);
                     });
             entity.setRoom(room);
         } else {
