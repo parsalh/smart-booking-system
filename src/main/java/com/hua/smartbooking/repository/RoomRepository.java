@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -22,17 +23,16 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             SELECT b FROM Booking b 
             WHERE b.room = r 
             AND b.status != 'CANCELLED'
-            AND b.startTime < :end AND b.endTime > :start
+            AND b.startTime < :endTime AND b.endTime > :startTime
         )
         AND NOT EXISTS (
             SELECT e FROM Event e 
             WHERE e.room = r 
-            AND e.startTime < :end AND e.endTime > :start
+            AND e.startTime < :endTime AND e.endTime > :startTime
         )
     """)
-    List<Room> findAvailableRooms(
-            @Param("minCapacity") Integer minCapacity,
-            @Param("start") LocalDateTime start,
-            @Param("end") LocalDateTime end
+    List<Room> findAvailableRooms(@Param("minCapacity") Integer minCapacity,
+                                  @Param("startTime") Instant startTime,
+                                  @Param("endTime") Instant endTime
     );
 }

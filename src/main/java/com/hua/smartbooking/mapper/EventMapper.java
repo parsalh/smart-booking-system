@@ -7,7 +7,11 @@ import com.hua.smartbooking.repository.RoomRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 
 @Component
@@ -32,19 +36,8 @@ public class EventMapper {
         entity.setTitle(gEvent.getSummary());
         entity.setUser(user);
 
-        if (gEvent.getStart().getDateTime() != null) {
-            entity.setStartTime(LocalDateTime.parse(gEvent.getStart().getDateTime().toStringRfc3339().substring(0, 19)));
-        } else {
-            entity.setStartTime(LocalDateTime.parse(gEvent.getStart().getDate().toString() + "T00:00:00"));
-        }
-
-        if (gEvent.getEnd() != null) {
-            if (gEvent.getEnd().getDateTime() != null) {
-                entity.setEndTime(LocalDateTime.parse(gEvent.getEnd().getDateTime().toStringRfc3339().substring(0, 19)));
-            } else {
-                entity.setEndTime(LocalDateTime.parse(gEvent.getEnd().getDate().toString() + "T23:59:59"));
-            }
-        }
+        entity.setStartTime(convertGoogleTimeToInstant(gEvent.getStart()));
+        entity.setEndTime(convertGoogleTimeToInstant(gEvent.getEnd()));
 
         String rawGoogleLocation = gEvent.getLocation();
 
@@ -109,5 +102,22 @@ public class EventMapper {
         if (s.contains("meeting")) return Event.EventType.MEETING;
         return Event.EventType.OTHER;
     }
+
+    private Instant convertGoogleTimeToInstant(com.google.api.services.calendar.model.EventDateTime googleTime) {
+        if (googleTime == null) return null;
+
+        if (googleTime.getDateTime() != null) {
+            return Instant.ofEpochMilli(googleTime.getDateTime().getValue());
+        }
+
+        if (googleTime.getDate() != null) {
+            return LocalDate.parse(googleTime.getDate().toString())
+                    .atStartOfDay(ZoneId.of("Europe/Athens"))
+                    .toInstant();
+        }
+
+        return null;
+    }
+
 
 }

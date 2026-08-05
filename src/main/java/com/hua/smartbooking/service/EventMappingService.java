@@ -1,13 +1,18 @@
 package com.hua.smartbooking.service;
 
+import com.google.api.services.calendar.model.EventDateTime;
 import com.hua.smartbooking.model.Event;
 import com.hua.smartbooking.mapper.EventMapper;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.EventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -41,10 +46,28 @@ public class EventMappingService {
     }
 
     public long countMeetingsForUser(User user) {
+        Instant now = Instant.now();
+
         return eventRepository.findByUser(user).stream()
                 .filter(e -> e.getType() == Event.EventType.MEETING)
                 .filter(e -> e.getStartTime() != null && e.getStartTime().isAfter(now))
                 .count();
+    }
+
+    public Instant convertGoogleTimeToInstant(EventDateTime googleTime) {
+        if (googleTime == null) return null;
+
+        if (googleTime.getDateTime() != null) {
+            return Instant.ofEpochMilli(googleTime.getDateTime().getValue());
+        }
+
+        if (googleTime.getDate() != null) {
+            return LocalDate.parse(googleTime.getDate().toString())
+                    .atStartOfDay(ZoneId.of("Europe/Athens"))
+                    .toInstant();
+        }
+
+        return null;
     }
 
 }

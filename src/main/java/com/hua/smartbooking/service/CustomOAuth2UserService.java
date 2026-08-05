@@ -34,16 +34,23 @@ public class CustomOAuth2UserService extends OidcUserService {
 
         String email = oidcUser.getAttribute("email");
         String name = oidcUser.getAttribute("name");
-        String sub =  oidcUser.getSubject(); // το googleSubId
+        String picture = oidcUser.getAttribute("picture");
+        String sub = oidcUser.getSubject();
 
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             User newUser = new User();
             newUser.setEmail(email);
             newUser.setFullname(name);
             newUser.setGoogleSubId(sub);
+            newUser.setAvatarUrl(picture);
             newUser.setRole(User.Role.STUDENT);
             return userRepository.save(newUser);
         });
+
+        if (picture != null && !picture.equals(user.getAvatarUrl())) {
+            user.setAvatarUrl(picture);
+            userRepository.save(user);
+        }
 
         Set<GrantedAuthority> authorities = new HashSet<>();
         authorities.add(new SimpleGrantedAuthority(user.getRole().name()));

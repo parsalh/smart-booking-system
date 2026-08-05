@@ -14,6 +14,11 @@ import com.hua.smartbooking.mapper.EventMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.google.api.services.calendar.model.EventAttendee;
+import com.google.api.services.calendar.model.EventDateTime;
+
+import java.time.Instant;
+import java.time.ZoneId;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -55,15 +60,19 @@ public class GoogleCalendarService {
                 .setApplicationName("SmartBooking")
                 .build();
 
-        java.time.ZonedDateTime thirtyDaysAgo = java.time.ZonedDateTime.now().minusDays(30);
-        DateTime pastDate = new DateTime(thirtyDaysAgo.toInstant().toEpochMilli());
+        java.time.ZonedDateTime twoWeeksAgo = java.time.ZonedDateTime.now().minusDays(14);
+        DateTime pastDate = new DateTime(twoWeeksAgo.toInstant().toEpochMilli());
 
         Events events = service.events().list("primary")
-                .setMaxResults(50)
+                .setMaxResults(70)
                 .setTimeMin(pastDate)
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
                 .execute();
+
+        // debug
+        List<Event> resultList = events.getItems() != null ? events.getItems() : new ArrayList<>();
+        System.out.println("Fetched " + resultList.size() + " events from Google.");
 
         return events.getItems() != null ? events.getItems() : new ArrayList<>();
     }
@@ -125,9 +134,9 @@ public class GoogleCalendarService {
 
         if (googleEvent.getStart().getDateTime() != null) {
             String rfcDate = googleEvent.getStart().getDateTime().toStringRfc3339().substring(0, 19);
-            myEvent.setStartTime(LocalDateTime.parse(rfcDate));
+            myEvent.setStartTime(Instant.from(LocalDateTime.parse(rfcDate)));
         } else {
-            myEvent.setStartTime(LocalDateTime.parse(googleEvent.getStart().getDate().toString() + "T00:00:00"));
+            myEvent.setStartTime(Instant.from(LocalDateTime.parse(googleEvent.getStart().getDate().toString() + "T00:00:00")));
         }
 
         String summary = (googleEvent.getSummary() != null) ? googleEvent.getSummary().toLowerCase() : "";
@@ -156,5 +165,56 @@ public class GoogleCalendarService {
                 .filter(myEvent -> myEvent.getType() == com.hua.smartbooking.model.Event.EventType.MEETING)
                 .count();
     }
+
+    /**
+     * Creates a new meeting directly on the user's Google Calendar and sends invites.
+     */
+    public String createMeetingEvent(String refreshToken, String title, Instant start,
+                                     Instant end, String location, List<String> participantEmails) throws Exception {
+
+        UserCredentials credentials = UserCredentials.newBuilder()
+                .setClientId(clientId)
+                .setClientSecret(clientSecret)
+                .setRefreshToken(refreshToken)
+                .build();
+
+        Calendar service = new Calendar.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(),
+                GsonFactory.getDefaultInstance(),
+                new HttpCredentialsAdapter(credentials))
+                .setApplicationName("SmartBooking")
+                .build();
+
+        Event event = new Event()
+                .setSummary(title)
+                .setLocation(location)
+                .setDescription("Automatically scheduled via SmartBooking HUA App");
+
+        com.google.api.client.util.DateTime startDateTime =
+                new com.google.api.client.util.DateTime(start.toEpochMilli());
+        EventDateTime startEventDateTime = new EventDateTime().setDateTime(startDateTime);
+        event.setStart(startEventDateTime);
+
+        com.google.api.client.util.DateTime endDateTime =
+                new com.google.api.client.util.DateTime(end.toEpochMilli());
+        EventDateTime endEventDateTime = new EventDateTime().setDateTime(endDateTime);
+        event.setEnd(endEventDateTime);
+
+        if (participantEmails != null && !participantEmails.isEmpty()) {
+            List<EventAttendee> attendees = new ArrayList<>();
+            for (String email : participantEmails) {
+                attendees.add(new EventAttendee().setEmail(email));
+            }
+            event.setAttendees(attendees);
+        }
+
+        Event createdEvent = service.events().insert("primary", event)
+                .setSendUpdates("all")
+                .execute();
+
+        return createdEvent.getId();
+    }
+
+
 
 }

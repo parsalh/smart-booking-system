@@ -41,8 +41,11 @@
                     </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <button th:onclick="'openEditModal(' + ${room.id} + ', \'' + ${room.name} + '\', \'' + ${room.floor} + '\', ' + ${room.capacity} + ')'"
-                            class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors">
+                    <button class="edit-room-btn text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                            th:data-id="${room.id}"
+                            th:data-name="${room.name}"
+                            th:data-floor="${room.floor}"
+                            th:data-capacity="${room.capacity}">
                         <i data-lucide="edit-3" class="w-5 h-5"></i>
                     </button>
                 </td>
@@ -149,19 +152,30 @@
         modal.classList.remove('hidden');
     }
 
-    function openEditModal(id, name, floor, capacity) {
-        modalTitle.innerText = "Edit Room: " + name;
-        form.action = "/admin/rooms/update";
-        document.getElementById('roomId').value = id;
-        document.getElementById('roomName').value = name;
-        document.getElementById('roomFloor').value = floor === 'null' ? '' : floor;
-        document.getElementById('roomCapacity').value = capacity;
-        modal.classList.remove('hidden');
-    }
+    document.querySelectorAll('.edit-room-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            openEditModal(
+                btn.dataset.id,
+                btn.dataset.name,
+                btn.dataset.floor,
+                btn.dataset.capacity
+            );
+        });
+    });
 
     function closeModal() {
         modal.classList.add('hidden');
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        document.querySelectorAll('.edit-room-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                openEditModal(btn.dataset.id, btn.dataset.name, btn.dataset.floor, btn.dataset.capacity);
+            });
+        });
+    });
+
 </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 package com.hua.smartbooking.config;
 
+import com.hua.smartbooking.security.LoginSuccessHandler;
 import com.hua.smartbooking.service.CustomOAuth2UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -20,9 +21,12 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final LoginSuccessHandler loginSuccessHandler;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService,
+                          LoginSuccessHandler loginSuccessHandler) {
         this.customOAuth2UserService = customOAuth2UserService;
+        this.loginSuccessHandler = loginSuccessHandler;
     }
 
     @Bean
@@ -32,14 +36,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        .requestMatchers("/book").authenticated()
+                        .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
                         .userInfoEndpoint(userInfo -> userInfo
                                 .oidcUserService(customOAuth2UserService)
                         )
+                        .successHandler(loginSuccessHandler)
                 )
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout")

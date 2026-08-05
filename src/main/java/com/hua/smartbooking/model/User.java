@@ -33,6 +33,9 @@ public class User {
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     public enum Role {
         ADMIN,
         STUDENT,

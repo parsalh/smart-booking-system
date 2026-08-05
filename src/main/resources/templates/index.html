@@ -108,7 +108,7 @@
                 <h2 class="text-3xl font-bold mb-1 tracking-tight">Welcome back!</h2>
                 <p class="text-white/80 font-medium">You have <span class="text-white font-bold underline decoration-white/30" th:text="${eventCount}">0</span> upcoming meetings</p>
             </div>
-            <button class="bg-white flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all shadow-xl active:scale-95 group border border-blue-50">
+            <button onclick="window.location.href='/book'" class="bg-white flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all shadow-xl active:scale-95 group border border-blue-50">
                 <i data-lucide="sparkles" class="w-5 h-5 text-blue-600 group-hover:rotate-12 transition-transform"></i>
                 <span class="btn-gradient-text">Schedule New Meeting</span>
             </button>
@@ -163,7 +163,6 @@
 </main>
 
 <script>
-    // noinspection JSUnresolvedReference
     lucide.createIcons();
 
     function closeModal() {
@@ -183,7 +182,6 @@
             }
         }
 
-        // noinspection JSUnresolvedReference
         const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             initialDate: new Date(),
@@ -202,13 +200,11 @@
             eventDisplay: 'block',
             eventTimeFormat: { hour: 'numeric', minute: '2-digit', hour12: false },
             eventClassNames: function(arg) {
-                // noinspection JSUnresolvedReference
                 return [ arg.event.extendedProps.type ? 'event-' + arg.event.extendedProps.type.toLowerCase() : 'event-other' ];
             },
 
             eventClick: function(info) {
 
-                // noinspection JSUnresolvedReference
                 const props = info.event.extendedProps;
 
                 document.getElementById('modalTitle').innerText = props['fullTitle'] || info.event.title || 'Untitled Event';
@@ -239,12 +235,10 @@
                 }
 
                 document.getElementById('eventModal').classList.remove('hidden');
-                // noinspection JSUnresolvedReference
                 lucide.createIcons();
             }
         });
 
-        // noinspection JSUnresolvedReference
         calendar.render();
 
         document.getElementById('eventModal').addEventListener('click', function(e) {

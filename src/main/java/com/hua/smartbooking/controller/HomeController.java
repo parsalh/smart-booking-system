@@ -93,4 +93,24 @@ public class HomeController {
     public String login() {
         return "login";
     }
+
+    @GetMapping("/book")
+    public String showBookingWizard(OAuth2AuthenticationToken token, Model model) {
+        if (token == null) {
+            return "redirect:/login";
+        }
+
+        OAuth2User oAuth2User = token.getPrincipal();
+        String email = oAuth2User.getAttribute("email");
+
+        model.addAttribute("name", oAuth2User.getAttribute("name"));
+        model.addAttribute("email", email);
+
+        User dbUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found in database"));
+        model.addAttribute("role", dbUser.getRole().name());
+
+        return "book";
+    }
+
 }
