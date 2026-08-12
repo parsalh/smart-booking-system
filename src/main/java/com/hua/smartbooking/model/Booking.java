@@ -26,8 +26,8 @@ public class Booking {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "room_id", nullable = false)
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "room_id", nullable = true)
     private Room room;
 
     @Column(name = "start_time", nullable = false)

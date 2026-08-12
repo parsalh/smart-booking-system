@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -23,4 +24,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                                    @Param("startTime") Instant startTime,
                                    @Param("endTime") Instant endTime);
 
+
+    List<Booking> findByRoomId(Long roomId);
 }

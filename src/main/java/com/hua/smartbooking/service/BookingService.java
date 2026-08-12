@@ -1,5 +1,6 @@
 package com.hua.smartbooking.service;
 
+import com.google.api.services.calendar.model.Event;
 import com.hua.smartbooking.dto.BookingRequest;
 import com.hua.smartbooking.dto.FinalBookingRequest;
 import com.hua.smartbooking.model.Booking;
@@ -14,6 +15,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class BookingService {
@@ -31,15 +36,10 @@ public class BookingService {
     }
 
     @Transactional
-    public Booking createBooking(FinalBookingRequest request, User organizer) throws Exception {
+    public Map<String, Object> createBooking(FinalBookingRequest request, User organizer) throws Exception {
 
-        LocalDateTime localStart = LocalDateTime.parse(request.getStartTime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        LocalDateTime localEnd = LocalDateTime.parse(request.getEndTime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-
-        ZoneId athensZone = ZoneId.of("Europe/Athens");
-        Instant startInstant = localStart.atZone(athensZone).toInstant();
-        Instant endInstant = localEnd.atZone(athensZone).toInstant();
-
+        Instant startInstant = Instant.parse(request.getStartTime());
+        Instant endInstant = Instant.parse(request.getEndTime());
 
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));
@@ -59,19 +59,36 @@ public class BookingService {
         newBooking = bookingRepository.save(newBooking);
 
         try {
-            String googleEventId = googleCalendarService.createMeetingEvent(
+            List<String> allParticipants = new ArrayList<>();
+            if (request.getParticipants() != null) {
+                allParticipants.addAll(request.getParticipants());
+            }
+            if (!allParticipants.contains(organizer.getEmail())) {
+                allParticipants.add(organizer.getEmail());
+            }
+
+            Event googleEvent = googleCalendarService.createMeetingEvent(
                     organizer.getRefreshToken(),
                     request.getTitle(),
                     startInstant,
                     endInstant,
                     room.getName(),
-                    request.getParticipants()
+                    allParticipants
             );
 
-            newBooking.setGoogleEventId(googleEventId);
+            newBooking.setGoogleEventId(googleEvent.getId());
             newBooking.setStatus(Booking.BookingStatus.APPROVED);
 
-            return bookingRepository.save(newBooking);
+            bookingRepository.save(newBooking);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("bookingId", newBooking.getId());
+            response.put("title", request.getTitle());
+            response.put("status", "APPROVED");
+            response.put("htmlLink", googleEvent.getHtmlLink());
+
+            return response;
+
         } catch (Exception e) {
             newBooking.setStatus(Booking.BookingStatus.CANCELLED);
             bookingRepository.save(newBooking);

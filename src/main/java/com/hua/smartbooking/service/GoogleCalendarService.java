@@ -88,21 +88,27 @@ public class GoogleCalendarService {
 
                 Map<String, Object> map = new HashMap<>();
 
-                String typeStr = entity.getType().toString();
-                String shortTitle = typeStr.substring(0, 1).toUpperCase() + typeStr.substring(1).toLowerCase().replace("_", " ");
-                map.put("title", shortTitle);
+                String description = gEvent.getDescription();
+                boolean isSmartBooking = description != null && description.contains("Automatically scheduled via SmartBooking App");
+
+                if (isSmartBooking) {
+                    map.put("title", "Meeting");
+                    map.put("className", "event-smartbooking");
+                } else {
+                    String typeStr = entity.getType().toString();
+                    String shortTitle = typeStr.substring(0, 1).toUpperCase() + typeStr.substring(1).toLowerCase().replace("_", " ");
+                    map.put("title", shortTitle);
+                    map.put("className", "event-" + entity.getType().toString().toLowerCase());
+                }
 
                 map.put("start", entity.getStartTime().toString());
                 map.put("end", entity.getEndTime() != null ? entity.getEndTime().toString() : null);
 
-                map.put("className", "event-" + entity.getType().toString().toLowerCase());
-
                 Map<String, Object> extendedProps = new HashMap<>();
-
                 extendedProps.put("fullTitle", entity.getTitle() != null ? entity.getTitle() : "Untitled Event");
                 extendedProps.put("fullLocation", gEvent.getLocation() != null ? gEvent.getLocation() : "No location specified");
-                extendedProps.put("description", gEvent.getDescription() != null ? gEvent.getDescription() : "No description available.");
-                extendedProps.put("type", entity.getType().toString());
+                extendedProps.put("description", description != null ? description : "No description available.");
+                extendedProps.put("type", isSmartBooking ? "SMART_BOOKING" : entity.getType().toString());
                 extendedProps.put("locationName", entity.getRoom() != null ? entity.getRoom().getName() : "No location specified");
                 extendedProps.put("roomFloor", entity.getRoom() != null ? entity.getRoom().getFloor() : null);
                 extendedProps.put("roomImage", entity.getRoom() != null ? entity.getRoom().getImageUrl() : "/images/default-room.jpg");
@@ -117,7 +123,6 @@ public class GoogleCalendarService {
         }
         return new ObjectMapper().writeValueAsString(calendarEvents);
     }
-
     public int getEventCount(String refreshToken) throws Exception {
         List<Event> events = getUpcomingEvents(refreshToken);
         return events != null ? events.size() : 0;
@@ -169,8 +174,8 @@ public class GoogleCalendarService {
     /**
      * Creates a new meeting directly on the user's Google Calendar and sends invites.
      */
-    public String createMeetingEvent(String refreshToken, String title, Instant start,
-                                     Instant end, String location, List<String> participantEmails) throws Exception {
+    public Event createMeetingEvent(String refreshToken, String title, Instant start,
+                                    Instant end, String location, List<String> participantEmails) throws Exception {
 
         UserCredentials credentials = UserCredentials.newBuilder()
                 .setClientId(clientId)
@@ -188,7 +193,7 @@ public class GoogleCalendarService {
         Event event = new Event()
                 .setSummary(title)
                 .setLocation(location)
-                .setDescription("Automatically scheduled via SmartBooking HUA App");
+                .setDescription("Automatically scheduled via SmartBooking App");
 
         com.google.api.client.util.DateTime startDateTime =
                 new com.google.api.client.util.DateTime(start.toEpochMilli());
@@ -212,7 +217,7 @@ public class GoogleCalendarService {
                 .setSendUpdates("all")
                 .execute();
 
-        return createdEvent.getId();
+        return createdEvent;
     }
 
 

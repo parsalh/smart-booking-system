@@ -7,6 +7,7 @@ import com.hua.smartbooking.repository.RoomRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ public class MeetingOptimizerService {
     }
 
     public List<TimeSlotScore> findBestTimeSlots(
+            String organizerEmail,
             ZonedDateTime searchStart,
             ZonedDateTime searchEnd,
             int meetingDurationMinutes,
@@ -47,6 +49,11 @@ public class MeetingOptimizerService {
                 continue;
             }
 
+            if (isUserBusy(organizerEmail, currentSlotStart, currentSlotEnd, userBusyBlocks)) {
+                currentSlotStart = currentSlotStart.plusMinutes(30);
+                continue;
+            }
+
             boolean requiredAreFree = true;
             for (String email : requiredEmails) {
                 if (isUserBusy(email, currentSlotStart, currentSlotEnd, userBusyBlocks)) {
@@ -60,7 +67,7 @@ public class MeetingOptimizerService {
                 continue;
             }
 
-            int totalParticipants = requiredEmails.size() + optionalEmails.size();
+            int totalParticipants = 1 + requiredEmails.size() + optionalEmails.size();
             List<Room> availableRooms = roomRepository.findAvailableRooms(
                     totalParticipants,
                     currentSlotStart.toInstant(),
@@ -79,11 +86,11 @@ public class MeetingOptimizerService {
                 }
             }
 
-            int totalPeople = requiredEmails.size() + optionalEmails.size();
-            int freePeople = requiredEmails.size() + optionalAvailable;
+            int totalPeople = 1 + requiredEmails.size() + optionalEmails.size();
+            int freePeople = 1 + requiredEmails.size() + optionalAvailable;
             int baseScore = totalPeople > 0 ? (int) Math.round(((double) freePeople / totalPeople) * 100) : 100;
 
-            int penalty = 0;
+            int penalty = calculateProximityPenalty(organizerEmail, currentSlotStart, currentSlotEnd, userBusyBlocks);
 
             for (String email : requiredEmails) {
                 penalty += calculateProximityPenalty(email, currentSlotStart, currentSlotEnd, userBusyBlocks);
@@ -95,15 +102,19 @@ public class MeetingOptimizerService {
                 }
             }
 
-            int finalScore = Math.max(0, baseScore - penalty);
+            double timeOfDayBonus = calculateTimeOfDayScore(currentSlotStart);
+            double lunchPenalty = calculateLunchOverlapPenalty(currentSlotStart, currentSlotEnd);
+            double soonestBonus = calculateSoonestBonus(currentSlotStart, searchStart, searchEnd);
+
+            double rawScore = baseScore - penalty + timeOfDayBonus - lunchPenalty + soonestBonus;
+            int finalScore = (int) Math.round(Math.max(0, rawScore));
 
             viableSlots.add(new TimeSlotScore(currentSlotStart, currentSlotEnd, finalScore, optionalAvailable));
             currentSlotStart = currentSlotStart.plusMinutes(30);
         }
 
         Collections.sort(viableSlots);
-
-        return viableSlots.stream().limit(15).toList();
+        return viableSlots.stream().limit(30).toList();
     }
 
     private boolean isUserBusy(String email, ZonedDateTime slotStart, ZonedDateTime slotEnd, Map<String, List<TimePeriod>> allBusyBlocks) {
@@ -111,11 +122,16 @@ public class MeetingOptimizerService {
         long slotStartMillis = slotStart.toInstant().toEpochMilli();
         long slotEndMillis = slotEnd.toInstant().toEpochMilli();
 
+        long bufferMillis = 15 * 60 * 1000L;
+
         for (TimePeriod block : busyBlocks) {
             long blockStart = block.getStart().getValue();
             long blockEnd = block.getEnd().getValue();
 
-            if (slotStartMillis < blockEnd && slotEndMillis > blockStart) {
+            long bufferedBlockStart = blockStart - bufferMillis;
+            long bufferedBlockEnd = blockEnd + bufferMillis;
+
+            if (slotStartMillis < bufferedBlockEnd && slotEndMillis > bufferedBlockStart) {
                 return true;
             }
         }
@@ -130,7 +146,17 @@ public class MeetingOptimizerService {
         if (localStart.getDayOfWeek() == DayOfWeek.SATURDAY || localStart.getDayOfWeek() == DayOfWeek.SUNDAY) {
             return true;
         }
-        return localStart.getHour() < 8 || localEnd.getHour() > 20 || (localEnd.getHour() == 20 && localEnd.getMinute() > 0);
+
+        int startHour = localStart.getHour();
+        int endHour = localEnd.getHour();
+
+        if (startHour < 8 || startHour >= 20) return true;
+
+        if (endHour > 20 || (endHour == 20 && localEnd.getMinute() > 0)) return true;
+
+        if (endHour < startHour) return true;
+
+        return false;
     }
 
     private int calculateProximityPenalty(String email, ZonedDateTime slotStart, ZonedDateTime slotEnd, Map<String, List<TimePeriod>> allBusyBlocks) {
@@ -138,20 +164,71 @@ public class MeetingOptimizerService {
         long slotStartMillis = slotStart.toInstant().toEpochMilli();
         long slotEndMillis = slotEnd.toInstant().toEpochMilli();
 
-        long bufferMillis = 60 * 60 * 1000L;
+        long bufferMillis = 30 * 60 * 1000L;
 
         int penalty = 0;
         for (TimePeriod block : busyBlocks) {
             long blockStart = block.getStart().getValue();
             long blockEnd = block.getEnd().getValue();
 
-            if (blockEnd <= slotStartMillis && (slotStartMillis - blockEnd) <= bufferMillis) {
-                penalty += 10; // Αφαιρούμε 10 πόντους
+            long gapBefore = slotStartMillis - blockEnd;
+            if (gapBefore >= 0 && gapBefore <= bufferMillis) {
+                penalty += gradedProximityPenalty(gapBefore, bufferMillis);
             }
-            if (blockStart >= slotEndMillis && (blockStart - slotEndMillis) <= bufferMillis) {
-                penalty += 10; // Αφαιρούμε 10 πόντους
+
+            long gapAfter = blockStart - slotEndMillis;
+            if (gapAfter >= 0 && gapAfter <= bufferMillis) {
+                penalty += gradedProximityPenalty(gapAfter, bufferMillis);
             }
         }
         return penalty;
+    }
+
+    // The closer the slot is to an existing busy block, the higher the penalty it gets (linear scale).
+    private double gradedProximityPenalty(long gapMillis, long bufferMillis) {
+        double fraction = 1.0 - ((double) gapMillis / bufferMillis);
+        return fraction * 20;
+    }
+
+    // Gives a bonus for "sweet spot" hours (morning/afternoon) and a penalty for very early or very late slots.
+    private double calculateTimeOfDayScore(ZonedDateTime start) {
+        ZoneId athensZone = ZoneId.of("Europe/Athens");
+        ZonedDateTime local = start.withZoneSameInstant(athensZone);
+        double hourFraction = local.getHour() + local.getMinute() / 60.0;
+
+        if (hourFraction >= 10.0 && hourFraction < 12.0) {
+            return 25;
+        }
+        if (hourFraction >= 14.0 && hourFraction < 16.0) {
+            return 25;
+        }
+        if (hourFraction < 9.0 || hourFraction >= 18.0) {
+            return -15;
+        }
+        return 0;
+    }
+
+    // Penalizes slots that overlap with the classic lunch break (12:00-14:00).
+    private double calculateLunchOverlapPenalty(ZonedDateTime start, ZonedDateTime end) {
+        ZoneId athensZone = ZoneId.of("Europe/Athens");
+        ZonedDateTime localStart = start.withZoneSameInstant(athensZone);
+        ZonedDateTime localEnd = end.withZoneSameInstant(athensZone);
+
+        ZonedDateTime lunchStart = localStart.withHour(12).withMinute(0).withSecond(0).withNano(0);
+        ZonedDateTime lunchEnd = localStart.withHour(14).withMinute(0).withSecond(0).withNano(0);
+
+        boolean overlapsLunch = localStart.isBefore(lunchEnd) && localEnd.isAfter(lunchStart);
+        return overlapsLunch ? 30 : 0;
+    }
+
+    // Gives a small tie-breaker bonus to the slots closest to the start of the requested date range.
+    private double calculateSoonestBonus(ZonedDateTime slotStart, ZonedDateTime searchStart, ZonedDateTime searchEnd) {
+        long totalRangeMinutes = Duration.between(searchStart, searchEnd).toMinutes();
+        if (totalRangeMinutes <= 0) {
+            return 0;
+        }
+        long minutesFromStart = Duration.between(searchStart, slotStart).toMinutes();
+        double fraction = 1.0 - ((double) minutesFromStart / totalRangeMinutes);
+        return Math.max(0, fraction) * 15;
     }
 }

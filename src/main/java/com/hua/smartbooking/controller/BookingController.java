@@ -6,13 +6,12 @@ import com.hua.smartbooking.dto.FinalBookingRequest;
 import com.hua.smartbooking.dto.TimeSlotScore;
 import com.hua.smartbooking.exception.UserNotRegisteredException;
 import com.hua.smartbooking.model.Booking;
+import com.hua.smartbooking.model.Event;
 import com.hua.smartbooking.model.Room;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.RoomRepository;
 import com.hua.smartbooking.repository.UserRepository;
-import com.hua.smartbooking.service.AvailabilityService;
-import com.hua.smartbooking.service.BookingService;
-import com.hua.smartbooking.service.MeetingOptimizerService;
+import com.hua.smartbooking.service.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.http.ResponseEntity;
@@ -34,17 +33,23 @@ public class BookingController {
     private final BookingService bookingService;
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
+    private final GoogleCalendarService googleCalendarService;
+    private final EventMappingService eventMappingService;
 
     public BookingController(AvailabilityService availabilityService,
                              MeetingOptimizerService optimizerService,
                              BookingService bookingService,
                              UserRepository userRepository,
-                             RoomRepository roomRepository) {
+                             RoomRepository roomRepository,
+                             GoogleCalendarService googleCalendarService,
+                             EventMappingService eventMappingService) {
         this.availabilityService = availabilityService;
         this.optimizerService = optimizerService;
         this.bookingService = bookingService;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
+        this.googleCalendarService = googleCalendarService;
+        this.eventMappingService = eventMappingService;
     }
 
     @PostMapping("/suggest-times")
@@ -55,19 +60,31 @@ public class BookingController {
             User organizer = userRepository.findByEmail(organizerEmail)
                     .orElseThrow(() -> new IllegalStateException("Organizer not found"));
 
+            ZoneId athensZone = ZoneId.of("Europe/Athens");
             ZonedDateTime searchStart = LocalDate.parse(request.getDateRangeStart())
-                    .atStartOfDay(ZoneId.systemDefault());
+                    .atStartOfDay(athensZone);
             ZonedDateTime searchEnd = LocalDate.parse(request.getDateRangeEnd())
-                    .atTime(23, 59).atZone(ZoneId.systemDefault());
+                    .atTime(23, 59, 59).atZone(athensZone);
 
-            List<String> allEmails = new ArrayList<>();
-            allEmails.addAll(request.getRequiredParticipants());
-            allEmails.addAll(request.getOptionalParticipants());
+            List<String> allEmailsToFetch = new ArrayList<>();
+            allEmailsToFetch.add(organizerEmail);
+            allEmailsToFetch.addAll(request.getRequiredParticipants());
+            allEmailsToFetch.addAll(request.getOptionalParticipants());
+
+            for (String email : allEmailsToFetch) {
+                User participant = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new UserNotRegisteredException("Participant " + email + " is not registered.", email));
+                if (participant.getRefreshToken() != null) {
+                    List<com.google.api.services.calendar.model.Event> googleEvents = googleCalendarService.getUpcomingEvents(participant.getRefreshToken());
+                    eventMappingService.syncEvents(googleEvents, participant);
+                }
+            }
 
             Map<String, List<TimePeriod>> busyBlocks =
-                    availabilityService.fetchGroupAvailability(allEmails, searchStart, searchEnd, organizer);
+                    availabilityService.fetchGroupAvailability(allEmailsToFetch, searchStart, searchEnd, organizer);
 
             List<TimeSlotScore> slots = optimizerService.findBestTimeSlots(
+                    organizerEmail,
                     searchStart, searchEnd, request.getDurationMinutes(),
                     request.getRequiredParticipants(), request.getOptionalParticipants(), busyBlocks
             );
@@ -153,8 +170,8 @@ public class BookingController {
             User organizer = userRepository.findByEmail(organizerEmail)
                     .orElseThrow(() -> new IllegalStateException("Organizer not found"));
 
-            Booking booking = bookingService.createBooking(request, organizer);
-            return ResponseEntity.ok(booking);
+            Map<String, Object> bookingResponse = bookingService.createBooking(request, organizer);
+            return ResponseEntity.ok(bookingResponse);
 
         } catch (IllegalStateException e) {
             Map<String, String> body = new HashMap<>();

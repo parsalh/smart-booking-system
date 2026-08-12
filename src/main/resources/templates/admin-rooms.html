@@ -14,7 +14,7 @@
             <h1 class="text-3xl font-bold text-slate-900">Room Management</h1>
             <p class="text-slate-500">Configure campus meeting rooms.</p>
         </div>
-        <button onclick="openAddModal()" class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 flex items-center gap-2 shadow-lg transition-all">
+        <button id="addRoomBtn" class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 flex items-center gap-2 shadow-lg transition-all">
             <i data-lucide="plus"></i> Add New Room
         </button>
     </div>
@@ -40,14 +40,25 @@
                         [[${room.isAvailable ? 'Available' : 'Unavailable'}]]
                     </span>
                 </td>
-                <td class="px-6 py-4 text-center">
-                    <button class="edit-room-btn text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                <td class="px-6 py-4 text-center flex justify-center gap-2">
+                    <button class="edit-room-btn text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors" title="Edit Room"
                             th:data-id="${room.id}"
                             th:data-name="${room.name}"
                             th:data-floor="${room.floor}"
                             th:data-capacity="${room.capacity}">
                         <i data-lucide="edit-3" class="w-5 h-5"></i>
                     </button>
+
+                    <form th:action="@{/admin/rooms/delete}" method="post" th:id="'delete-form-' + ${room.id}">
+                        <input type="hidden" name="id" th:value="${room.id}" />
+
+                        <button type="button"
+                                class="text-red-500 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                                title="Delete Room"
+                                th:onclick="openDeleteModal([[${room.id}]], [[${room.name}]])">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </form>
                 </td>
             </tr>
             </tbody>
@@ -135,6 +146,31 @@
             </div>
         </form>
     </div>
+    <div id="deleteModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-300">
+
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+                <i data-lucide="alert-triangle" class="h-8 w-8 text-red-600"></i>
+            </div>
+
+            <div class="text-center">
+                <h3 class="text-xl font-black text-slate-900 mb-2">Delete Room</h3>
+                <p class="text-sm text-slate-500 font-medium">
+                    Are you sure you want to delete <span id="deleteRoomName" class="font-bold text-slate-800"></span>?
+                    <br>This action cannot be undone, but existing bookings will be preserved.
+                </p>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button type="button" onclick="closeDeleteModal()" class="flex-1 py-3 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
+                    Cancel
+                </button>
+                <button type="button" onclick="confirmDelete()" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-md shadow-red-200 transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -143,6 +179,8 @@
     const modal = document.getElementById('roomModal');
     const form = document.getElementById('roomForm');
     const modalTitle = document.getElementById('modalTitle');
+    const deleteModal = document.getElementById('deleteModal');
+    let roomToDeleteId = null;
 
     function openAddModal() {
         modalTitle.innerText = "Create New Room";
@@ -152,30 +190,73 @@
         modal.classList.remove('hidden');
     }
 
-    document.querySelectorAll('.edit-room-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            openEditModal(
-                btn.dataset.id,
-                btn.dataset.name,
-                btn.dataset.floor,
-                btn.dataset.capacity
-            );
-        });
-    });
-
     function closeModal() {
         modal.classList.add('hidden');
     }
 
+    function openDeleteModal(roomId, roomName) {
+        roomToDeleteId = roomId;
+        document.getElementById('deleteRoomName').innerText = roomName;
+
+        deleteModal.classList.remove('hidden');
+        setTimeout(() => {
+            deleteModal.classList.remove('opacity-0');
+            deleteModal.querySelector('div').classList.remove('scale-95');
+        }, 10);
+    }
+
+    function closeDeleteModal() {
+        deleteModal.classList.add('opacity-0');
+        deleteModal.querySelector('div').classList.add('scale-95');
+
+        setTimeout(() => {
+            deleteModal.classList.add('hidden');
+            roomToDeleteId = null;
+        }, 300);
+    }
+
+    function confirmDelete() {
+        if (roomToDeleteId) {
+            const deleteForm = document.getElementById('delete-form-' + roomToDeleteId);
+            if (deleteForm) {
+                const btn = deleteModal.querySelector('button.bg-red-600');
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Deleting...`;
+                lucide.createIcons();
+
+                deleteForm.submit();
+            }
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
+
+        const addBtn = document.getElementById('addRoomBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                openAddModal();
+            });
+        }
+
         document.querySelectorAll('.edit-room-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                openEditModal(btn.dataset.id, btn.dataset.name, btn.dataset.floor, btn.dataset.capacity);
+                const id = btn.dataset.id || '';
+                const name = btn.dataset.name || '';
+                const floor = btn.dataset.floor || '';
+                const capacity = btn.dataset.capacity || '';
+
+                openEditModal(id, name, floor, capacity);
+            });
+        });
+
+        document.querySelectorAll('.delete-room-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id || '';
+                const name = btn.dataset.name || '';
+                openDeleteModal(id, name);
             });
         });
     });
-
 </script>
 </body>
 </html>

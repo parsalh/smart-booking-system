@@ -101,7 +101,7 @@ async function handleSearch(query) {
             container.innerHTML = filtered.map(user => `
                 <div onclick="addParticipantFromDB('${user.id}', '${user.fullname}', '${user.email}', '${user.avatarUrl || ''}')"
                      class="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b border-slate-100 last:border-0 transition-all group">
-                    <img src="${user.avatarUrl || ''}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullname)}&background=dbeafe&color=2563eb'" class="w-8 h-8 rounded-full object-cover">
+                    <img src="${user.avatarUrl || ''}" referrerpolicy="no-referrer" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullname)}&background=dbeafe&color=2563eb'" class="w-8 h-8 rounded-full object-cover">
                     <div class="flex-1">
                         <div class="text-sm font-bold text-slate-900 group-hover:text-blue-600">${user.fullname}</div>
                         <div class="text-[10px] text-slate-500">${user.email}</div>
@@ -173,7 +173,7 @@ function renderSelected() {
 
     list.innerHTML = state.participants.map(p => `
         <div class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
-            <img src="${p.avatar || ''}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb'" class="w-10 h-10 rounded-full object-cover">
+            <img src="${p.avatar || ''}" referrerpolicy="no-referrer" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb'" class="w-10 h-10 rounded-full object-cover">
             <div class="flex-1 overflow-hidden">
                 <div class="text-sm font-bold text-slate-900 truncate">${p.name}</div>
                 <div class="text-xs text-slate-500 truncate">${p.email}</div>
@@ -255,24 +255,92 @@ async function handleFindBestTimes() {
 
 function renderTrafficLightTimeSlots(slots) {
     const container = document.getElementById('recommended-times-container');
+
+    if (!slots || slots.length === 0) {
+        container.innerHTML = `<div class="p-5 text-amber-600 font-bold border-2 border-amber-200 bg-amber-50 rounded-2xl text-center text-sm">No available times found for the selected dates.</div>`;
+        return;
+    }
+
+    const totalSlots = slots.length;
+
     container.innerHTML = slots.map((slot, index) => {
         const start = new Date(slot.startTime);
         const end = new Date(slot.endTime);
-        const colorClass = index === 0 ? "border-emerald-500" : "border-yellow-400";
+
+        const dateString = start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const timeString = `${start.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})} - ${end.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}`;
+
+        if (index === 0) {
+            const badgeHtml = `
+                <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white uppercase tracking-wider mb-1 shadow-sm">
+                    <i data-lucide="sparkles" class="w-3 h-3"></i> Best Match
+                </div>`;
+
+            return `
+                <div onclick="selectTimeSlot('${slot.startTime}', '${slot.endTime}')" 
+                     class="relative overflow-hidden p-[2px] rounded-2xl mb-3 shadow-md cursor-pointer group transition-all hover:scale-[1.005]">
+                    
+                    <div class="absolute inset-[-500%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_0deg,#059669_0%,#34d399_25%,#e6f4ea_50%,#34d399_75%,#059669_100%)] opacity-90"></div>
+                    
+                    <div class="relative bg-emerald-50/95 rounded-[14px] p-4 transition-all group-hover:bg-emerald-100/90">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                ${badgeHtml}
+                                <h3 class="text-base font-bold text-slate-900">${dateString}</h3>
+                                <p class="text-slate-600 text-xs font-medium flex items-center gap-1 mt-0.5">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    ${timeString}
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-emerald-800 opacity-80">Score</span>
+                                <p class="text-xl font-black text-emerald-800">${slot.score}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        let colorClass = "";
+        let textColor = "";
+        const ratio = index / totalSlots;
+
+        if (ratio <= 0.20) {
+            colorClass = "border-2 border-lime-500 bg-lime-50/80 hover:border-lime-600";
+            textColor = "text-lime-800";
+        } else if (ratio <= 0.45) {
+            colorClass = "border-2 border-yellow-400 bg-yellow-50/80 hover:border-yellow-500";
+            textColor = "text-yellow-800";
+        } else if (ratio <= 0.72) {
+            colorClass = "border-2 border-orange-400 bg-orange-50/80 hover:border-orange-500";
+            textColor = "text-orange-800";
+        } else {
+            colorClass = "border-2 border-red-400 bg-red-50/80 hover:border-red-500";
+            textColor = "text-red-800";
+        }
+
         return `
-            <div onclick="selectTimeSlot('${slot.startTime}', '${slot.endTime}')" class="cursor-pointer bg-white border-2 ${colorClass} rounded-2xl p-5 mb-4 hover:shadow-lg transition-all">
+            <div onclick="selectTimeSlot('${slot.startTime}', '${slot.endTime}')" 
+                 class="cursor-pointer rounded-2xl p-4 mb-3 shadow-sm hover:shadow-md transition-all ${colorClass}">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h3 class="text-lg font-bold">${start.toLocaleDateString()}</h3>
-                        <p>${start.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - ${end.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
+                        <h3 class="text-base font-bold text-slate-900">${dateString}</h3>
+                        <p class="text-slate-600 text-xs font-medium flex items-center gap-1 mt-0.5">
+                            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                            ${timeString}
+                        </p>
                     </div>
                     <div class="text-right">
-                        <span class="text-xs font-bold uppercase">Score</span>
-                        <p class="text-xl font-black">${slot.score}</p>
+                        <span class="text-[9px] font-bold uppercase tracking-wider ${textColor} opacity-80">Score</span>
+                        <p class="text-xl font-black ${textColor}">${slot.score}</p>
                     </div>
                 </div>
             </div>`;
     }).join('');
+
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 }
 
 function selectTimeSlot(start, end) {
@@ -335,25 +403,142 @@ function renderFinalReview() {
     const start = new Date(state.selectedTimeSlot.start);
     document.getElementById('review-datetime').innerText = start.toLocaleString();
     document.getElementById('review-room').innerText = state.selectedRoomName;
-    document.getElementById('final-title-input').value = `Meeting with ${state.participants.length} participants`;
+
+    const titleInput = document.getElementById('final-title-input');
+    if (titleInput) {
+        titleInput.value = "";
+    }
 }
 
+
 async function submitFinalBooking() {
+    const titleInput = document.getElementById('final-title-input');
+    const errorElement = document.getElementById('title-error');
+    const meetingTitle = titleInput ? titleInput.value.trim() : "";
+
+    if (errorElement) {
+        errorElement.classList.add('hidden');
+        errorElement.innerText = "";
+    }
+    if (titleInput) {
+        titleInput.classList.remove('border-red-500');
+    }
+
+    if (!meetingTitle) {
+        if (errorElement && titleInput) {
+            errorElement.innerText = "Please enter a title for your meeting before confirming.";
+            errorElement.classList.remove('hidden');
+            titleInput.classList.add('border-red-500');
+            titleInput.focus();
+        }
+        return;
+    }
+
     const payload = {
-        roomId: state.selectedRoomId, title: document.getElementById('final-title-input').value,
-        startTime: state.selectedTimeSlot.start, endTime: state.selectedTimeSlot.end,
+        roomId: state.selectedRoomId,
+        title: meetingTitle,
+        startTime: state.selectedTimeSlot.start,
+        endTime: state.selectedTimeSlot.end,
         participants: state.participants.map(p => p.email)
     };
+
     const btn = document.getElementById('final-confirm-btn');
-    btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Booking...`;
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin inline mr-2"></i> Booking & Syncing...`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
     try {
         const res = await fetch('/api/bookings/confirm', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
+
         const data = await res.json();
-        if (res.status === 409) { alert("Conflict: " + data.error); goToStep(3); return; }
-        alert("Booking Confirmed!");
-        window.location.href = "/";
-    } catch (e) { alert("Error: " + e.message); }
-    finally { btn.innerHTML = `Confirm Booking`; lucide.createIcons(); }
+
+        if (res.status === 409) {
+            alert("Conflict Error: " + (data.error || "Room is no longer available at this time."));
+            goToStep(3);
+            return;
+        }
+
+        if (!res.ok) {
+            throw new Error(data.error || "Failed to confirm booking.");
+        }
+
+        renderSuccessScreen(data);
+
+    } catch (e) {
+        alert("Booking Error: " + e.message);
+        console.error(e);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `Confirm Booking`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+}
+
+function renderSuccessScreen(bookingData) {
+    goToStep(4);
+
+    const container = document.getElementById('step-4-container');
+    if (!container) return;
+
+    const start = new Date(state.selectedTimeSlot.start);
+    const end = new Date(state.selectedTimeSlot.end);
+
+    const dateStr = start.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+    const timeStr = `${start.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})} - ${end.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}`;
+
+    const calendarBtn = bookingData.googleEventLink || bookingData.htmlLink
+        ? `<a href="${bookingData.googleEventLink || bookingData.htmlLink}" target="_blank" 
+              class="inline-flex items-center justify-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-3 px-6 rounded-xl transition-all shadow-sm">
+                <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i> View in Google Calendar
+           </a>`
+        : '';
+
+    const participantList = state.participants.map(p => p.name || p.email);
+    const participantsHtml = participantList.length > 0 ? participantList.join(', ') : 'You (Organizer)';
+
+    container.innerHTML = `
+        <div class="text-center py-8 px-4 max-w-lg mx-auto">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-bounce">
+                <i data-lucide="check-circle-2" class="w-10 h-10"></i>
+            </div>
+
+            <h2 class="text-2xl font-black text-slate-900 mb-2">Meeting Confirmed!</h2>
+            <p class="text-slate-500 text-sm mb-8">Calendar invites have been automatically sent to all participants.</p>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-left mb-8 shadow-sm space-y-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Title</span>
+                    <p class="text-base font-bold text-slate-900">${bookingData.title || document.getElementById('final-title-input').value}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 border-t border-slate-200 pt-3">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Date & Time</span>
+                        <p class="text-xs font-bold text-slate-800 mt-1">${dateStr}</p>
+                        <p class="text-xs text-slate-600">${timeStr}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Room</span>
+                        <p class="text-xs font-bold text-slate-800 mt-1">${state.selectedRoomName}</p>
+                    </div>
+                </div>
+                <div class="border-t border-slate-200 pt-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Participants (${state.participants.length + 1})</span>
+                    <p class="text-xs text-slate-600 mt-1 truncate">${participantsHtml}, You (Organizer)</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                ${calendarBtn}
+                <a href="/" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md">
+                    <i data-lucide="home" class="w-5 h-5"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    `;
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
