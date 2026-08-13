@@ -8,7 +8,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin")
@@ -29,22 +31,38 @@ public class AdminController {
     }
 
     @PostMapping("/rooms/update")
-    public String updateRoom(@RequestParam Long id,
-                             @RequestParam String floor,
-                             @RequestParam Integer capacity,
-                             @RequestParam(required = false) String location) {
-        Room room = roomRepository.findById(id).orElseThrow();
-        room.setFloor(floor);
-        room.setCapacity(capacity);
-        room.setLocation(location);
-        roomRepository.save(room);
+    public String updateRoom(@ModelAttribute Room updatedRoom) {
+        Optional<Room> existingRoomOpt = roomRepository.findById(updatedRoom.getId());
+
+        if (existingRoomOpt.isPresent()) {
+            Room existingRoom = existingRoomOpt.get();
+
+            existingRoom.setName(updatedRoom.getName());
+            existingRoom.setLocation(updatedRoom.getLocation());
+            existingRoom.setFloor(updatedRoom.getFloor());
+            existingRoom.setCapacity(updatedRoom.getCapacity());
+            existingRoom.setImageUrl(updatedRoom.getImageUrl());
+
+            if (existingRoom.getAmenities() != null) {
+                existingRoom.getAmenities().clear();
+            } else {
+                existingRoom.setAmenities(new ArrayList<>());
+            }
+
+            if (updatedRoom.getAmenities() != null && !updatedRoom.getAmenities().isEmpty()) {
+                existingRoom.getAmenities().addAll(updatedRoom.getAmenities());
+            }
+
+            roomRepository.save(existingRoom);
+        }
+
         return "redirect:/admin/rooms";
     }
 
     @PostMapping("/rooms/add")
     public String addRoom(@ModelAttribute Room room) {
         if (room.getName() != null) {
-            room.setName(room.getName().trim().toLowerCase());
+            room.setName(room.getName().trim());
         }
         room.setIsAvailable(true);
         roomRepository.save(room);
@@ -53,16 +71,7 @@ public class AdminController {
 
     @PostMapping("/rooms/delete")
     public String deleteRoom(@RequestParam Long id) {
-        if (roomRepository.existsById(id)) {
-            List<Booking> associatedBookings = bookingRepository.findByRoomId(id);
-
-            for (Booking booking : associatedBookings) {
-                booking.setRoom(null);
-                bookingRepository.save(booking);
-            }
-
-            roomRepository.deleteById(id);
-        }
+        roomRepository.deleteById(id);
         return "redirect:/admin/rooms";
     }
 

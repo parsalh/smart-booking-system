@@ -19,47 +19,87 @@
         </button>
     </div>
 
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
         <table class="w-full text-left border-collapse">
-            <thead class="bg-slate-50 border-b border-slate-200">
-            <tr>
-                <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500">Room Name</th>
-                <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500">Floor</th>
-                <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500">Capacity</th>
-                <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500">Status</th>
-                <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500 text-center">Actions</th>
+            <thead>
+            <tr class="border-b border-slate-100 bg-slate-50/50 text-sm font-bold text-slate-700">
+                <th class="px-6 py-4">Room</th>
+                <th class="px-6 py-4">Location</th>
+                <th class="px-6 py-4">Floor</th>
+                <th class="px-6 py-4">Capacity</th>
+                <th class="px-6 py-4">Amenities</th>
+                <th class="px-6 py-4 text-center">Actions</th>
             </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
             <tr th:each="room : ${rooms}" class="hover:bg-slate-50/50 transition-colors">
-                <td class="px-6 py-4 font-semibold text-slate-700" th:text="${room.name}"></td>
-                <td class="px-6 py-4 text-slate-600" th:text="${room.floor ?: '-'}"></td>
-                <td class="px-6 py-4 text-slate-600" th:text="${room.capacity ?: '-'}"></td>
-                <td class="px-6 py-4">
-                    <span th:class="${room.isAvailable ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} + ' px-3 py-1 rounded-full text-xs font-bold'">
-                        [[${room.isAvailable ? 'Available' : 'Unavailable'}]]
-                    </span>
+
+                <td class="px-6 py-5">
+                    <div class="flex items-center gap-5">
+                        <div class="w-44 h-28 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200 relative shadow-md">
+                            <img th:if="${room.imageUrl != null and !#strings.isEmpty(room.imageUrl)}"
+                                 th:src="${room.imageUrl}"
+                                 alt="Room Image"
+                                 class="w-full h-full object-cover"
+                                 onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
+
+                            <div th:classappend="${room.imageUrl != null and !#strings.isEmpty(room.imageUrl)} ? 'hidden' : ''"
+                                 class="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 p-2">
+                                <i data-lucide="image" class="w-8 h-8 text-slate-400 mb-1"></i>
+                                <span class="text-xs font-semibold text-slate-400">No Image</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="font-bold text-slate-900 text-lg" th:text="${room.name}">Conference Room A</div>
+                        </div>
+                    </div>
                 </td>
-                <td class="px-6 py-4 text-center flex justify-center gap-2">
-                    <button class="edit-room-btn text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors" title="Edit Room"
-                            th:data-id="${room.id}"
-                            th:data-name="${room.name}"
-                            th:data-floor="${room.floor}"
-                            th:data-capacity="${room.capacity}">
-                        <i data-lucide="edit-3" class="w-5 h-5"></i>
-                    </button>
 
-                    <form th:action="@{/admin/rooms/delete}" method="post" th:id="'delete-form-' + ${room.id}">
-                        <input type="hidden" name="id" th:value="${room.id}" />
+                <td class="px-6 py-5 text-slate-700 font-semibold text-sm" th:text="${room.location != null ? room.location : '-'}">Building A</td>
 
-                        <button type="button"
-                                class="text-red-500 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                                title="Delete Room"
-                                th:onclick="openDeleteModal([[${room.id}]], [[${room.name}]])">
-                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                <td class="px-6 py-5 text-slate-600 font-medium text-sm" th:text="${room.floor}">1st Floor</td>
+
+                <td class="px-6 py-5 text-slate-600 font-medium text-sm">
+                    <span th:text="${room.capacity}">12</span> Seats
+                </td>
+
+                <td class="px-6 py-5">
+                    <div class="flex flex-wrap gap-1.5 max-w-xs">
+                        <span th:each="amenity : ${room.amenities}"
+                              th:text="${amenity}"
+                              class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200/50">
+                            Projector
+                        </span>
+                    </div>
+                </td>
+
+                <td class="px-6 py-5 text-center">
+                    <div class="flex justify-center gap-2">
+                        <button class="edit-room-btn text-blue-600 hover:text-blue-800 p-2.5 rounded-xl hover:bg-blue-50 transition-colors"
+                                title="Edit Room"
+                                th:data-id="${room.id}"
+                                th:data-name="${room.name}"
+                                th:data-location="${room.location}"
+                                th:data-floor="${room.floor}"
+                                th:data-capacity="${room.capacity}"
+                                th:data-image="${room.imageUrl}"
+                                th:data-amenities="${#strings.listJoin(room.amenities, ',')}"> <i data-lucide="edit-3" class="w-5 h-5"></i>
                         </button>
-                    </form>
+
+                        <form th:action="@{/admin/rooms/delete}" method="post" th:id="'delete-form-' + ${room.id}" class="inline">
+                            <input type="hidden" name="id" th:value="${room.id}" />
+                            <button type="button"
+                                    class="delete-room-btn text-red-500 hover:text-red-800 p-2.5 rounded-xl hover:bg-red-50 transition-colors"
+                                    title="Delete Room"
+                                    th:data-id="${room.id}"
+                                    th:data-name="${room.name}">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </form>
+                    </div>
                 </td>
+
             </tr>
             </tbody>
         </table>
@@ -67,85 +107,117 @@
 </div>
 
 <div id="roomModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl overflow-y-auto max-h-[90vh]">
-        <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-slate-900">Create New Room</h2>
+    <div class="bg-white rounded-3xl p-8 max-w-5xl w-full shadow-2xl overflow-y-auto max-h-[90vh]">
 
-        <form id="roomForm" th:action="@{/admin/rooms/add}" method="POST" class="space-y-4">
+        <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+            <h2 id="modalTitle" class="text-2xl font-bold text-slate-900">Create New Room</h2>
+            <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-50 transition-all">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <form id="roomForm" th:action="@{/admin/rooms/add}" method="POST">
             <input type="hidden" id="roomId" name="id">
 
-            <div>
-                <label class="block text-sm font-bold mb-2 text-slate-700">Room Name</label>
-                <input type="text" id="roomName" name="name" required class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-bold mb-2 text-slate-700">Floor</label>
-                    <input type="text" id="roomFloor" name="floor" placeholder="e.g. 1st" class="w-full p-3 border border-slate-200 rounded-xl">
+                <div class="md:col-span-7 space-y-5">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-700">Room Name</label>
+                            <input type="text" id="roomName" name="name" required placeholder="e.g. Conference Room A" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-700">Location / Building</label>
+                            <input type="text" id="roomLocation" name="location" placeholder="e.g. Main Building - Wing B" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-700">Floor</label>
+                            <input type="text" id="roomFloor" name="floor" placeholder="e.g. 1st Floor" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-700">Capacity</label>
+                            <input type="number" id="roomCapacity" name="capacity" placeholder="e.g. 12" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-slate-700">Photo URL</label>
+                        <input type="text" id="roomImage" name="imageUrl" placeholder="https://images.unsplash.com/..." class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-slate-700">Photo Preview</label>
+                        <div id="imagePreviewContainer" class="w-full h-64 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden relative shadow-inner">
+                            <img id="imagePreview" src="" alt="Room Preview" class="w-full h-full object-cover hidden">
+                            <div id="imagePlaceholder" class="text-center text-slate-400 p-4">
+                                <i data-lucide="image" class="w-10 h-10 mx-auto mb-2 text-slate-300"></i>
+                                <p class="text-xs font-semibold">Enter a valid URL above to preview image</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-bold mb-2 text-slate-700">Capacity</label>
-                    <input type="number" id="roomCapacity" name="capacity" class="w-full p-3 border border-slate-200 rounded-xl">
+
+                <div class="md:col-span-5 flex flex-col justify-between space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold mb-3 text-slate-700">Room Amenities</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-1">
+                            <label class="flex items-center gap-3 p-3 border border-slate-200/80 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                                <input type="checkbox" name="amenities" value="Projector" class="w-4 h-4 rounded text-blue-600">
+                                <span class="text-xs font-semibold text-slate-700 group-hover:text-blue-700">Projector</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200/80 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                                <input type="checkbox" name="amenities" value="Interactive Whiteboard" class="w-4 h-4 rounded text-blue-600">
+                                <span class="text-xs font-semibold text-slate-700 group-hover:text-blue-700">Whiteboard</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200/80 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                                <input type="checkbox" name="amenities" value="High-Speed WiFi" class="w-4 h-4 rounded text-blue-600">
+                                <span class="text-xs font-semibold text-slate-700 group-hover:text-blue-700">Wi-Fi</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200/80 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                                <input type="checkbox" name="amenities" value="Power Outlets" class="w-4 h-4 rounded text-blue-600">
+                                <span class="text-xs font-semibold text-slate-700 group-hover:text-blue-700">Power Outlets</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200/80 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                                <input type="checkbox" name="amenities" value="Video Conferencing" class="w-4 h-4 rounded text-blue-600">
+                                <span class="text-xs font-semibold text-slate-700 group-hover:text-blue-700">Video Conf.</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200/80 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                                <input type="checkbox" name="amenities" value="Ethernet Ports" class="w-4 h-4 rounded text-blue-600">
+                                <span class="text-xs font-semibold text-slate-700 group-hover:text-blue-700">Ethernet</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200/80 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                                <input type="checkbox" name="amenities" value="Soundproofing" class="w-4 h-4 rounded text-blue-600">
+                                <span class="text-xs font-semibold text-slate-700 group-hover:text-blue-700">Soundproofed</span>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 border border-slate-200/80 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                                <input type="checkbox" name="amenities" value="Wheelchair Accessible" class="w-4 h-4 rounded text-blue-600">
+                                <span class="text-xs font-semibold text-slate-700 group-hover:text-blue-700">Accessible</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 pt-4 border-t border-slate-100">
+                        <button type="button" onclick="closeModal()" class="flex-1 py-3.5 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all">Cancel</button>
+                        <button type="submit" class="flex-1 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-md transition-all">Save Changes</button>
+                    </div>
                 </div>
-            </div>
 
-            <div>
-                <label class="block text-sm font-bold mb-2 text-slate-700">Photo URL</label>
-                <input type="text" id="roomImage" name="imageUrl" placeholder="https://..." class="w-full p-3 border border-slate-200 rounded-xl">
-            </div>
-
-            <div class="pt-2">
-                <label class="block text-sm font-bold mb-3 text-slate-700">Room Amenities</label>
-
-                <div class="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto p-1">
-                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
-                        <input type="checkbox" name="amenities" value="Projector" class="w-4 h-4 rounded text-blue-600">
-                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Projector</span>
-                    </label>
-
-                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
-                        <input type="checkbox" name="amenities" value="Interactive Whiteboard" class="w-4 h-4 rounded text-blue-600">
-                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Interactive Whiteboard</span>
-                    </label>
-
-                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
-                        <input type="checkbox" name="amenities" value="High-Speed WiFi" class="w-4 h-4 rounded text-blue-600">
-                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">High-Speed Wi-Fi</span>
-                    </label>
-
-                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
-                        <input type="checkbox" name="amenities" value="Power Outlets" class="w-4 h-4 rounded text-blue-600">
-                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Power Outlets</span>
-                    </label>
-
-                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
-                        <input type="checkbox" name="amenities" value="Video Conferencing" class="w-4 h-4 rounded text-blue-600">
-                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Video Conferencing</span>
-                    </label>
-
-                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
-                        <input type="checkbox" name="amenities" value="Ethernet Ports" class="w-4 h-4 rounded text-blue-600">
-                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Ethernet Ports</span>
-                    </label>
-
-                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
-                        <input type="checkbox" name="amenities" value="Soundproofing" class="w-4 h-4 rounded text-blue-600">
-                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Soundproofed</span>
-                    </label>
-
-                    <label class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
-                        <input type="checkbox" name="amenities" value="Wheelchair Accessible" class="w-4 h-4 rounded text-blue-600">
-                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-700">Accessible</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="flex gap-3 mt-8">
-                <button type="button" onclick="closeModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all">Cancel</button>
-                <button type="submit" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-md transition-all">Save Changes</button>
             </div>
         </form>
     </div>
+</div>
     <div id="deleteModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-300">
 
@@ -174,55 +246,124 @@
 </div>
 
 <script>
-    lucide.createIcons();
+    function updateImagePreview(url) {
+        const preview = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('imagePlaceholder');
 
-    const modal = document.getElementById('roomModal');
-    const form = document.getElementById('roomForm');
-    const modalTitle = document.getElementById('modalTitle');
-    const deleteModal = document.getElementById('deleteModal');
-    let roomToDeleteId = null;
+        if (!preview || !placeholder) return;
+
+        if (url && url.trim() !== '') {
+            preview.src = url.trim();
+            preview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        } else {
+            preview.src = '';
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+    }
 
     function openAddModal() {
-        modalTitle.innerText = "Create New Room";
-        form.action = "/admin/rooms/add";
-        form.reset();
+        const modalTitle = document.getElementById('modalTitle');
+        const form = document.getElementById('roomForm');
+        const roomId = document.getElementById('roomId');
+        const roomLocation = document.getElementById('roomLocation');
+        const roomImage = document.getElementById('roomImage');
+        const modal = document.getElementById('roomModal');
+
+        if (modalTitle) modalTitle.innerText = "Create New Room";
+        if (form) {
+            form.action = "/admin/rooms/add";
+            form.reset();
+        }
         document.getElementById('roomId').value = "";
-        modal.classList.remove('hidden');
+        const locationInput = document.getElementById('roomLocation');
+        if (locationInput) locationInput.value = "";
+        document.getElementById('roomImage').value = "";
+
+        document.querySelectorAll('input[name="amenities"]').forEach(cb => cb.checked = false);
+
+        updateImagePreview("");
+        document.getElementById('roomModal').classList.remove('hidden');
+    }
+
+    function openEditModal(id, name, location, floor, capacity, imageUrl, amenitiesStr) {
+        const modalTitle = document.getElementById('modalTitle');
+        const form = document.getElementById('roomForm');
+
+        if (modalTitle) modalTitle.innerText = "Edit Room";
+        if (form) form.action = "/admin/rooms/update";
+
+        document.getElementById('roomId').value = id || '';
+        document.getElementById('roomName').value = name || '';
+
+        const locInput = document.getElementById('roomLocation');
+        if (locInput) locInput.value = location || '';
+
+        document.getElementById('roomFloor').value = floor || '';
+        document.getElementById('roomCapacity').value = capacity || '';
+
+        const imgInput = document.getElementById('roomImage');
+        if (imgInput) imgInput.value = imageUrl || '';
+
+        document.querySelectorAll('input[name="amenities"]').forEach(cb => cb.checked = false);
+
+        if (amenitiesStr) {
+            const roomAmenities = amenitiesStr.split(',');
+            roomAmenities.forEach(amenity => {
+                // Βρίσκουμε το checkbox που το value του ταιριάζει ακριβώς με το όνομα του amenity
+                const checkbox = document.querySelector(`input[name="amenities"][value="${amenity.trim()}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
+        updateImagePreview(imageUrl || '');
+        document.getElementById('roomModal').classList.remove('hidden');
     }
 
     function closeModal() {
-        modal.classList.add('hidden');
+        const modal = document.getElementById('roomModal');
+        if (modal) modal.classList.add('hidden');
     }
 
     function openDeleteModal(roomId, roomName) {
-        roomToDeleteId = roomId;
-        document.getElementById('deleteRoomName').innerText = roomName;
+        window.roomToDeleteId = roomId;
+        const nameEl = document.getElementById('deleteRoomName');
+        if (nameEl) nameEl.innerText = roomName;
 
-        deleteModal.classList.remove('hidden');
-        setTimeout(() => {
-            deleteModal.classList.remove('opacity-0');
-            deleteModal.querySelector('div').classList.remove('scale-95');
-        }, 10);
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.classList.remove('hidden');
+            setTimeout(() => {
+                deleteModal.classList.remove('opacity-0');
+                deleteModal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+        }
     }
 
     function closeDeleteModal() {
-        deleteModal.classList.add('opacity-0');
-        deleteModal.querySelector('div').classList.add('scale-95');
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.classList.add('opacity-0');
+            deleteModal.querySelector('div').classList.add('scale-95');
 
-        setTimeout(() => {
-            deleteModal.classList.add('hidden');
-            roomToDeleteId = null;
-        }, 300);
+            setTimeout(() => {
+                deleteModal.classList.add('hidden');
+                window.roomToDeleteId = null;
+            }, 300);
+        }
     }
 
     function confirmDelete() {
-        if (roomToDeleteId) {
-            const deleteForm = document.getElementById('delete-form-' + roomToDeleteId);
+        if (window.roomToDeleteId) {
+            const deleteForm = document.getElementById('delete-form-' + window.roomToDeleteId);
             if (deleteForm) {
+                const deleteModal = document.getElementById('deleteModal');
                 const btn = deleteModal.querySelector('button.bg-red-600');
-                btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Deleting...`;
-                lucide.createIcons();
-
+                if (btn) {
+                    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Deleting...`;
+                    lucide.createIcons();
+                }
                 deleteForm.submit();
             }
         }
@@ -230,6 +371,27 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
+
+        const roomImageInput = document.getElementById('roomImage');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePlaceholder = document.getElementById('imagePlaceholder');
+
+        if (roomImageInput) {
+            ['input', 'change', 'keyup', 'paste'].forEach(eventType => {
+                roomImageInput.addEventListener(eventType, () => {
+                    setTimeout(() => {
+                        updateImagePreview(roomImageInput.value);
+                    }, 10);
+                });
+            });
+        }
+
+        if (imagePreview) {
+            imagePreview.onerror = function() {
+                imagePreview.classList.add('hidden');
+                if (imagePlaceholder) imagePlaceholder.classList.remove('hidden');
+            };
+        }
 
         const addBtn = document.getElementById('addRoomBtn');
         if (addBtn) {
@@ -242,10 +404,13 @@
             btn.addEventListener('click', () => {
                 const id = btn.dataset.id || '';
                 const name = btn.dataset.name || '';
+                const location = btn.dataset.location || '';
                 const floor = btn.dataset.floor || '';
                 const capacity = btn.dataset.capacity || '';
+                const imageUrl = btn.dataset.image || '';
+                const amenities = btn.dataset.amenities || '';
 
-                openEditModal(id, name, floor, capacity);
+                openEditModal(id, name, location, floor, capacity, imageUrl, amenities);
             });
         });
 

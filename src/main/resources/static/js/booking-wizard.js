@@ -23,7 +23,16 @@ const dbContacts = [
     { id: '6', name: 'Dr. Professor', email: 'prof@hua.gr', avatar: 'https://i.pravatar.cc/150?img=11' }
 ];
 
-const amenitiesList = ['Video Conference', 'Whiteboard', 'TV Display', 'Phone', 'Projector'];
+const amenitiesList = [
+    'Projector',
+    'Interactive Whiteboard',
+    'High-Speed WiFi',
+    'Power Outlets',
+    'Video Conferencing',
+    'Ethernet Ports',
+    'Soundproofing',
+    'Wheelchair Accessible'
+];
 
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
@@ -372,24 +381,62 @@ function renderRoomCards(rooms) {
         document.getElementById('btn-to-confirm').classList.add('hidden');
         return;
     }
+
     container.innerHTML = rooms.map(room => {
-        const missingWarning = room.missingAmenities && room.missingAmenities.length > 0
-            ? `<div class="mt-2 flex items-center gap-2 text-amber-600 text-xs font-bold bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
-                 <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
-                 Missing: ${room.missingAmenities.join(', ')}
+        const imageHtml = room.imageUrl && room.imageUrl.trim() !== ''
+            ? `<img src="${room.imageUrl}" alt="${room.name}" class="w-full h-full object-cover" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
+               <div class="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 hidden">
+                   <i data-lucide="image" class="w-8 h-8 text-slate-300 mb-1"></i>
+                   <span class="text-xs font-semibold text-slate-400">No Image</span>
                </div>`
-            : `<div class="mt-2 flex items-center gap-2 text-emerald-600 text-xs font-bold">
-                 <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
-                 All requirements met
+            : `<div class="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100">
+                   <i data-lucide="image" class="w-8 h-8 text-slate-300 mb-1"></i>
+                   <span class="text-xs font-semibold text-slate-400">No Image</span>
                </div>`;
 
+        const amenitiesHtml = state.preferences.requiredAmenities.map(amenity => {
+            const hasAmenity = room.amenities && room.amenities.includes(amenity);
+            return `
+                <span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-semibold border ${hasAmenity ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'}">
+                    <i data-lucide="${hasAmenity ? 'check' : 'x'}" class="w-3.5 h-3.5 ${hasAmenity ? 'text-emerald-600' : 'text-rose-500'}"></i>
+                    ${amenity}
+                </span>
+            `;
+        }).join('');
+
         return `
-        <div onclick="selectRoom(${room.id}, '${room.name}')" class="cursor-pointer bg-white border-2 border-slate-200 hover:border-blue-500 rounded-2xl p-5 mb-4">
-            <h3 class="text-lg font-bold">${room.name}</h3>
-            <p class="text-sm">Capacity: ${room.capacity} | Floor: ${room.floor}</p>
-            ${missingWarning}
-        </div>`;
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all mb-4">
+                <div class="w-full h-48 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative mb-4">
+                    ${imageHtml}
+                </div>
+
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-lg">${room.name}</h4>
+                        <p class="text-xs text-slate-500 font-medium">${room.location || '-'}</p>
+                    </div>
+                    <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">${room.floor || ''}</span>
+                </div>
+
+                <div class="flex items-center gap-2 text-slate-600 text-xs font-medium mb-4">
+                    <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
+                    <span>Capacity: <strong>${room.capacity}</strong> seats</span>
+                </div>
+
+                <div class="space-y-2 border-t border-slate-100 pt-3 mb-4">
+                    <p class="text-xs font-bold text-slate-500">Requested Amenities Status:</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${amenitiesHtml.length > 0 ? amenitiesHtml : '<span class="text-xs text-slate-400 italic">No specific amenities requested</span>'}
+                    </div>
+                </div>
+
+                <button type="button" onclick="selectRoom(${room.id}, '${room.name}')" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm">
+                    Select This Room
+                </button>
+            </div>
+        `;
     }).join('');
+
     lucide.createIcons();
 }
 

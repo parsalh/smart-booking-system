@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ public class Booking {
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "room_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Room room;
 
     @Column(name = "start_time", nullable = false)

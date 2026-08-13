@@ -73,15 +73,8 @@ public class EventMapper {
             final String finalBuilding = buildingName;
             final String finalFloor = floorNum;
 
-            Room room = roomRepository.findByNameIgnoreCase(searchName)
-                    .orElseGet(() -> {
-                        Room newRoom = roomMapper.mapLocationToEntity(searchName);
-                        if (finalBuilding != null) newRoom.setLocation(finalBuilding);
-
-                        if (finalFloor != null) newRoom.setFloor(finalFloor);
-
-                        return roomRepository.saveAndFlush(newRoom);
-                    });
+            Room room = roomRepository.findByNameIgnoreCase(searchName).orElse(null);
+            entity.setRoom(room);
 
             entity.setRoom(room);
         } else {
