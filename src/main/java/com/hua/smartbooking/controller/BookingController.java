@@ -150,7 +150,10 @@ public class BookingController {
                                 room.getFloor(), room.getImageUrl(), roomAmenities, missing
                         );
                     })
-                    .sorted(Comparator.comparingInt(r -> r.getMissingAmenities().size()))
+                    .sorted(
+                    Comparator.comparingInt((RoomSuggestionResult r) -> r.getMissingAmenities().size())
+                            .thenComparingInt(RoomSuggestionResult::getCapacity)
+            )
                     .toList();
 
             return ResponseEntity.ok(results);

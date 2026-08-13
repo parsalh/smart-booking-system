@@ -1,10 +1,13 @@
 package com.hua.smartbooking.controller;
 
 import com.google.api.services.calendar.model.Event;
+import com.hua.smartbooking.model.Room;
 import com.hua.smartbooking.model.User;
+import com.hua.smartbooking.repository.RoomRepository;
 import com.hua.smartbooking.repository.UserRepository;
 import com.hua.smartbooking.service.GoogleCalendarService;
 import com.hua.smartbooking.service.EventMappingService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -22,15 +25,18 @@ public class HomeController {
     private final UserRepository userRepository;
     private final GoogleCalendarService googleCalendarService;
     private final EventMappingService eventMappingService;
+    private final RoomRepository roomRepository;
 
     public HomeController(OAuth2AuthorizedClientService authorizedClientService,
                           UserRepository userRepository,
                           GoogleCalendarService googleCalendarService,
-                          EventMappingService eventMappingService) {
+                          EventMappingService eventMappingService,
+                          RoomRepository roomRepository) {
         this.authorizedClientService = authorizedClientService;
         this.userRepository = userRepository;
         this.googleCalendarService = googleCalendarService;
         this.eventMappingService = eventMappingService;
+        this.roomRepository = roomRepository;
     }
 
     @GetMapping("/")
@@ -111,6 +117,19 @@ public class HomeController {
         model.addAttribute("role", dbUser.getRole().name());
 
         return "book";
+    }
+
+    @GetMapping("/rooms")
+    public String browseRooms(Model model, @AuthenticationPrincipal OAuth2User principal) {
+        if (principal != null) {
+            model.addAttribute("name", principal.getAttribute("name"));
+            model.addAttribute("picture", principal.getAttribute("picture"));
+        }
+
+        List<Room> rooms = roomRepository.findAll();
+        model.addAttribute("rooms", rooms);
+
+        return "rooms";
     }
 
 }

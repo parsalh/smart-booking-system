@@ -202,6 +202,7 @@ async function handleFindBestTimes() {
     const opt = state.participants.filter(p => !p.required).map(p => p.email);
 
     state.preferences.durationMinutes = parseInt(document.getElementById('pref-duration').value);
+    state.preferences.minCapacity = parseInt(document.getElementById('pref-capacity').value) || 1;
 
     state.preferences.startDate = document.getElementById('pref-date-start').value;
     state.preferences.endDate = document.getElementById('pref-date-end').value;

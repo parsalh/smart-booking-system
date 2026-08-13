@@ -9,6 +9,7 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.UserCredentials;
+import com.hua.smartbooking.factory.GoogleCalendarClientFactory;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.mapper.EventMapper;
 import jakarta.transaction.Transactional;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.ZoneId;
 
@@ -39,42 +42,23 @@ public class GoogleCalendarService {
     private String clientSecret;
 
     private final EventMapper eventMapper;
-    private final ObjectMapper objectMapper;
+    private final GoogleCalendarClientFactory calendarClientFactory;
 
-    public GoogleCalendarService(EventMapper eventMapper) {
+    public GoogleCalendarService(EventMapper eventMapper,
+                                 GoogleCalendarClientFactory calendarClientFactory) {
         this.eventMapper = eventMapper;
-        this.objectMapper = new ObjectMapper();
+        this.calendarClientFactory = calendarClientFactory;
     }
 
-    public List<Event> getUpcomingEvents(String refreshToken) throws Exception {
-        UserCredentials credentials = UserCredentials.newBuilder()
-                .setClientId(clientId)
-                .setClientSecret(clientSecret)
-                .setRefreshToken(refreshToken)
-                .build();
+    public List<Event> getUpcomingEvents(String refreshToken) throws GeneralSecurityException, IOException {
+        Calendar calendar = calendarClientFactory.buildClient(refreshToken);
 
-        Calendar service = new Calendar.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                GsonFactory.getDefaultInstance(),
-                new HttpCredentialsAdapter(credentials))
-                .setApplicationName("SmartBooking")
-                .build();
-
-        java.time.ZonedDateTime twoWeeksAgo = java.time.ZonedDateTime.now().minusDays(14);
-        DateTime pastDate = new DateTime(twoWeeksAgo.toInstant().toEpochMilli());
-
-        Events events = service.events().list("primary")
-                .setMaxResults(70)
-                .setTimeMin(pastDate)
+        return calendar.events().list("primary")
+                .setTimeMin(new DateTime(System.currentTimeMillis()))
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
-                .execute();
-
-        // debug
-        List<Event> resultList = events.getItems() != null ? events.getItems() : new ArrayList<>();
-        System.out.println("Fetched " + resultList.size() + " events from Google.");
-
-        return events.getItems() != null ? events.getItems() : new ArrayList<>();
+                .execute()
+                .getItems();
     }
 
     @Transactional
@@ -123,101 +107,80 @@ public class GoogleCalendarService {
         }
         return new ObjectMapper().writeValueAsString(calendarEvents);
     }
-    public int getEventCount(String refreshToken) throws Exception {
-        List<Event> events = getUpcomingEvents(refreshToken);
-        return events != null ? events.size() : 0;
-    }
+//    public int getEventCount(String refreshToken) throws Exception {
+//        List<Event> events = getUpcomingEvents(refreshToken);
+//        return events != null ? events.size() : 0;
+//    }
 
-    /**
-     * Maps a Google Event to internal JPA Entity.
-     */
-    public com.hua.smartbooking.model.Event convertToEntity(Event googleEvent, User user) {
-        com.hua.smartbooking.model.Event myEvent = new com.hua.smartbooking.model.Event();
+//    /**
+//     * Maps a Google Event to internal JPA Entity.
+//     */
+//    public com.hua.smartbooking.model.Event convertToEntity(Event googleEvent, User user) {
+//        com.hua.smartbooking.model.Event myEvent = new com.hua.smartbooking.model.Event();
+//
+//        myEvent.setTitle(googleEvent.getSummary());
+//        myEvent.setUser(user);
+//
+//        if (googleEvent.getStart().getDateTime() != null) {
+//            String rfcDate = googleEvent.getStart().getDateTime().toStringRfc3339().substring(0, 19);
+//            myEvent.setStartTime(Instant.from(LocalDateTime.parse(rfcDate)));
+//        } else {
+//            myEvent.setStartTime(Instant.from(LocalDateTime.parse(googleEvent.getStart().getDate().toString() + "T00:00:00")));
+//        }
+//
+//        String summary = (googleEvent.getSummary() != null) ? googleEvent.getSummary().toLowerCase() : "";
+//
+//        if (summary.contains("lecture")) {
+//            myEvent.setType(com.hua.smartbooking.model.Event.EventType.LECTURE);
+//        } else if (summary.contains("lab")) {
+//            myEvent.setType(com.hua.smartbooking.model.Event.EventType.LAB);
+//        } else if (summary.contains("office")) {
+//            myEvent.setType(com.hua.smartbooking.model.Event.EventType.OFFICE_HOURS);
+//        } else if (summary.contains("meeting")) {
+//            myEvent.setType(com.hua.smartbooking.model.Event.EventType.MEETING);
+//        } else {
+//            myEvent.setType(com.hua.smartbooking.model.Event.EventType.OTHER);
+//        }
+//
+//        return myEvent;
+//    }
 
-        myEvent.setTitle(googleEvent.getSummary());
-        myEvent.setUser(user);
-
-        if (googleEvent.getStart().getDateTime() != null) {
-            String rfcDate = googleEvent.getStart().getDateTime().toStringRfc3339().substring(0, 19);
-            myEvent.setStartTime(Instant.from(LocalDateTime.parse(rfcDate)));
-        } else {
-            myEvent.setStartTime(Instant.from(LocalDateTime.parse(googleEvent.getStart().getDate().toString() + "T00:00:00")));
-        }
-
-        String summary = (googleEvent.getSummary() != null) ? googleEvent.getSummary().toLowerCase() : "";
-
-        if (summary.contains("lecture")) {
-            myEvent.setType(com.hua.smartbooking.model.Event.EventType.LECTURE);
-        } else if (summary.contains("lab")) {
-            myEvent.setType(com.hua.smartbooking.model.Event.EventType.LAB);
-        } else if (summary.contains("office")) {
-            myEvent.setType(com.hua.smartbooking.model.Event.EventType.OFFICE_HOURS);
-        } else if (summary.contains("meeting")) {
-            myEvent.setType(com.hua.smartbooking.model.Event.EventType.MEETING);
-        } else {
-            myEvent.setType(com.hua.smartbooking.model.Event.EventType.OTHER);
-        }
-
-        return myEvent;
-    }
-
-    public long getMeetingCount(String refreshToken, User user) throws Exception {
-        List<Event> googleEvents = getUpcomingEvents(refreshToken);
-        if (googleEvents == null) return 0;
-
-        return googleEvents.stream()
-                .map(gEvent -> convertToEntity(gEvent, user))
-                .filter(myEvent -> myEvent.getType() == com.hua.smartbooking.model.Event.EventType.MEETING)
-                .count();
-    }
+//    public long getMeetingCount(String refreshToken, User user) throws Exception {
+//        List<Event> googleEvents = getUpcomingEvents(refreshToken);
+//        if (googleEvents == null) return 0;
+//
+//        return googleEvents.stream()
+//                .map(gEvent -> convertToEntity(gEvent, user))
+//                .filter(myEvent -> myEvent.getType() == com.hua.smartbooking.model.Event.EventType.MEETING)
+//                .count();
+//    }
 
     /**
      * Creates a new meeting directly on the user's Google Calendar and sends invites.
      */
-    public Event createMeetingEvent(String refreshToken, String title, Instant start,
-                                    Instant end, String location, List<String> participantEmails) throws Exception {
-
-        UserCredentials credentials = UserCredentials.newBuilder()
-                .setClientId(clientId)
-                .setClientSecret(clientSecret)
-                .setRefreshToken(refreshToken)
-                .build();
-
-        Calendar service = new Calendar.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                GsonFactory.getDefaultInstance(),
-                new HttpCredentialsAdapter(credentials))
-                .setApplicationName("SmartBooking")
-                .build();
+    public Event createMeetingEvent(String refreshToken, String summary, Instant start, Instant end, String location, List<String> attendeeEmails) throws GeneralSecurityException, IOException {
 
         Event event = new Event()
-                .setSummary(title)
+                .setSummary(summary)
                 .setLocation(location)
                 .setDescription("Automatically scheduled via SmartBooking App");
 
-        com.google.api.client.util.DateTime startDateTime =
-                new com.google.api.client.util.DateTime(start.toEpochMilli());
-        EventDateTime startEventDateTime = new EventDateTime().setDateTime(startDateTime);
-        event.setStart(startEventDateTime);
+        EventDateTime startDateTime = new EventDateTime().setDateTime(new DateTime(start.toEpochMilli()));
+        event.setStart(startDateTime);
 
-        com.google.api.client.util.DateTime endDateTime =
-                new com.google.api.client.util.DateTime(end.toEpochMilli());
-        EventDateTime endEventDateTime = new EventDateTime().setDateTime(endDateTime);
-        event.setEnd(endEventDateTime);
+        EventDateTime endDateTime = new EventDateTime().setDateTime(new DateTime(end.toEpochMilli()));
+        event.setEnd(endDateTime);
 
-        if (participantEmails != null && !participantEmails.isEmpty()) {
+        if (attendeeEmails != null && !attendeeEmails.isEmpty()) {
             List<EventAttendee> attendees = new ArrayList<>();
-            for (String email : participantEmails) {
+            for (String email : attendeeEmails) {
                 attendees.add(new EventAttendee().setEmail(email));
             }
             event.setAttendees(attendees);
         }
 
-        Event createdEvent = service.events().insert("primary", event)
-                .setSendUpdates("all")
-                .execute();
-
-        return createdEvent;
+        Calendar calendar = calendarClientFactory.buildClient(refreshToken);
+        return calendar.events().insert("primary", event).execute();
     }
 
 

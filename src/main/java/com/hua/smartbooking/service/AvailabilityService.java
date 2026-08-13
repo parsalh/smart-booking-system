@@ -8,11 +8,14 @@ import com.google.api.services.calendar.model.*;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.UserCredentials;
 import com.hua.smartbooking.exception.UserNotRegisteredException;
+import com.hua.smartbooking.factory.GoogleCalendarClientFactory;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +24,7 @@ import java.util.Map;
 
 /**
  * Service dedicated to interfacing with the Google Free/Busy API.
+ * @author Stavroula Parsali
  */
 @Service
 public class AvailabilityService {
@@ -32,15 +36,18 @@ public class AvailabilityService {
     private String clientSecret;
 
     private final UserRepository userRepository;
+    private final GoogleCalendarClientFactory calendarClientFactory;
 
-    public AvailabilityService(UserRepository userRepository) {
+    public AvailabilityService(UserRepository userRepository,
+                               GoogleCalendarClientFactory calendarClientFactory) {
         this.userRepository = userRepository;
+        this.calendarClientFactory = calendarClientFactory;
     }
 
     public Map<String, List<TimePeriod>> fetchGroupAvailability(List<String> participantEmails,
                                                                 ZonedDateTime searchStart,
                                                                 ZonedDateTime searchEnd,
-                                                                User organizer) throws Exception {
+                                                                User organizer) throws GeneralSecurityException, IOException {
 
         Map<String, List<TimePeriod>> userBusyBlocks = new HashMap<>();
 
@@ -53,18 +60,7 @@ public class AvailabilityService {
                         "User is registered but has no Google Calendar access token: " + email, email);
             }
 
-            UserCredentials credentials = UserCredentials.newBuilder()
-                    .setClientId(clientId)
-                    .setClientSecret(clientSecret)
-                    .setRefreshToken(participant.getRefreshToken())
-                    .build();
-
-            Calendar service = new Calendar.Builder(
-                    GoogleNetHttpTransport.newTrustedTransport(),
-                    GsonFactory.getDefaultInstance(),
-                    new HttpCredentialsAdapter(credentials))
-                    .setApplicationName("SmartBooking")
-                    .build();
+            Calendar service = calendarClientFactory.buildClient(participant.getRefreshToken());
 
             FreeBusyRequest request = new FreeBusyRequest();
             request.setTimeMin(new DateTime(searchStart.toInstant().toEpochMilli()));
