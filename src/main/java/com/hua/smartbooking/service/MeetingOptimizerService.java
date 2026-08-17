@@ -6,10 +6,8 @@ import com.hua.smartbooking.model.Room;
 import com.hua.smartbooking.repository.RoomRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
-import java.time.Duration;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,6 +41,11 @@ public class MeetingOptimizerService {
                 currentSlotStart.plusMinutes(meetingDurationMinutes).isEqual(searchEnd)) {
 
             ZonedDateTime currentSlotEnd = currentSlotStart.plusMinutes(meetingDurationMinutes);
+
+            if (currentSlotStart.toInstant().isBefore(Instant.now().plus(30, ChronoUnit.MINUTES))) { //minimum notice period
+                currentSlotStart = currentSlotStart.plusMinutes(30);
+                continue;
+            }
 
             if (isOutsideBusinessHours(currentSlotStart, currentSlotEnd)) {
                 currentSlotStart = currentSlotStart.plusMinutes(30);

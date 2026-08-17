@@ -10,6 +10,8 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "bookings", indexes = {
@@ -44,6 +46,11 @@ public class Booking {
 
     @Column(name = "google_event_id")
     private String googleEventId;
+
+    @ElementCollection
+    @CollectionTable(name = "booking_participants", joinColumns = @JoinColumn(name = "booking_id"))
+    @Column(name = "participant_email")
+    private List<String> participants = new ArrayList<>();
 
     public enum BookingStatus {
         PENDING, APPROVED, REJECTED, CANCELLED

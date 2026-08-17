@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -38,6 +39,14 @@ public class EventMapper {
 
         entity.setStartTime(convertGoogleTimeToInstant(gEvent.getStart()));
         entity.setEndTime(convertGoogleTimeToInstant(gEvent.getEnd()));
+
+        if (gEvent.getAttendees() != null) {
+            List<String> attendeeEmails = gEvent.getAttendees().stream()
+                    .map(com.google.api.services.calendar.model.EventAttendee::getEmail)
+                    .filter(email -> email != null && !email.isEmpty())
+                    .toList();
+            entity.setParticipants(attendeeEmails);
+        }
 
         String rawGoogleLocation = gEvent.getLocation();
 
@@ -74,8 +83,6 @@ public class EventMapper {
             final String finalFloor = floorNum;
 
             Room room = roomRepository.findByNameIgnoreCase(searchName).orElse(null);
-            entity.setRoom(room);
-
             entity.setRoom(room);
         } else {
             entity.setRoom(null);

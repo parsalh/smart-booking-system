@@ -10,6 +10,8 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "events")
@@ -39,6 +41,11 @@ public class Event {
     @JoinColumn(name = "room_id")
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private Room room;
+
+    @ElementCollection
+    @CollectionTable(name = "event_participants", joinColumns = @JoinColumn(name = "event_id"))
+    @Column(name = "participant_email")
+    private List<String> participants = new ArrayList<>();
 
     public enum EventType {
         LECTURE,

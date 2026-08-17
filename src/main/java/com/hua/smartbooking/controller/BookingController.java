@@ -1,10 +1,9 @@
 package com.hua.smartbooking.controller;
 
 import com.google.api.services.calendar.model.TimePeriod;
-import com.hua.smartbooking.dto.BookingRequest;
-import com.hua.smartbooking.dto.FinalBookingRequest;
-import com.hua.smartbooking.dto.TimeSlotScore;
+import com.hua.smartbooking.dto.*;
 import com.hua.smartbooking.exception.UserNotRegisteredException;
+import com.hua.smartbooking.mapper.RoomMapper;
 import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.Event;
 import com.hua.smartbooking.model.Room;
@@ -35,6 +34,7 @@ public class BookingController {
     private final RoomRepository roomRepository;
     private final GoogleCalendarService googleCalendarService;
     private final EventMappingService eventMappingService;
+    private final RoomMapper roomMapper;
 
     public BookingController(AvailabilityService availabilityService,
                              MeetingOptimizerService optimizerService,
@@ -42,7 +42,8 @@ public class BookingController {
                              UserRepository userRepository,
                              RoomRepository roomRepository,
                              GoogleCalendarService googleCalendarService,
-                             EventMappingService eventMappingService) {
+                             EventMappingService eventMappingService,
+                             RoomMapper roomMapper) {
         this.availabilityService = availabilityService;
         this.optimizerService = optimizerService;
         this.bookingService = bookingService;
@@ -50,6 +51,7 @@ public class BookingController {
         this.roomRepository = roomRepository;
         this.googleCalendarService = googleCalendarService;
         this.eventMappingService = eventMappingService;
+        this.roomMapper = roomMapper;
     }
 
     @PostMapping("/suggest-times")
@@ -103,26 +105,6 @@ public class BookingController {
         }
     }
 
-    @Data
-    public static class RoomSuggestionRequest {
-        private String startTime;
-        private String endTime;
-        private Integer minCapacity;
-        private List<String> requiredAmenities;
-    }
-
-    @Data
-    @AllArgsConstructor
-    public static class RoomSuggestionResult {
-        private Long id;
-        private String name;
-        private Integer capacity;
-        private String floor;
-        private String imageUrl;
-        private List<String> amenities;
-        private List<String> missingAmenities;
-    }
-
     @PostMapping("/suggest-rooms")
     public ResponseEntity<?> suggestRooms(@RequestBody RoomSuggestionRequest request) {
         try {
@@ -145,15 +127,23 @@ public class BookingController {
                         List<String> missing = required.stream()
                                 .filter(a -> !roomAmenities.contains(a))
                                 .toList();
+
                         return new RoomSuggestionResult(
-                                room.getId(), room.getName(), room.getCapacity(),
-                                room.getFloor(), room.getImageUrl(), roomAmenities, missing
+                                room.getId(),
+                                room.getName(),
+                                room.getBuilding(),
+                                room.getLocation(),
+                                room.getCapacity(),
+                                room.getFloor(),
+                                room.getImageUrl(),
+                                roomAmenities,
+                                missing
                         );
                     })
                     .sorted(
-                    Comparator.comparingInt((RoomSuggestionResult r) -> r.getMissingAmenities().size())
-                            .thenComparingInt(RoomSuggestionResult::getCapacity)
-            )
+                            Comparator.comparingInt((RoomSuggestionResult r) -> r.getMissingAmenities().size())
+                                    .thenComparingInt(RoomSuggestionResult::getCapacity)
+                    )
                     .toList();
 
             return ResponseEntity.ok(results);

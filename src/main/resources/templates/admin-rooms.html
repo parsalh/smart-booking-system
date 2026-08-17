@@ -6,8 +6,38 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body class="bg-slate-50 min-h-screen p-8">
+<body class="bg-slate-50 min-h-screen">
 
+<nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
+    <div class="flex items-center gap-2">
+        <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" />
+            <span class="text-lg font-bold tracking-tight text-slate-900">SmartBooking</span>
+        </a>
+    </div>
+    <div class="flex items-center gap-4">
+        <a href="/"
+           onclick="this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-4 h-4 text-blue-600 animate-spin\'></i> Loading...'; lucide.createIcons(); this.classList.add('opacity-70', 'pointer-events-none');"
+           class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
+            <i data-lucide="arrow-left" class="w-4 h-4 text-blue-600"></i> Back to Dashboard
+        </a>
+
+        <div class="text-right hidden md:block">
+            <p class="text-xs font-bold text-slate-900" th:text="${name}">User</p>
+            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold"
+               th:text="${role == 'ADMIN' ? 'Administrator' : email}">user@email.com</p>
+        </div>
+
+        <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
+             alt="Profile"
+             class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover">
+
+        <a href="/logout" class="text-slate-400 hover:text-red-600 transition-colors p-2" title="Logout">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+        </a>
+    </div>
+</nav>
+<main class="p-10">
 <div class="max-w-6xl mx-auto">
     <div class="flex justify-between items-center mb-8">
         <div>
@@ -80,11 +110,12 @@
                                 title="Edit Room"
                                 th:data-id="${room.id}"
                                 th:data-name="${room.name}"
-                                th:data-location="${room.location}"
+                                th:data-building="${room.building}" th:data-location="${room.location}"
                                 th:data-floor="${room.floor}"
                                 th:data-capacity="${room.capacity}"
                                 th:data-image="${room.imageUrl}"
-                                th:data-amenities="${#strings.listJoin(room.amenities, ',')}"> <i data-lucide="edit-3" class="w-5 h-5"></i>
+                                th:data-amenities="${#strings.listJoin(room.amenities, ',')}">
+                            <i data-lucide="edit-3" class="w-5 h-5"></i>
                         </button>
 
                         <form th:action="@{/admin/rooms/delete}" method="post" th:id="'delete-form-' + ${room.id}" class="inline">
@@ -129,8 +160,12 @@
                             <input type="text" id="roomName" name="name" required placeholder="e.g. Conference Room A" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
                         </div>
                         <div>
-                            <label class="block text-sm font-bold mb-2 text-slate-700">Location / Building</label>
-                            <input type="text" id="roomLocation" name="location" placeholder="e.g. Main Building - Wing B" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
+                            <label class="block text-sm font-bold mb-2 text-slate-700">Building Name</label>
+                            <input type="text" id="roomBuilding" name="building" placeholder="e.g. DIT Building" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-700">Address</label>
+                            <input type="text" id="roomLocation" name="location" placeholder="e.g. Omirou 9, Tavros" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
                         </div>
                     </div>
 
@@ -147,7 +182,7 @@
 
                     <div>
                         <label class="block text-sm font-bold mb-2 text-slate-700">Photo URL</label>
-                        <input type="text" id="roomImage" name="imageUrl" placeholder="https://images.unsplash.com/..." class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
+                        <input type="text" id="roomImage" name="imageUrl" placeholder="https://images.com/..." class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
                     </div>
 
                     <div>
@@ -243,7 +278,7 @@
             </div>
         </div>
     </div>
-</div>
+</main>
 
 <script>
     function updateImagePreview(url) {
@@ -266,19 +301,19 @@
     function openAddModal() {
         const modalTitle = document.getElementById('modalTitle');
         const form = document.getElementById('roomForm');
-        const roomId = document.getElementById('roomId');
-        const roomLocation = document.getElementById('roomLocation');
-        const roomImage = document.getElementById('roomImage');
-        const modal = document.getElementById('roomModal');
 
         if (modalTitle) modalTitle.innerText = "Create New Room";
         if (form) {
             form.action = "/admin/rooms/add";
             form.reset();
         }
+
         document.getElementById('roomId').value = "";
-        const locationInput = document.getElementById('roomLocation');
-        if (locationInput) locationInput.value = "";
+        document.getElementById('roomName').value = "";
+        document.getElementById('roomBuilding').value = "";
+        document.getElementById('roomLocation').value = "";
+        document.getElementById('roomFloor').value = "";
+        document.getElementById('roomCapacity').value = "";
         document.getElementById('roomImage').value = "";
 
         document.querySelectorAll('input[name="amenities"]').forEach(cb => cb.checked = false);
@@ -287,7 +322,7 @@
         document.getElementById('roomModal').classList.remove('hidden');
     }
 
-    function openEditModal(id, name, location, floor, capacity, imageUrl, amenitiesStr) {
+    function openEditModal(id, name, building, location, floor, capacity, imageUrl, amenitiesStr) {
         const modalTitle = document.getElementById('modalTitle');
         const form = document.getElementById('roomForm');
 
@@ -296,22 +331,16 @@
 
         document.getElementById('roomId').value = id || '';
         document.getElementById('roomName').value = name || '';
-
-        const locInput = document.getElementById('roomLocation');
-        if (locInput) locInput.value = location || '';
-
+        document.getElementById('roomBuilding').value = building || '';
+        document.getElementById('roomLocation').value = location || '';
         document.getElementById('roomFloor').value = floor || '';
         document.getElementById('roomCapacity').value = capacity || '';
-
-        const imgInput = document.getElementById('roomImage');
-        if (imgInput) imgInput.value = imageUrl || '';
+        document.getElementById('roomImage').value = imageUrl || '';
 
         document.querySelectorAll('input[name="amenities"]').forEach(cb => cb.checked = false);
-
         if (amenitiesStr) {
             const roomAmenities = amenitiesStr.split(',');
             roomAmenities.forEach(amenity => {
-                // Βρίσκουμε το checkbox που το value του ταιριάζει ακριβώς με το όνομα του amenity
                 const checkbox = document.querySelector(`input[name="amenities"][value="${amenity.trim()}"]`);
                 if (checkbox) checkbox.checked = true;
             });
@@ -404,13 +433,14 @@
             btn.addEventListener('click', () => {
                 const id = btn.dataset.id || '';
                 const name = btn.dataset.name || '';
+                const building = btn.dataset.building || '';
                 const location = btn.dataset.location || '';
                 const floor = btn.dataset.floor || '';
                 const capacity = btn.dataset.capacity || '';
                 const imageUrl = btn.dataset.image || '';
                 const amenities = btn.dataset.amenities || '';
 
-                openEditModal(id, name, location, floor, capacity, imageUrl, amenities);
+                openEditModal(id, name, building, location, floor, capacity, imageUrl, amenities);
             });
         });
 

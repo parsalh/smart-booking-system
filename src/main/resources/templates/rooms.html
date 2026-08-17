@@ -3,25 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browse Rooms - SmartBooking</title>
+    <title>SmartBooking - Browse Rooms</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body class="min-h-screen font-sans text-slate-900 bg-slate-50 selection:bg-blue-100">
 
-<nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="min-h-screen font-sans text-gray-900 selection:bg-blue-100">
+
+<nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
     <div class="flex items-center gap-2">
         <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">SB</div>
-            <span class="text-lg font-bold tracking-tight text-slate-800">SmartBooking</span>
+            <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" />
+            <span class="text-lg font-bold tracking-tight text-gray-900">SmartBooking</span>
         </a>
     </div>
     <div class="flex items-center gap-4">
-        <div class="text-right hidden md:block" th:if="${name != null}">
-            <p class="text-xs font-bold text-slate-900" th:text="${name}">User</p>
-            <p class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Standard User</p>
+        <a th:if="${role == 'ADMIN'}" href="/admin/rooms" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
+            <i data-lucide="shield" class="w-4 h-4 text-purple-600"></i> Admin Panel
+        </a>
+        <div class="text-right hidden md:block">
+            <p class="text-xs font-bold text-gray-900" th:text="${name}">User</p>
+            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold"
+               th:text="${role == 'ADMIN' ? 'Administrator' : email}">user@email.com</p>
         </div>
-        <img th:if="${picture != null}" th:src="${picture}" alt="Profile" class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover">
+        <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
+             alt="Profile"
+             class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover">
+        <a href="/logout" class="text-gray-400 hover:text-red-600 transition-colors p-2" title="Logout">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+        </a>
     </div>
 </nav>
 
@@ -29,19 +43,29 @@
 
     <div class="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-            <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Campus Meeting Rooms</h1>
-            <p class="text-slate-500 text-sm max-w-2xl">Browse our available meeting spaces and their amenities. Ready to meet? Head over to the dashboard to schedule your next session.</p>
+            <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-2">Campus Meeting Rooms</h1>
+            <p class="text-gray-600 text-sm max-w-2xl font-medium">Browse our available meeting spaces and their amenities. Click on any room card to view detailed specifications and its campus map location.</p>
         </div>
-        <a href="/" class="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold rounded-xl hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm flex items-center gap-2 text-sm">
+        <a href="/"
+           onclick="this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-4 h-4 animate-spin\'></i> Loading...'; lucide.createIcons(); this.classList.add('opacity-70', 'pointer-events-none');"
+           class="px-6 py-2.5 bg-white/90 backdrop-blur-md border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-white hover:text-blue-600 transition-all shadow-sm flex items-center gap-2 text-sm">
             <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
         </a>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-        <div th:each="room : ${rooms}" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col">
+        <div th:each="room : ${rooms}"
+             class="room-card bg-white/90 backdrop-blur-md rounded-3xl p-6 border border-gray-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col cursor-pointer"
+             th:data-name="${room.name}"
+             th:data-building="${room.building}"
+             th:data-location="${room.location}"
+             th:data-floor="${room.floor}"
+             th:data-capacity="${room.capacity}"
+             th:data-image="${room.imageUrl}"
+             th:data-amenities="${#strings.listJoin(room.amenities, ',')}">
 
-            <div class="w-full h-52 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 relative mb-5">
+            <div class="w-full h-52 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 relative mb-5">
                 <img th:if="${room.imageUrl != null and !#strings.isEmpty(room.imageUrl)}"
                      th:src="${room.imageUrl}"
                      alt="Room Image"
@@ -49,36 +73,40 @@
                      onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
 
                 <div th:classappend="${room.imageUrl != null and !#strings.isEmpty(room.imageUrl)} ? 'hidden' : ''"
-                     class="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
-                    <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
-                    <span class="text-xs font-semibold text-slate-400">No Image Available</span>
+                     class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                    <i data-lucide="image" class="w-10 h-10 text-gray-300 mb-2"></i>
+                    <span class="text-xs font-semibold text-gray-400">No Image Available</span>
+                </div>
+
+                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-gray-700 shadow-sm flex items-center gap-1 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> View Details
                 </div>
             </div>
 
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <h4 class="font-bold text-slate-900 text-xl" th:text="${room.name}">Conference Room A</h4>
-                    <p class="text-xs text-slate-500 font-medium mt-1 flex items-center gap-1">
-                        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                    <h4 class="font-bold text-gray-900 text-xl group-hover:text-blue-600 transition-colors" th:text="${room.name}">Conference Room A</h4>
+                    <p class="text-xs text-gray-500 font-medium mt-1 flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-gray-400"></i>
                         <span th:text="${room.location != null ? room.location : '-'}">Main Building</span>
                     </p>
                 </div>
                 <span class="text-xs font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-100" th:text="${room.floor}">1st Floor</span>
             </div>
 
-            <div class="flex items-center gap-2 text-slate-700 text-sm font-semibold mb-6 bg-slate-50 w-fit px-3 py-1.5 rounded-lg">
+            <div class="flex items-center gap-2 text-gray-700 text-sm font-semibold mb-6 bg-gray-50/80 w-fit px-3 py-1.5 rounded-lg border border-gray-100">
                 <i data-lucide="users" class="w-4 h-4 text-blue-500"></i>
                 <span><span th:text="${room.capacity}">12</span> Seats</span>
             </div>
 
-            <div class="mt-auto pt-4 border-t border-slate-100">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Available Amenities</p>
+            <div class="mt-auto pt-4 border-t border-gray-100">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Available Amenities</p>
                 <div class="flex flex-wrap gap-2">
                     <span th:each="amenity : ${room.amenities}"
-                          class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200/60">
+                          class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200/60">
                         <span th:text="${amenity}">Projector</span>
                     </span>
-                    <span th:if="${#lists.isEmpty(room.amenities)}" class="text-xs text-slate-400 italic">
+                    <span th:if="${#lists.isEmpty(room.amenities)}" class="text-xs text-gray-400 italic">
                         No special amenities listed.
                     </span>
                 </div>
@@ -87,18 +115,211 @@
 
     </div>
 
-    <div th:if="${#lists.isEmpty(rooms)}" class="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm">
-        <div class="w-20 h-20 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+    <div th:if="${#lists.isEmpty(rooms)}" class="text-center py-20 bg-white/90 backdrop-blur-md rounded-3xl border border-gray-200 shadow-sm">
+        <div class="w-20 h-20 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
             <i data-lucide="door-closed" class="w-10 h-10"></i>
         </div>
-        <h3 class="text-xl font-bold text-slate-900 mb-2">No Rooms Found</h3>
-        <p class="text-slate-500 text-sm">There are currently no meeting rooms configured in the system.</p>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">No Rooms Found</h3>
+        <p class="text-gray-500 text-sm">There are currently no meeting rooms configured in the system.</p>
     </div>
 
 </main>
 
+<div id="roomModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-3xl shadow-2xl border border-gray-200 max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-200">
+
+        <button onclick="closeModal()" class="absolute top-6 right-6 p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+            <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+
+        <div class="mb-6 pb-4 border-b border-gray-100">
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+                <span id="modalBuildingBadge" class="text-xs font-bold text-purple-700 bg-purple-50 border border-purple-100 px-3 py-1 rounded-full uppercase tracking-wider">Building</span>
+                <span id="modalFloorBadge" class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full uppercase tracking-wider">Floor</span>
+            </div>
+            <h3 id="modalRoomName" class="text-2xl font-black text-gray-900">Room Name</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <div class="space-y-4">
+                <div class="w-full h-48 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 relative">
+                    <img id="modalImage" src="" alt="Room" class="w-full h-full object-cover">
+                    <div id="modalImagePlaceholder" class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50 hidden">
+                        <i data-lucide="image" class="w-8 h-8 text-gray-300 mb-1"></i>
+                        <span class="text-xs font-semibold text-gray-400">No Image Available</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2.5">
+                    <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100 text-center">
+                        <i data-lucide="users" class="w-5 h-5 text-blue-500 mx-auto mb-1"></i>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Capacity</p>
+                        <p id="modalCapacity" class="text-xs font-bold text-gray-900 mt-0.5">12 Seats</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100 text-center">
+                        <i data-lucide="layers" class="w-5 h-5 text-indigo-500 mx-auto mb-1"></i>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Floor</p>
+                        <p id="modalFloorSpec" class="text-xs font-bold text-gray-900 mt-0.5">1st Floor</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100 text-center">
+                        <i data-lucide="building-2" class="w-5 h-5 text-purple-500 mx-auto mb-1"></i>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Building</p>
+                        <p id="modalBuildingSpec" class="text-xs font-bold text-gray-900 mt-0.5 truncate">Main</p>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Amenities</p>
+                    <div id="modalAmenitiesList" class="flex flex-wrap gap-2">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <i data-lucide="map" class="w-3.5 h-3.5 text-blue-500"></i> Campus Location Map
+                </p>
+                <div id="modalMap" class="w-full h-64 md:h-full min-h-[220px] rounded-2xl border border-gray-200 overflow-hidden shadow-inner z-10"></div>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-gray-100 flex justify-end">
+            <button onclick="closeModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all text-sm">
+                Close
+            </button>
+        </div>
+
+    </div>
+</div>
+
 <script>
-    lucide.createIcons();
+    let map = null;
+    let marker = null;
+
+    const DEFAULT_LAT = 37.9602;
+    const DEFAULT_LNG = 23.7088;
+
+    function initMap() {
+        if (!map) {
+            map = L.map('modalMap').setView([DEFAULT_LAT, DEFAULT_LNG], 16);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            marker = L.marker([DEFAULT_LAT, DEFAULT_LNG]).addTo(map);
+        }
+    }
+
+    async function geocodeAddress(address) {
+        if (!address || address.trim() === '') return null;
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+            const data = await response.json();
+            if (data && data.length > 0) {
+                return {
+                    lat: parseFloat(data[0].lat),
+                    lng: parseFloat(data[0].lon)
+                };
+            }
+        } catch (error) {
+            console.error("Geocoding failed:", error);
+        }
+        return null;
+    }
+
+    async function openModal(name, building, address, floor, capacity, imageUrl, amenitiesStr) {
+        const buildingName = building && building.trim() !== '' ? building.trim() : 'Main Campus';
+        const addressText = address && address.trim() !== '' ? address.trim() : 'El. Venizelou 70, Kallithea';
+        const floorName = floor && floor.trim() !== '' ? floor.trim() : 'N/A';
+
+        document.getElementById('modalRoomName').innerText = name || 'Room Details';
+        document.getElementById('modalBuildingBadge').innerText = buildingName;
+        document.getElementById('modalFloorBadge').innerText = floorName;
+
+        document.getElementById('modalCapacity').innerText = (capacity || '0') + ' Seats';
+        document.getElementById('modalFloorSpec').innerText = floorName;
+        document.getElementById('modalBuildingSpec').innerText = buildingName;
+
+        const modalImg = document.getElementById('modalImage');
+        const modalPlaceholder = document.getElementById('modalImagePlaceholder');
+
+        if (imageUrl && imageUrl.trim() !== '') {
+            modalImg.src = imageUrl.trim();
+            modalImg.classList.remove('hidden');
+            modalPlaceholder.classList.add('hidden');
+        } else {
+            modalImg.src = '';
+            modalImg.classList.add('hidden');
+            modalPlaceholder.classList.remove('hidden');
+        }
+
+        const amenitiesContainer = document.getElementById('modalAmenitiesList');
+        amenitiesContainer.innerHTML = '';
+
+        if (amenitiesStr && amenitiesStr.trim() !== '') {
+            const amenities = amenitiesStr.split(',');
+            amenities.forEach(amenity => {
+                const badge = document.createElement('span');
+                badge.className = 'px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200/80 capitalize flex items-center gap-1';
+                badge.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> ${amenity.trim()}`;
+                amenitiesContainer.appendChild(badge);
+            });
+        } else {
+            amenitiesContainer.innerHTML = '<span class="text-xs text-gray-400 italic">No special amenities listed</span>';
+        }
+
+        document.getElementById('roomModal').classList.remove('hidden');
+        lucide.createIcons();
+
+        setTimeout(async () => {
+            initMap();
+            map.invalidateSize();
+
+            const coords = await geocodeAddress(addressText);
+            const lat = coords ? coords.lat : DEFAULT_LAT;
+            const lng = coords ? coords.lng : DEFAULT_LNG;
+
+            map.setView([lat, lng], 17);
+            marker.setLatLng([lat, lng]);
+            marker.bindPopup(`<b>${name}</b><br>${buildingName}<br><span class="text-xs text-gray-500">${addressText}</span>`).openPopup();
+        }, 150);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+
+        document.querySelectorAll('.room-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const name = card.dataset.name || '';
+                const building = card.dataset.building || '';
+                const location = card.dataset.location || '';
+                const floor = card.dataset.floor || '';
+                const capacity = card.dataset.capacity || '';
+                const imageUrl = card.dataset.image || '';
+                const amenities = card.dataset.amenities || '';
+
+                openModal(name, building, location, floor, capacity, imageUrl, amenities);
+            });
+        });
+
+        document.getElementById('roomModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('roomModal')) {
+                closeModal();
+            }
+        });
+    });
+
+    function closeModal() {
+        const modal = document.getElementById('roomModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
 </script>
 </body>
 </html>

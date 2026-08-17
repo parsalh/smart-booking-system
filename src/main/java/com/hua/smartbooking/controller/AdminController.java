@@ -2,8 +2,12 @@ package com.hua.smartbooking.controller;
 
 import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.Room;
+import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.BookingRepository;
 import com.hua.smartbooking.repository.RoomRepository;
+import com.hua.smartbooking.repository.UserRepository;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -17,16 +21,29 @@ import java.util.Optional;
 public class AdminController {
 
     private final RoomRepository roomRepository;
-    private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
 
-    public AdminController(RoomRepository roomRepository, BookingRepository bookingRepository) {
+    public AdminController(RoomRepository roomRepository, UserRepository userRepository) {
         this.roomRepository = roomRepository;
-        this.bookingRepository = bookingRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/rooms")
-    public String listRooms(Model model) {
+    public String listRooms(Model model, @AuthenticationPrincipal OAuth2User principal) {
         model.addAttribute("rooms", roomRepository.findAll());
+
+        if (principal != null) {
+            String email = principal.getAttribute("email");
+            User user = userRepository.findByEmail(email).orElse(null);
+
+            if (user != null) {
+                model.addAttribute("name", user.getFullname());
+                model.addAttribute("avatar", user.getAvatarUrl());
+                model.addAttribute("role", user.getRole().name());
+                model.addAttribute("email", user.getEmail());
+            }
+        }
+
         return "admin-rooms";
     }
 
@@ -38,6 +55,7 @@ public class AdminController {
             Room existingRoom = existingRoomOpt.get();
 
             existingRoom.setName(updatedRoom.getName());
+            existingRoom.setBuilding(updatedRoom.getBuilding());
             existingRoom.setLocation(updatedRoom.getLocation());
             existingRoom.setFloor(updatedRoom.getFloor());
             existingRoom.setCapacity(updatedRoom.getCapacity());

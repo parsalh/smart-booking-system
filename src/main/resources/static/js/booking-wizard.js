@@ -414,9 +414,11 @@ function renderRoomCards(rooms) {
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <h4 class="font-bold text-slate-900 text-lg">${room.name}</h4>
-                        <p class="text-xs text-slate-500 font-medium">${room.location || '-'}</p>
+                        <p class="text-xs text-slate-500 font-medium">
+                            ${room.building ? room.building + ' • ' : ''}${room.location || '-'}
+                        </p>
                     </div>
-                    <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">${room.floor || ''}</span>
+                    <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">Floor ${room.floor || ''}</span>
                 </div>
 
                 <div class="flex items-center gap-2 text-slate-600 text-xs font-medium mb-4">
@@ -431,8 +433,8 @@ function renderRoomCards(rooms) {
                     </div>
                 </div>
 
-                <button type="button" onclick="selectRoom(${room.id}, '${room.name}')" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm">
-                    Select This Room
+                <button id="btn-select-room-${room.id}" type="button" onclick="selectRoom(${room.id}, '${room.name}', '${room.building || ''}', '${room.location || ''}')" class="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm flex justify-center items-center gap-2">
+                    <span>Select This Room</span>
                 </button>
             </div>
         `;
@@ -441,16 +443,19 @@ function renderRoomCards(rooms) {
     lucide.createIcons();
 }
 
-function selectRoom(id, name) {
+function selectRoom(id, name, building, location) {
     state.selectedRoomId = id;
     state.selectedRoomName = name;
+    state.selectedRoomBuilding = building;
+    state.selectedRoomLocation = location;
     document.getElementById('btn-to-confirm').classList.remove('hidden');
 }
 
 function renderFinalReview() {
     const start = new Date(state.selectedTimeSlot.start);
     document.getElementById('review-datetime').innerText = start.toLocaleString();
-    document.getElementById('review-room').innerText = state.selectedRoomName;
+    document.getElementById('review-room').innerHTML =
+        `${state.selectedRoomName} <br> <span class="text-xs font-normal text-slate-500">${state.selectedRoomBuilding ? state.selectedRoomBuilding + ', ' : ''}${state.selectedRoomLocation || ''}</span>`;
 
     const titleInput = document.getElementById('final-title-input');
     if (titleInput) {
@@ -571,6 +576,7 @@ function renderSuccessScreen(bookingData) {
                     <div>
                         <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Room</span>
                         <p class="text-xs font-bold text-slate-800 mt-1">${state.selectedRoomName}</p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">${state.selectedRoomBuilding ? state.selectedRoomBuilding + ', ' : ''}${state.selectedRoomLocation || ''}</p>
                     </div>
                 </div>
                 <div class="border-t border-slate-200 pt-3">

@@ -9,6 +9,7 @@ import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.BookingRepository;
 import com.hua.smartbooking.repository.RoomRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -35,6 +36,7 @@ public class BookingService {
         this.googleCalendarService = googleCalendarService;
     }
 
+    @CacheEvict(value = "calendarEvents", key = "#organizer.refreshToken")
     @Transactional
     public Map<String, Object> createBooking(FinalBookingRequest request, User organizer) throws Exception {
 
@@ -54,6 +56,7 @@ public class BookingService {
         newBooking.setRoom(room);
         newBooking.setStartTime(startInstant);
         newBooking.setEndTime(endInstant);
+        newBooking.setParticipants(request.getParticipants());
         newBooking.setStatus(Booking.BookingStatus.PENDING);
 
         newBooking = bookingRepository.save(newBooking);

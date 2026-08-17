@@ -14,6 +14,7 @@ import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.mapper.EventMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
@@ -50,6 +51,7 @@ public class GoogleCalendarService {
         this.calendarClientFactory = calendarClientFactory;
     }
 
+    @Cacheable(value = "calendarEvents", key = "#refreshToken")
     public List<Event> getUpcomingEvents(String refreshToken) throws GeneralSecurityException, IOException {
         Calendar calendar = calendarClientFactory.buildClient(refreshToken);
 
@@ -97,6 +99,7 @@ public class GoogleCalendarService {
                 extendedProps.put("roomFloor", entity.getRoom() != null ? entity.getRoom().getFloor() : null);
                 extendedProps.put("roomImage", entity.getRoom() != null ? entity.getRoom().getImageUrl() : "/images/default-room.jpg");
                 extendedProps.put("roomAmenities", entity.getRoom() != null ? entity.getRoom().getAmenities() : new ArrayList<>());
+                extendedProps.put("participants", entity.getParticipants());
 
                 map.put("extendedProps", extendedProps);
 

@@ -35,6 +35,9 @@ public class Room {
 
     private String floor;
 
+    @Column(name = "building")
+    private String building;
+
     @ElementCollection
     @CollectionTable(name = "room_amenities", joinColumns = @JoinColumn(name = "room_id"))
     @Column(name = "amenity")

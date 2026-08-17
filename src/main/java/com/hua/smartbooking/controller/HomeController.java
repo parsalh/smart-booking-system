@@ -45,13 +45,14 @@ public class HomeController {
             return "login";
         }
 
-        OAuth2User oAuth2User = token.getPrincipal();
-        String email = oAuth2User.getAttribute("email");
-        model.addAttribute("name", oAuth2User.getAttribute("name"));
-        model.addAttribute("email", email);
+        String email = token.getPrincipal().getAttribute("email");
 
-        User dbUser = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        User dbUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        model.addAttribute("name", dbUser.getFullname());
+        model.addAttribute("email", dbUser.getEmail());
+        model.addAttribute("avatar", dbUser.getAvatarUrl());
         model.addAttribute("role", dbUser.getRole().name());
 
         String currentRefreshToken = handleRefreshToken(token, dbUser);
@@ -106,14 +107,14 @@ public class HomeController {
             return "redirect:/login";
         }
 
-        OAuth2User oAuth2User = token.getPrincipal();
-        String email = oAuth2User.getAttribute("email");
-
-        model.addAttribute("name", oAuth2User.getAttribute("name"));
-        model.addAttribute("email", email);
+        String email = token.getPrincipal().getAttribute("email");
 
         User dbUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found in database"));
+
+        model.addAttribute("name", dbUser.getFullname());
+        model.addAttribute("email", dbUser.getEmail());
+        model.addAttribute("avatar", dbUser.getAvatarUrl());
         model.addAttribute("role", dbUser.getRole().name());
 
         return "book";
@@ -121,13 +122,19 @@ public class HomeController {
 
     @GetMapping("/rooms")
     public String browseRooms(Model model, @AuthenticationPrincipal OAuth2User principal) {
-        if (principal != null) {
-            model.addAttribute("name", principal.getAttribute("name"));
-            model.addAttribute("picture", principal.getAttribute("picture"));
-        }
+        model.addAttribute("rooms", roomRepository.findAll());
 
-        List<Room> rooms = roomRepository.findAll();
-        model.addAttribute("rooms", rooms);
+        if (principal != null) {
+            String email = principal.getAttribute("email");
+            User user = userRepository.findByEmail(email).orElse(null);
+
+            if (user != null) {
+                model.addAttribute("name", user.getFullname());
+                model.addAttribute("avatar", user.getAvatarUrl());
+                model.addAttribute("role", user.getRole().name());
+                model.addAttribute("email", user.getEmail());
+            }
+        }
 
         return "rooms";
     }

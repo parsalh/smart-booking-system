@@ -10,19 +10,28 @@
 </head>
 <body class="min-h-screen font-sans text-slate-900 bg-slate-50 selection:bg-blue-100">
 
-<nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
+<nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
     <div class="flex items-center gap-2">
-        <a href="/" class="flex items-center gap-2">
-            <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" onerror="this.style.display='none'" />
-            <span class="text-lg font-bold tracking-tight">SmartBooking</span>
+        <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" />
+            <span class="text-lg font-bold tracking-tight text-gray-900">SmartBooking</span>
         </a>
     </div>
     <div class="flex items-center gap-4">
+        <a th:if="${role == 'ADMIN'}" href="/admin/rooms" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
+            <i data-lucide="shield" class="w-4 h-4 text-purple-600"></i> Admin Panel
+        </a>
         <div class="text-right hidden md:block">
-            <p class="text-xs font-bold text-slate-900" th:text="${name}">Organizer</p>
-            <p class="text-[10px] text-slate-500 uppercase tracking-wider" th:text="${email}">organizer@hua.gr</p>
+            <p class="text-xs font-bold text-gray-900" th:text="${name}">User</p>
+            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold"
+               th:text="${role == 'ADMIN' ? 'Administrator' : email}">user@email.com</p>
         </div>
-        <a href="/" class="text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors bg-slate-100 px-4 py-2 rounded-lg">Cancel</a>
+        <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
+             alt="Profile"
+             class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover">
+        <a href="/logout" class="text-gray-400 hover:text-red-600 transition-colors p-2" title="Logout">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+        </a>
     </div>
 </nav>
 
