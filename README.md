@@ -4,7 +4,7 @@
 A modern meeting scheduling and management system.
 This project was developed as part of my final year project.
 
-🌍 **Live Demo:** [https://book-a-meeting.site](https://book-a-meeting.site)
+🌍 **Demo:** [https://book-a-meeting.site](https://book-a-meeting.site)
 
 ---
 

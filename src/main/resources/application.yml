@@ -33,3 +33,6 @@ spring:
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth?prompt=consent&access_type=offline
+
+server:
+  forward-headers-strategy: framework

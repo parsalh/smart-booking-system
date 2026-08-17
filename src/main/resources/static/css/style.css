@@ -36,6 +36,24 @@ Calendar Container & Grid Layout
     background-color: var(--fc-today-bg-color) !important;
 }
 
+.fc-scrollgrid-sync-table,
+.fc-daygrid-body table {
+    table-layout: fixed !important;
+    width: 100% !important;
+}
+
+.fc-day-sat {
+    background-color: rgba(37, 99, 235, 0.035) !important;
+}
+
+.fc-day-sun {
+    background-color: rgba(37, 99, 235, 0.035) !important;
+}
+
+.fc-daygrid-day-frame {
+    min-height: 130px !important;
+}
+
 /*
 =====================
 Date Numbers & Badges
@@ -178,6 +196,7 @@ Header Toolbar & Standard Buttons
 Event Blocks & Classifications
 ==============================
 */
+
 .event-lecture {
     --evt-bg: rgba(221, 214, 254, 0.9);
     --evt-border: #8b5cf6;
@@ -216,10 +235,45 @@ Event Blocks & Classifications
 
 .fc-event {
     border: none !important;
-    border-radius: 6px !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
-    background-color: var(--evt-bg, rgba(191, 219, 254, 0.9)) !important;
-    border-left: 4px solid var(--evt-border, #3b82f6) !important;
+    border-radius: 10px !important;
+    border-left: 3px solid var(--evt-border, #3b82f6) !important;
+    background: linear-gradient(
+            180deg,
+            var(--evt-bg, rgba(191, 219, 254, 0.9)),
+            color-mix(in srgb, var(--evt-border, #3b82f6) 15%, var(--evt-bg, rgba(191, 219, 254, 0.9)))
+    ) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.fc-event:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+    cursor: pointer;
+}
+
+.fc-event-title {
+    font-weight: 700 !important;
+    letter-spacing: -0.01em;
+}
+
+.fc-event-title::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--evt-border, #3b82f6);
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.fc-event-time {
+    display: none !important;
+}
+
+.fc-daygrid-event {
+    margin-top: 3px !important;
 }
 
 .fc-h-event {
@@ -231,19 +285,15 @@ Event Blocks & Classifications
     color: inherit !important;
 }
 
-.fc-event-time {
-    display: none !important;
-}
-
 .fc .event-smartbooking {
-    background-color: #10b981 !important;
+    background: #10b981 !important;
     border-color: #059669 !important;
     color: #ffffff !important;
     box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3) !important;
 }
 
 .fc .event-smartbooking:hover {
-    background-color: #059669 !important;
+    background: #059669 !important;
 }
 
 .fc .fc-daygrid-day-top {
@@ -261,7 +311,7 @@ Event Blocks & Classifications
     padding: 4px 8px !important;
     border-radius: 12px;
     white-space: nowrap !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     z-index: 5 !important;
     position: relative;
     text-decoration: none !important;
@@ -270,6 +320,29 @@ Event Blocks & Classifications
 .fc .fc-daygrid-day-number:hover {
     color: #0f172a !important;
     background-color: #ffffff;
+}
+
+.fc-daygrid-day {
+    transition: background-color 0.15s ease;
+}
+
+.fc-daygrid-day:hover {
+    background-color: rgba(37, 99, 235, 0.03) !important;
+}
+
+
+.fc-daygrid-more-link {
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    color: #2563eb !important;
+    background: rgba(37, 99, 235, 0.08) !important;
+    border-radius: 6px !important;
+    padding: 2px 6px !important;
+    margin-top: 2px !important;
+}
+
+.fc-daygrid-more-link:hover {
+    background: rgba(37, 99, 235, 0.15) !important;
 }
 
 
