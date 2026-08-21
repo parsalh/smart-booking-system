@@ -1,6 +1,7 @@
 package com.hua.smartbooking.model;
 
 
+import com.hua.smartbooking.util.StringCryptoConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,8 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Convert(converter = StringCryptoConverter.class)
+    @Column(length = 500)
     private String fullname;
 
     @Column(name = "google_sub_id", unique = true)
@@ -30,6 +33,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Convert(converter = StringCryptoConverter.class)
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 

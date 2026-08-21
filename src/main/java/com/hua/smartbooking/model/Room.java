@@ -26,7 +26,7 @@ public class Room {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     private Integer capacity;

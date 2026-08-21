@@ -80,6 +80,11 @@
                         <div id="modalAmenitiesList" class="flex flex-wrap gap-2"></div>
                     </div>
 
+                    <div id="modalParticipantsContainer" class="pt-2 hidden">
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-3 font-bold px-1">Participants & RSVP</p>
+                        <div id="modalParticipantsList" class="flex flex-col gap-2"></div>
+                    </div>
+
                     <div class="pt-2">
                         <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Details</p>
                         <div class="bg-white/30 p-4 rounded-2xl border border-white/40">
@@ -121,6 +126,30 @@
                     Close
                 </button>
             </div>
+        </div>
+    </div>
+
+    <div id="pendingInvitesModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white rounded-3xl shadow-2xl border border-gray-200 max-w-lg w-full max-h-[85vh] flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
+
+            <div class="flex justify-between items-center p-6 border-b border-slate-100">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100 relative">
+                        <i data-lucide="bell-ring" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-900">Meeting Invites</h3>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5">You have pending invitations to respond to</p>
+                    </div>
+                </div>
+                <button onclick="closePendingInvitesModal()" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <div id="pendingInvitesList" class="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50/50">
+            </div>
+
         </div>
     </div>
 
@@ -166,6 +195,19 @@
                         <i data-lucide="map-pin" class="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform"></i>
                         <span class="text-gray-700 text-sm">Browse Rooms</span>
                     </a>
+                    <button onclick="openPendingInvitesModal()" class="w-full flex items-center justify-between p-4 border border-white/50 bg-white/40 rounded-2xl hover:bg-white/60 font-semibold transition-all group shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <i data-lucide="bell-ring" class="w-5 h-5 text-amber-500 group-hover:scale-110 transition-transform"></i>
+                                <span id="inviteBadge" class="hidden absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border-2 border-white"></span>
+                                </span>
+                            </div>
+                            <span class="text-gray-700 text-sm">Pending Invites</span>
+                        </div>
+                        <span id="inviteCountBadge" class="hidden bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
+                    </button>
                 </div>
             </div>
 
@@ -268,10 +310,8 @@
                     buttonText: 'Month'
                 }
             },
-
             initialView: 'rollingMonth',
             initialDate: new Date(),
-
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
@@ -287,12 +327,8 @@
             slotMaxTime: '22:00:00',
             eventDisplay: 'block',
             eventTimeFormat: { hour: 'numeric', minute: '2-digit', hour12: false },
-            eventClassNames: function(arg) {
-                return [ arg.event.extendedProps.type ? 'event-' + arg.event.extendedProps.type.toLowerCase() : 'event-other' ];
-            },
 
             eventClick: function(info) {
-
                 const props = info.event.extendedProps;
 
                 document.getElementById('modalTitle').innerText = props['fullTitle'] || info.event.title || 'Untitled Event';
@@ -309,7 +345,6 @@
                 list.innerHTML = '';
 
                 const amenities = props['roomAmenities'];
-
                 if (amenities && amenities.length > 0) {
                     container.classList.remove('hidden');
                     amenities.forEach(amenity => {
@@ -324,10 +359,69 @@
 
                 document.getElementById('eventModal').classList.remove('hidden');
                 lucide.createIcons();
+
+                renderParticipants(props.bookingId, props.participants);
             }
         });
 
+        function renderParticipants(bookingId, fallbackParticipants) {
+            const participantsList = document.getElementById('modalParticipantsList');
+            const participantsContainer = document.getElementById('modalParticipantsContainer');
+
+            const draw = (participantsRaw) => {
+                participantsList.innerHTML = '';
+
+                let participantsEntries = [];
+                if (Array.isArray(participantsRaw)) {
+                    participantsEntries = participantsRaw.map(a => {
+                        const email = typeof a === 'string' ? a : (a.email || a.displayName);
+                        return [email, 'UNKNOWN'];
+                    }).filter(entry => entry[0]);
+                } else {
+                    participantsEntries = Object.entries(participantsRaw || {});
+                }
+
+                if (participantsEntries.length > 0) {
+                    participantsContainer.classList.remove('hidden');
+                    participantsEntries.forEach(([email, status]) => {
+                        let icon = 'help-circle';
+                        let colorClass = 'bg-slate-50 text-slate-600 border-slate-200';
+
+                        if (status === 'ACCEPTED') {
+                            icon = 'check-circle-2';
+                            colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                        } else if (status === 'DECLINED') {
+                            icon = 'x-circle';
+                            colorClass = 'bg-red-50 text-red-700 border-red-200';
+                        } else if (status === 'PENDING') {
+                            icon = 'clock';
+                            colorClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                        }
+
+                        const span = document.createElement('div');
+                        span.className = `flex items-center gap-2 px-3 py-2 ${colorClass} rounded-xl text-xs font-bold border`;
+                        span.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${email}`;
+                        participantsList.appendChild(span);
+                    });
+                    lucide.createIcons();
+                } else {
+                    participantsContainer.classList.add('hidden');
+                }
+            };
+
+            if (!bookingId) {
+                draw(fallbackParticipants || {});
+                return;
+            }
+
+            fetch(`/api/bookings/${bookingId}/participants`)
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(freshParticipants => draw(freshParticipants))
+                .catch(() => draw(fallbackParticipants || {}));
+        }
+
         calendar.render();
+        window.smartCalendar = calendar;
 
         document.getElementById('eventModal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
@@ -338,118 +432,121 @@
     });
 
     function openAllBookingsModal() {
-        const eventsInput = document.getElementById('calendarEventsData');
         const listContainer = document.getElementById('allBookingsList');
         if (!listContainer) return;
-        listContainer.innerHTML = '';
+
+        listContainer.innerHTML = `
+            <div class="text-center py-12">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p class="text-slate-500 font-medium">Loading your smart bookings...</p>
+            </div>
+        `;
+
+        const modal = document.getElementById('allBookingsModal');
+        if (modal) modal.classList.remove('hidden');
 
         const emailInput = document.getElementById('currentUserEmail');
         const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
 
-        let eventsData = [];
-        if (eventsInput && eventsInput.value) {
-            try {
-                eventsData = JSON.parse(eventsInput.value);
-            } catch (e) {
-                console.error("Failed to parse events JSON:", e);
-            }
-        }
+        fetch('/api/bookings/my-smartbookings')
+            .then(res => {
+                if (!res.ok) throw new Error('Network response error');
+                return res.json();
+            })
+            .then(bookings => {
+                listContainer.innerHTML = '';
 
-        const smartBookings = eventsData.filter(ev => {
-            const props = ev.extendedProps || {};
-            const isSmartType = props.type === 'SMART_BOOKING';
-            const hasDescriptionText = props.description && props.description.includes('Automatically scheduled via SmartBooking App');
-            return isSmartType || hasDescriptionText;
-        });
-
-        if (smartBookings.length === 0) {
-            listContainer.innerHTML = `
-            <div class="text-center py-12">
-                <div class="w-16 h-16 bg-white border border-slate-200 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                    <i data-lucide="inbox" class="w-8 h-8"></i>
-                </div>
-                <h4 class="text-slate-700 font-bold text-lg mb-1">No SmartBookings found</h4>
-                <p class="text-sm text-slate-500">Meetings you schedule through the app will appear here.</p>
-            </div>
-        `;
-        } else {
-            smartBookings.sort((a, b) => new Date(a.start) - new Date(b.start));
-
-            smartBookings.forEach(booking => {
-                const startDate = new Date(booking.start);
-                const endDate = booking.end ? new Date(booking.end) : null;
-
-                const timeStr = endDate
-                    ? `${startDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})} - ${endDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}`
-                    : startDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
-
-                const roomName = booking.extendedProps.locationName || booking.location || 'Unknown Room';
-
-                const props = booking.extendedProps || {};
-                let attendees = props.participants || props.attendees || booking.attendees || [];
-
-                let filteredAttendees = attendees.map(a => typeof a === 'string' ? a : (a.email || a.displayName)).filter(Boolean);
-
-                let participantsHtml = '';
-                if (filteredAttendees.length > 0) {
-                    const namesHtml = filteredAttendees.map(person => {
-                        const personLower = person.trim().toLowerCase();
-                        const isUser = (currentUserEmail && personLower === currentUserEmail) || personLower === 'you';
-                        const displayLabel = isUser ? `${person} (You)` : person;
-
-                        return `<span class="inline-flex items-center px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold border border-slate-200/80 truncate max-w-[200px]">
-                                <i data-lucide="user" class="w-3 h-3 mr-1 text-slate-400"></i> ${displayLabel}
-                            </span>`;
-                    }).join('');
-
-                    participantsHtml = `
-                    <div class="mt-4 pt-3 border-t border-slate-100">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Participants (${filteredAttendees.length})</p>
-                        <div class="flex flex-wrap gap-2">
-                            ${namesHtml}
+                if (!bookings || bookings.length === 0) {
+                    listContainer.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 bg-white border border-slate-200 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                            <i data-lucide="inbox" class="w-8 h-8"></i>
                         </div>
-                    </div>
-                `;
-                } else {
-                    participantsHtml = `
-                    <div class="mt-4 pt-3 border-t border-slate-100">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Participants</p>
-                        <p class="text-xs text-slate-400 italic">Only you (Organizer)</p>
-                    </div>
-                `;
+                        <h4 class="text-slate-700 font-bold text-lg mb-1">No SmartBookings found</h4>
+                        <p class="text-sm text-slate-500">Meetings you schedule through the app will appear here.</p>
+                    </div>`;
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                    return;
                 }
 
-                const card = document.createElement('div');
-                card.className = "flex items-start gap-5 p-5 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow group";
-                card.innerHTML = `
-                <div class="w-16 h-16 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-2xl flex flex-col items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                    <span class="text-xs font-black uppercase tracking-wider">${startDate.toLocaleString('en-US', { month: 'short'})}</span>
-                    <span class="text-2xl font-black leading-none mt-0.5">${startDate.getDate()}</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h4 class="font-bold text-slate-900 text-lg truncate">${booking.extendedProps.fullTitle || booking.title}</h4>
-                    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-1.5">
-                        <p class="text-sm text-slate-500 font-semibold flex items-center gap-1.5">
-                            <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i> ${timeStr}
-                        </p>
-                        <p class="text-sm text-slate-500 font-semibold flex items-center gap-1.5">
-                            <i data-lucide="map-pin" class="w-4 h-4 text-blue-500"></i> ${roomName}
-                        </p>
-                    </div>
-                    ${participantsHtml}
-                </div>
-            `;
-                listContainer.appendChild(card);
-            });
-        }
+                bookings.forEach(booking => {
+                    const startDate = new Date(booking.startTime);
+                    const endDate = booking.endTime ? new Date(booking.endTime) : null;
 
-        const modal = document.getElementById('allBookingsModal');
-        if (modal) {
-            modal.classList.remove('hidden');
-        }
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+                    const timeStr = endDate
+                        ? `${startDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})} - ${endDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}`
+                        : startDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+
+                    const roomName = booking.room && booking.room.name ? booking.room.name : 'Unknown Room';
+
+                    const participantsMap = booking.participants || {};
+                    const participantsEntries = Object.entries(participantsMap);
+
+                    let participantsHtml = '';
+                    if (participantsEntries.length > 0) {
+                        const namesHtml = participantsEntries.map(([person, status]) => {
+                            const personLower = person.trim().toLowerCase();
+                            const isUser = (currentUserEmail && personLower === currentUserEmail) || personLower === 'you';
+                            const displayLabel = isUser ? `${person} (You)` : person;
+
+                            let icon = 'user';
+                            let colorClass = 'bg-slate-100 text-slate-700 border-slate-200/80';
+                            let iconColor = 'text-slate-400';
+
+                            if (status === 'ACCEPTED') {
+                                icon = 'check';
+                                colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                iconColor = 'text-emerald-500';
+                            } else if (status === 'DECLINED') {
+                                icon = 'x';
+                                colorClass = 'bg-red-50 text-red-700 border-red-200';
+                                iconColor = 'text-red-500';
+                            } else if (status === 'PENDING') {
+                                icon = 'hourglass';
+                                colorClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                                iconColor = 'text-amber-500';
+                            }
+
+                            return `<span class="inline-flex items-center px-2.5 py-1 ${colorClass} rounded-lg text-[10px] font-bold border truncate max-w-[200px]">
+                                        <i data-lucide="${icon}" class="w-3 h-3 mr-1 ${iconColor}"></i> ${displayLabel}
+                                    </span>`;
+                        }).join('');
+
+                        participantsHtml = `<div class="mt-4 pt-3 border-t border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Participants (${participantsEntries.length})</p>
+                            <div class="flex flex-wrap gap-2">${namesHtml}</div></div>`;
+                    } else {
+                        participantsHtml = `<div class="mt-4 pt-3 border-t border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Participants</p>
+                            <p class="text-xs text-slate-400 italic">Only you (Organizer)</p></div>`;
+                    }
+
+                    const title = booking.title || (booking.room ? booking.room.name : 'SmartBooking Meeting');
+
+                    const card = document.createElement('div');
+                    card.className = "flex items-start gap-5 p-5 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow group";
+                    card.innerHTML = `
+                    <div class="w-16 h-16 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-2xl flex flex-col items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <span class="text-xs font-black uppercase tracking-wider">${startDate.toLocaleString('en-US', { month: 'short'})}</span>
+                        <span class="text-2xl font-black leading-none mt-0.5">${startDate.getDate()}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-bold text-slate-900 text-lg truncate">${title}</h4>
+                        <div class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-1.5">
+                            <p class="text-sm text-slate-500 font-semibold flex items-center gap-1.5"><i data-lucide="clock" class="w-4 h-4 text-slate-400"></i> ${timeStr}</p>
+                            <p class="text-sm text-slate-500 font-semibold flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4 text-blue-500"></i> ${roomName}</p>
+                        </div>
+                        ${participantsHtml}
+                    </div>`;
+                    listContainer.appendChild(card);
+                });
+
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            })
+            .catch(err => {
+                console.error("Failed to load smart bookings:", err);
+                listContainer.innerHTML = '<div class="text-center py-8 text-red-500">Failed to load bookings.</div>';
+            });
     }
 
     function closeAllBookingsModal() {
@@ -541,7 +638,212 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         updateEventStatistics();
+        fetchPendingInvites();
     });
+
+    function openPendingInvitesModal() {
+        const modal = document.getElementById('pendingInvitesModal');
+        const listContainer = document.getElementById('pendingInvitesList');
+
+        if (modal) modal.classList.remove('hidden');
+
+        if (listContainer) {
+            listContainer.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto mb-4"></div>
+                    <p class="text-slate-500 font-medium">Checking with Google Calendar...</p>
+                </div>
+            `;
+        }
+
+        fetchPendingInvites();
+    }
+
+    function closePendingInvitesModal() {
+        document.getElementById('pendingInvitesModal').classList.add('hidden');
+    }
+
+    function fetchPendingInvites() {
+        fetch('/api/bookings/pending-invites')
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch pending invites');
+                return response.json();
+            })
+            .then(data => {
+                const pendingInvites = data.map(invite => ({
+                    bookingId: invite.bookingId,
+                    title: 'Meeting',
+                    roomName: invite.roomName || 'Unknown Room',
+                    startTime: invite.startTime,
+                    endTime: invite.endTime
+                }));
+
+                renderPendingInvites(pendingInvites);
+
+                const badge = document.getElementById('inviteBadge');
+                const countBadge = document.getElementById('inviteCountBadge');
+
+                if (pendingInvites.length > 0) {
+                    if (badge) badge.classList.remove('hidden');
+                    if (countBadge) {
+                        countBadge.classList.remove('hidden');
+                        countBadge.innerText = pendingInvites.length;
+                    }
+                } else {
+                    if (badge) badge.classList.add('hidden');
+                    if (countBadge) countBadge.classList.add('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching invites:', error);
+                const listContainer = document.getElementById('pendingInvitesList');
+                if (listContainer) {
+                    listContainer.innerHTML = '<div class="text-center py-8 text-red-500">Failed to load invites.</div>';
+                }
+            });
+    }
+
+    function renderPendingInvites(invites) {
+        const listContainer = document.getElementById('pendingInvitesList');
+        if (!listContainer) return;
+        listContainer.innerHTML = '';
+
+        if (!invites || invites.length === 0) {
+            listContainer.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-white border border-slate-200 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                        <i data-lucide="mail-check" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-slate-700 font-bold text-lg mb-1">No pending invites</h4>
+                    <p class="text-sm text-slate-500">You're all caught up! New meeting invites will appear here.</p>
+                </div>
+            `;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            return;
+        }
+
+        invites.forEach(invite => {
+            const startDate = new Date(invite.startTime);
+            const endDate = invite.endTime ? new Date(invite.endTime) : new Date(startDate.getTime() + 3600000);
+
+            const dateStr = startDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            const timeStr = `${startDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})} - ${endDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}`;
+
+            const card = document.createElement('div');
+            card.id = `invite-card-${invite.bookingId}`;
+            card.className = "bg-white p-5 border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow";
+
+            card.innerHTML = `
+                <div class="mb-4">
+                    <h4 class="font-bold text-slate-900 text-lg">Invitation: ${invite.title}</h4>
+                </div>
+                <div class="space-y-2 mb-5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <p class="text-sm text-slate-700 flex items-center gap-2 font-medium">
+                        <i data-lucide="calendar" class="w-4 h-4 text-blue-500"></i> ${dateStr}
+                    </p>
+                    <p class="text-sm text-slate-700 flex items-center gap-2 font-medium">
+                        <i data-lucide="clock" class="w-4 h-4 text-orange-500"></i> ${timeStr}
+                    </p>
+                    <p class="text-sm text-slate-700 flex items-center gap-2 font-medium">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-emerald-500"></i> ${invite.roomName}
+                    </p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="handleRsvp(${invite.bookingId}, 'ACCEPTED')" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm">
+                        <i data-lucide="check" class="w-4 h-4"></i> Accept
+                    </button>
+                    <button onclick="handleRsvp(${invite.bookingId}, 'DECLINED')" class="flex-1 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 font-bold rounded-xl flex items-center justify-center gap-2 transition-colors">
+                        <i data-lucide="x" class="w-4 h-4"></i> Decline
+                    </button>
+                </div>
+            `;
+            listContainer.appendChild(card);
+        });
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function handleRsvp(bookingId, status) {
+        const card = document.getElementById(`invite-card-${bookingId}`);
+        if(card) {
+            card.style.opacity = '0.5';
+            card.style.pointerEvents = 'none';
+        }
+
+        fetch(`/api/bookings/${bookingId}/rsvp`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: status })
+        })
+            .then(response => {
+                if(response.ok) {
+                    if(card) {
+                        card.style.opacity = '1';
+                        card.innerHTML = `
+                        <div class="text-center py-8 flex flex-col items-center gap-3">
+                            <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                                <i data-lucide="check-circle-2" class="w-6 h-6 text-emerald-600"></i>
+                            </div>
+                            <p class="text-slate-700 font-bold">Response sent!</p>
+                        </div>
+                    `;
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+                        setTimeout(() => {
+                            card.remove();
+
+                            updatePendingBadges();
+
+                            if (window.smartCalendar) {
+                                const events = window.smartCalendar.getEvents();
+                                events.forEach(ev => {
+                                    if (ev.extendedProps && ev.extendedProps.bookingId === bookingId) {
+                                        let updatedParticipants = { ...ev.extendedProps.participants };
+                                        const emailInput = document.getElementById('currentUserEmail');
+                                        const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+                                        if (currentUserEmail) {
+                                            updatedParticipants[currentUserEmail] = status;
+                                            ev.setExtendedProp('participants', updatedParticipants);
+                                        }
+                                    }
+                                });
+                            }
+
+                            const remainingCards = document.querySelectorAll('[id^="invite-card-"]').length;
+                            if (remainingCards === 0) {
+                                closePendingInvitesModal();
+                            }
+                        }, 2000);
+                    }
+                } else {
+                    alert("Failed to send RSVP. Please try again.");
+                    if(card) {
+                        card.style.opacity = '1';
+                        card.style.pointerEvents = 'auto';
+                    }
+                }
+            })
+            .catch(error => console.error('Error handling RSVP:', error));
+    }
+
+    function updatePendingBadges() {
+        const remainingCards = document.querySelectorAll('[id^="invite-card-"]').length;
+        const badge = document.getElementById('inviteBadge');
+        const countBadge = document.getElementById('inviteCountBadge');
+
+        if (remainingCards > 0) {
+            if (badge) badge.classList.remove('hidden');
+            if (countBadge) {
+                countBadge.classList.remove('hidden');
+                countBadge.innerText = remainingCards;
+            }
+        } else {
+            if (badge) badge.classList.add('hidden');
+            if (countBadge) countBadge.classList.add('hidden');
+        }
+    }
 </script>
 </body>
 </html>

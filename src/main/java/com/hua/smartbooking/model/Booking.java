@@ -1,5 +1,6 @@
 package com.hua.smartbooking.model;
 
+import com.hua.smartbooking.util.StringCryptoConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +12,9 @@ import org.hibernate.annotations.OnDeleteAction;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "bookings", indexes = {
@@ -49,11 +52,18 @@ public class Booking {
 
     @ElementCollection
     @CollectionTable(name = "booking_participants", joinColumns = @JoinColumn(name = "booking_id"))
-    @Column(name = "participant_email")
-    private List<String> participants = new ArrayList<>();
+    @MapKeyColumn(name = "participant_email", length = 500)
+    @Convert(converter = StringCryptoConverter.class, attributeName = "key")
+    @Column(name = "rsvp_status")
+    @Enumerated(EnumType.STRING)
+    private Map<String, RsvpStatus> participants = new HashMap<>();
 
     public enum BookingStatus {
         PENDING, APPROVED, REJECTED, CANCELLED
+    }
+
+    public enum RsvpStatus {
+        PENDING, ACCEPTED, DECLINED, TENTATIVE
     }
 
 }

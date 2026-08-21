@@ -34,5 +34,9 @@ spring:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth?prompt=consent&access_type=offline
 
+app:
+  security:
+    encryption-key: ${ENCRYPTION_KEY}
+
 server:
   forward-headers-strategy: framework

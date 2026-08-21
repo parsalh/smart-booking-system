@@ -8,6 +8,7 @@ import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.Event;
 import com.hua.smartbooking.model.Room;
 import com.hua.smartbooking.model.User;
+import com.hua.smartbooking.repository.BookingRepository;
 import com.hua.smartbooking.repository.RoomRepository;
 import com.hua.smartbooking.repository.UserRepository;
 import com.hua.smartbooking.service.*;
@@ -18,6 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -34,6 +36,8 @@ public class BookingController {
     private final RoomRepository roomRepository;
     private final GoogleCalendarService googleCalendarService;
     private final EventMappingService eventMappingService;
+    private final BookingRepository bookingRepository;
+
     private final RoomMapper roomMapper;
 
     public BookingController(AvailabilityService availabilityService,
@@ -43,7 +47,8 @@ public class BookingController {
                              RoomRepository roomRepository,
                              GoogleCalendarService googleCalendarService,
                              EventMappingService eventMappingService,
-                             RoomMapper roomMapper) {
+                             RoomMapper roomMapper,
+                             BookingRepository bookingRepository) {
         this.availabilityService = availabilityService;
         this.optimizerService = optimizerService;
         this.bookingService = bookingService;
@@ -52,6 +57,7 @@ public class BookingController {
         this.googleCalendarService = googleCalendarService;
         this.eventMappingService = eventMappingService;
         this.roomMapper = roomMapper;
+        this.bookingRepository = bookingRepository;
     }
 
     @PostMapping("/suggest-times")
@@ -175,5 +181,60 @@ public class BookingController {
             body.put("error", e.getMessage());
             return ResponseEntity.status(500).body(body);
         }
+    }
+
+    @PostMapping("/{bookingId}/rsvp")
+    public ResponseEntity<?> respondToInvite(
+            @PathVariable Long bookingId,
+            @RequestBody RsvpRequest request,
+            @AuthenticationPrincipal OidcUser principal) {
+
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String userEmail = principal.getAttribute("email");
+
+        bookingService.updateRsvpStatus(bookingId, userEmail, request.getStatus());
+
+        return ResponseEntity.ok().body("RSVP updated successfully");
+    }
+
+    @GetMapping("/pending-invites")
+    public ResponseEntity<List<PendingInviteDTO>> getMyPendingInvites(@AuthenticationPrincipal OidcUser principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String userEmail = principal.getAttribute("email");
+        List<PendingInviteDTO> pendingInvites = bookingService.getPendingInvitesForUser(userEmail);
+
+        return ResponseEntity.ok(pendingInvites);
+    }
+
+    @GetMapping("/my-smartbookings")
+    public ResponseEntity<List<Map<String, Object>>> getMySmartBookings(Principal principal) {
+        if (principal == null) return ResponseEntity.status(401).build();
+        String userEmail = principal.getName();
+        return ResponseEntity.ok(bookingService.getSmartBookingsForUser(userEmail));
+    }
+
+    @GetMapping("/{bookingId}/participants")
+    public ResponseEntity<?> getParticipants(@PathVariable Long bookingId) {
+        return bookingRepository.findById(bookingId)
+                .<ResponseEntity<?>>map(booking -> {
+                    Map<String, Booking.RsvpStatus> decrypted = new HashMap<>();
+                    com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();
+                    for (Map.Entry<String, Booking.RsvpStatus> entry : booking.getParticipants().entrySet()) {
+                        try {
+                            String dec = crypto.convertToEntityAttribute(entry.getKey());
+                            decrypted.put(dec != null ? dec : entry.getKey(), entry.getValue());
+                        } catch (Exception e) {
+                            decrypted.put(entry.getKey(), entry.getValue());
+                        }
+                    }
+                    return ResponseEntity.ok(decrypted);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

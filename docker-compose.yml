@@ -30,6 +30,7 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     depends_on:
       - db
     extra_hosts:

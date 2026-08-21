@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -26,4 +27,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
 
     List<Booking> findByRoomId(Long roomId);
+
+    Optional<Booking> findByGoogleEventId(String googleEventId);
+
+    List<Booking> findByStartTimeAfterAndStatusNot(Instant now, Booking.BookingStatus excludedStatus);
 }

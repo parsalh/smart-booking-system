@@ -10,8 +10,10 @@ import com.google.api.services.calendar.model.Events;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.UserCredentials;
 import com.hua.smartbooking.factory.GoogleCalendarClientFactory;
+import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.mapper.EventMapper;
+import com.hua.smartbooking.repository.BookingRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,10 +27,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Service for interacting with Google Calendar API and mapping to internal Entities.
@@ -44,11 +43,14 @@ public class GoogleCalendarService {
 
     private final EventMapper eventMapper;
     private final GoogleCalendarClientFactory calendarClientFactory;
+    private final BookingRepository bookingRepository;
 
     public GoogleCalendarService(EventMapper eventMapper,
-                                 GoogleCalendarClientFactory calendarClientFactory) {
+                                 GoogleCalendarClientFactory calendarClientFactory,
+                                 BookingRepository bookingRepository) {
         this.eventMapper = eventMapper;
         this.calendarClientFactory = calendarClientFactory;
+        this.bookingRepository = bookingRepository;
     }
 
     @Cacheable(value = "calendarEvents", key = "#refreshToken")
@@ -99,7 +101,24 @@ public class GoogleCalendarService {
                 extendedProps.put("roomFloor", entity.getRoom() != null ? entity.getRoom().getFloor() : null);
                 extendedProps.put("roomImage", entity.getRoom() != null ? entity.getRoom().getImageUrl() : "/images/default-room.jpg");
                 extendedProps.put("roomAmenities", entity.getRoom() != null ? entity.getRoom().getAmenities() : new ArrayList<>());
-                extendedProps.put("participants", entity.getParticipants());
+                Optional<Booking> dbBooking = bookingRepository.findByGoogleEventId(gEvent.getId());
+
+                if (dbBooking.isPresent()) {
+                    Map<String, Booking.RsvpStatus> decryptedParticipants = new HashMap<>();
+                    com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();
+                    for (Map.Entry<String, Booking.RsvpStatus> entry : dbBooking.get().getParticipants().entrySet()) {
+                        try {
+                            String dec = crypto.convertToEntityAttribute(entry.getKey());
+                            decryptedParticipants.put(dec != null ? dec : entry.getKey(), entry.getValue());
+                        } catch (Exception e) {
+                            decryptedParticipants.put(entry.getKey(), entry.getValue());
+                        }
+                    }
+                    extendedProps.put("participants", decryptedParticipants);
+                    extendedProps.put("bookingId", dbBooking.get().getId());
+                } else {
+                    extendedProps.put("participants", entity.getParticipants());
+                }
 
                 map.put("extendedProps", extendedProps);
 
@@ -161,7 +180,7 @@ public class GoogleCalendarService {
     /**
      * Creates a new meeting directly on the user's Google Calendar and sends invites.
      */
-    public Event createMeetingEvent(String refreshToken, String summary, Instant start, Instant end, String location, List<String> attendeeEmails) throws GeneralSecurityException, IOException {
+    public Event createMeetingEvent(String refreshToken, String summary, Instant start, Instant end, String location, List<String> attendeeEmails, String organizerEmail) throws GeneralSecurityException, IOException {
 
         Event event = new Event()
                 .setSummary(summary)
@@ -177,7 +196,13 @@ public class GoogleCalendarService {
         if (attendeeEmails != null && !attendeeEmails.isEmpty()) {
             List<EventAttendee> attendees = new ArrayList<>();
             for (String email : attendeeEmails) {
-                attendees.add(new EventAttendee().setEmail(email));
+                EventAttendee attendee = new EventAttendee().setEmail(email);
+
+                if (email.equalsIgnoreCase(organizerEmail)) {
+                    attendee.setResponseStatus("accepted");
+                }
+
+                attendees.add(attendee);
             }
             event.setAttendees(attendees);
         }
@@ -186,6 +211,46 @@ public class GoogleCalendarService {
         return calendar.events().insert("primary", event).execute();
     }
 
+    /**
+     * Updates the RSVP status of a specific attendee directly on Google Calendar.
+     */
+    public void updateEventRsvpOnGoogleCalendar(String refreshToken, String googleEventId, String userEmail, String responseStatus) throws GeneralSecurityException, IOException {
+        Calendar calendar = calendarClientFactory.buildClient(refreshToken);
+
+        Event event = calendar.events().get("primary", googleEventId).execute();
+
+        List<EventAttendee> attendees = event.getAttendees();
+        if (attendees != null) {
+            boolean updated = false;
+            for (EventAttendee attendee : attendees) {
+                if (attendee.getEmail().equalsIgnoreCase(userEmail)) {
+                    attendee.setResponseStatus(responseStatus);
+                    updated = true;
+                    break;
+                }
+            }
+            if (updated) {
+                calendar.events().update("primary", event.getId(), event).execute();
+            }
+        }
+    }
+
+    public String getAttendeeResponseStatus(String organizerRefreshToken, String googleEventId, String attendeeEmail)
+            throws GeneralSecurityException, IOException {
+
+        Calendar calendar = calendarClientFactory.buildClient(organizerRefreshToken);
+        Event event = calendar.events().get("primary", googleEventId).execute();
+
+        if (event.getAttendees() == null) {
+            return null;
+        }
+
+        return event.getAttendees().stream()
+                .filter(a -> a.getEmail() != null && a.getEmail().equalsIgnoreCase(attendeeEmail))
+                .map(EventAttendee::getResponseStatus)
+                .findFirst()
+                .orElse(null);
+    }
 
 
 }
