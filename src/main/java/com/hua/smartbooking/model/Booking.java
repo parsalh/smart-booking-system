@@ -50,6 +50,10 @@ public class Booking {
     @Column(name = "google_event_id")
     private String googleEventId;
 
+    @Column(name = "title", length = 1000)
+    @Convert(converter = StringCryptoConverter.class)
+    private String title;
+
     @ElementCollection
     @CollectionTable(name = "booking_participants", joinColumns = @JoinColumn(name = "booking_id"))
     @MapKeyColumn(name = "participant_email", length = 500)

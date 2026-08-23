@@ -213,9 +213,9 @@ public class BookingController {
     }
 
     @GetMapping("/my-smartbookings")
-    public ResponseEntity<List<Map<String, Object>>> getMySmartBookings(Principal principal) {
+    public ResponseEntity<List<Map<String, Object>>> getMySmartBookings(@AuthenticationPrincipal OidcUser principal) {
         if (principal == null) return ResponseEntity.status(401).build();
-        String userEmail = principal.getName();
+        String userEmail = principal.getAttribute("email");
         return ResponseEntity.ok(bookingService.getSmartBookingsForUser(userEmail));
     }
 
@@ -223,8 +223,18 @@ public class BookingController {
     public ResponseEntity<?> getParticipants(@PathVariable Long bookingId) {
         return bookingRepository.findById(bookingId)
                 .<ResponseEntity<?>>map(booking -> {
-                    Map<String, Booking.RsvpStatus> decrypted = new HashMap<>();
                     com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();
+
+                    for (String key : new HashSet<>(booking.getParticipants().keySet())) {
+                        try {
+                            String plainEmail = crypto.convertToEntityAttribute(key);
+                            bookingService.reconcileRsvpFromGoogle(booking, plainEmail != null ? plainEmail : key);
+                        } catch (Exception e) {
+                            bookingService.reconcileRsvpFromGoogle(booking, key);
+                        }
+                    }
+
+                    Map<String, Booking.RsvpStatus> decrypted = new HashMap<>();
                     for (Map.Entry<String, Booking.RsvpStatus> entry : booking.getParticipants().entrySet()) {
                         try {
                             String dec = crypto.convertToEntityAttribute(entry.getKey());

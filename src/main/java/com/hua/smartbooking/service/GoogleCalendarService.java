@@ -57,12 +57,28 @@ public class GoogleCalendarService {
     public List<Event> getUpcomingEvents(String refreshToken) throws GeneralSecurityException, IOException {
         Calendar calendar = calendarClientFactory.buildClient(refreshToken);
 
-        return calendar.events().list("primary")
-                .setTimeMin(new DateTime(System.currentTimeMillis()))
+        java.time.ZonedDateTime now = java.time.ZonedDateTime.now(java.time.ZoneId.of("Europe/Athens"));
+
+        java.time.ZonedDateTime startOfPrevMonth = now.minusMonths(1)
+                .with(java.time.temporal.TemporalAdjusters.firstDayOfMonth())
+                .with(java.time.LocalTime.MIN);
+
+        java.time.ZonedDateTime endOfNextMonth = now.plusMonths(1)
+                .with(java.time.temporal.TemporalAdjusters.lastDayOfMonth())
+                .with(java.time.LocalTime.MAX);
+
+        com.google.api.client.util.DateTime timeMin = new com.google.api.client.util.DateTime(java.util.Date.from(startOfPrevMonth.toInstant()));
+        com.google.api.client.util.DateTime timeMax = new com.google.api.client.util.DateTime(java.util.Date.from(endOfNextMonth.toInstant()));
+
+        Events events = calendar.events().list("primary")
+                .setTimeMin(timeMin)
+                .setTimeMax(timeMax)
+                .setMaxResults(500)
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
-                .execute()
-                .getItems();
+                .execute();
+
+        return events.getItems();
     }
 
     @Transactional
@@ -72,6 +88,22 @@ public class GoogleCalendarService {
 
         for (com.google.api.services.calendar.model.Event gEvent : googleEvents) {
             try {
+
+                boolean isDeclined = false;
+                if (gEvent.getAttendees() != null) {
+                    for (com.google.api.services.calendar.model.EventAttendee attendee : gEvent.getAttendees()) {
+                        if (attendee.getEmail() != null && attendee.getEmail().equalsIgnoreCase(user.getEmail())) {
+                            if ("declined".equalsIgnoreCase(attendee.getResponseStatus())) {
+                                isDeclined = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (isDeclined) {
+                    continue;
+                }
+
                 com.hua.smartbooking.model.Event entity = eventMapper.googleToEntity(gEvent, user);
 
                 Map<String, Object> map = new HashMap<>();
@@ -94,7 +126,11 @@ public class GoogleCalendarService {
 
                 Map<String, Object> extendedProps = new HashMap<>();
                 extendedProps.put("fullTitle", entity.getTitle() != null ? entity.getTitle() : "Untitled Event");
-                extendedProps.put("fullLocation", gEvent.getLocation() != null ? gEvent.getLocation() : "No location specified");
+
+                String roomLoc = entity.getRoom() != null && entity.getRoom().getLocation() != null ? entity.getRoom().getLocation() : null;
+                String fallbackLoc = gEvent.getLocation() != null ? gEvent.getLocation() : "El. Venizelou 70, Kallithea";
+                extendedProps.put("fullLocation", roomLoc != null ? roomLoc : fallbackLoc);
+
                 extendedProps.put("description", description != null ? description : "No description available.");
                 extendedProps.put("type", isSmartBooking ? "SMART_BOOKING" : entity.getType().toString());
                 extendedProps.put("locationName", entity.getRoom() != null ? entity.getRoom().getName() : "No location specified");

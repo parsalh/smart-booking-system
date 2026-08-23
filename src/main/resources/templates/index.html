@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartBooking - Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
@@ -43,7 +45,7 @@
 <main class="max-w-7xl mx-auto p-6 space-y-6">
 
     <div id="eventModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white/90 backdrop-blur-2xl border border-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] transform transition-all relative overflow-hidden">
+        <div class="bg-white/90 backdrop-blur-2xl border border-white rounded-[2.5rem] p-8 max-w-2xl w-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] transform transition-all relative overflow-hidden">
 
             <div class="absolute -top-10 -left-10 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl"></div>
             <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl"></div>
@@ -60,36 +62,53 @@
 
                 <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 mb-2 leading-tight tracking-tight"></h3>
 
-                <div class="space-y-4 mt-6">
-                    <div class="flex items-center gap-3 text-gray-700 bg-white/40 p-4 rounded-2xl border border-white/60 shadow-sm">
-                        <div class="p-2 bg-blue-100 rounded-lg">
-                            <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3 text-gray-700 bg-white/40 p-3 rounded-2xl border border-white/60 shadow-sm">
+                            <div class="p-2 bg-blue-100 rounded-lg">
+                                <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i>
+                            </div>
+                            <span id="modalTime" class="text-sm font-bold"></span>
                         </div>
-                        <span id="modalTime" class="text-sm font-bold"></span>
-                    </div>
 
-                    <div class="flex items-center gap-3 text-gray-700 bg-white/40 p-4 rounded-2xl border border-white/60 shadow-sm">
-                        <div class="p-2 bg-emerald-100 rounded-lg">
-                            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i>
+                        <div class="flex items-center gap-3 text-gray-700 bg-white/40 p-3 rounded-2xl border border-white/60 shadow-sm">
+                            <div class="p-2 bg-emerald-100 rounded-lg">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i>
+                            </div>
+                            <span id="modalLocation" class="text-sm font-bold"></span>
                         </div>
-                        <span id="modalLocation" class="text-sm font-bold"></span>
-                    </div>
 
-                    <div id="modalAmenitiesContainer" class="pt-2 hidden">
-                        <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-800/60 mb-3 font-bold px-1">Room Features</p>
-                        <div id="modalAmenitiesList" class="flex flex-wrap gap-2"></div>
-                    </div>
-
-                    <div id="modalParticipantsContainer" class="pt-2 hidden">
-                        <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-3 font-bold px-1">Participants & RSVP</p>
-                        <div id="modalParticipantsList" class="flex flex-col gap-2"></div>
-                    </div>
-
-                    <div class="pt-2">
-                        <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Details</p>
-                        <div class="bg-white/30 p-4 rounded-2xl border border-white/40">
-                            <p id="modalDescription" class="text-sm text-gray-600 leading-relaxed font-medium"></p>
+                        <div id="modalAmenitiesContainer" class="pt-2 hidden">
+                            <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-800/60 mb-2 font-bold px-1">Room Features</p>
+                            <div id="modalAmenitiesList" class="flex flex-wrap gap-2"></div>
                         </div>
+
+                        <div id="modalParticipantsContainer" class="pt-2 hidden">
+                            <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Participants & RSVP</p>
+                            <div id="modalParticipantsList" class="flex flex-col gap-2"></div>
+                        </div>
+                    </div>
+
+                    <div id="eventMapSection" class="hidden flex flex-col justify-between">
+                        <div>
+                            <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-800/60 mb-2 font-bold px-1">Location Map</p>
+                            <div id="eventMap" class="w-full h-56 rounded-2xl border border-white/60 shadow-sm z-10"></div>
+                        </div>
+                        <div class="pt-4">
+                            <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Details</p>
+                            <div class="bg-white/30 p-3 rounded-2xl border border-white/40">
+                                <p id="modalDescription" class="text-sm text-gray-600 leading-relaxed font-medium"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="eventDescSection" class="pt-4">
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Details</p>
+                    <div class="bg-white/30 p-4 rounded-2xl border border-white/40">
+                        <p id="modalDescriptionFull" class="text-sm text-gray-600 leading-relaxed font-medium"></p>
                     </div>
                 </div>
 
@@ -296,71 +315,124 @@
         let eventsData = [];
         if (eventInput && eventInput.value) {
             try {
-                eventsData = JSON.parse(eventInput.value);
+                const rawEvents = JSON.parse(eventInput.value);
+                const emailInput = document.getElementById('currentUserEmail');
+                const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+
+                eventsData = rawEvents.filter(ev => {
+                    const props = ev.extendedProps || {};
+                    const parts = props.participants || {};
+
+                    for (const email of Object.keys(parts)) {
+                        if (email.trim().toLowerCase() === currentUserEmail) {
+                            return parts[email] !== 'DECLINED';
+                        }
+                    }
+                    return true;
+                });
+
             } catch (e) {
                 console.error("JSON Error:", e);
             }
         }
 
         const calendar = new FullCalendar.Calendar(calendarEl, {
-            views: {
-                rollingMonth: {
-                    type: 'dayGrid',
-                    duration: { weeks: 4 },
-                    buttonText: 'Month'
-                }
-            },
-            initialView: 'rollingMonth',
+            initialView: 'dayGridMonth',
             initialDate: new Date(),
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
-                right: 'rollingMonth,timeGridWeek'
+                right: 'dayGridMonth,timeGridWeek'
             },
             events: eventsData,
             firstDay: 1,
-            height: 730,
+            height: 750,
             expandRows: true,
-            dayMaxEvents: true,
+            dayMaxEvents: 2,
+            fixedWeekCount: false,
             slotDuration: '01:00:00',
             slotMinTime: '08:00:00',
             slotMaxTime: '22:00:00',
+            allDaySlot: false,
             eventDisplay: 'block',
             eventTimeFormat: { hour: 'numeric', minute: '2-digit', hour12: false },
+
+            eventClassNames: function(arg) {
+                const now = new Date();
+                const eventDate = arg.event.end || arg.event.start;
+
+                if (eventDate < now) {
+                    return ['opacity-50', 'hover:opacity-100', 'transition-opacity'];
+                }
+                return [];
+            },
 
             eventClick: function(info) {
                 const props = info.event.extendedProps;
 
                 document.getElementById('modalTitle').innerText = props['fullTitle'] || info.event.title || 'Untitled Event';
 
-                const startTime = info.event.start ? info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                const endTime = info.event.end ? info.event.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                const startTime = info.event.start ? info.event.start.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '';
+                const endTime = info.event.end ? info.event.end.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '';
                 document.getElementById('modalTime').innerText = endTime ? `${startTime} - ${endTime}` : startTime;
 
-                document.getElementById('modalLocation').innerText = props['fullLocation'] || props['locationName'] || 'No location specified';
-                document.getElementById('modalDescription').innerText = props.description || 'No details available.';
+                const roomLocation = props['roomLocation'] || props['fullLocation'] || 'El. Venizelou 70, Kallithea';
+                const roomName = props['locationName'] || 'Room Details';
 
-                const list = document.getElementById('modalAmenitiesList');
-                const container = document.getElementById('modalAmenitiesContainer');
-                list.innerHTML = '';
+                document.getElementById('modalLocation').innerText = roomLocation !== 'No location specified' ? `${roomName} - ${roomLocation}` : roomName;
 
-                const amenities = props['roomAmenities'];
-                if (amenities && amenities.length > 0) {
-                    container.classList.remove('hidden');
-                    amenities.forEach(amenity => {
-                        const span = document.createElement('span');
-                        span.className = "flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold border border-blue-100";
-                        span.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> ${amenity}`;
-                        list.appendChild(span);
-                    });
+                const descriptionText = props.description || 'No details available.';
+                const isSmartBooking = props.bookingId || descriptionText.includes('Automatically scheduled via SmartBooking App');
+
+                const mapSection = document.getElementById('eventMapSection');
+                const descSection = document.getElementById('eventDescSection');
+
+                if (isSmartBooking) {
+                    mapSection.classList.remove('hidden');
+                    descSection.classList.add('hidden');
+                    document.getElementById('modalDescription').innerText = descriptionText;
                 } else {
-                    container.classList.add('hidden');
+                    mapSection.classList.add('hidden');
+                    descSection.classList.remove('hidden');
+                    document.getElementById('modalDescriptionFull').innerText = descriptionText;
                 }
 
                 document.getElementById('eventModal').classList.remove('hidden');
                 lucide.createIcons();
+                document.getElementById('modalParticipantsContainer').classList.remove('hidden');
 
-                renderParticipants(props.bookingId, props.participants);
+                if (isSmartBooking && props.bookingId) {
+                    renderLiveParticipants(props.bookingId, props.participants, 'modalParticipantsList');
+                } else {
+                    document.getElementById('modalParticipantsContainer').classList.add('hidden');
+                }
+
+                if (isSmartBooking) {
+                    setTimeout(async () => {
+                        if (typeof initEventMap === 'function') {
+                            initEventMap();
+                            if (eventMap) {
+                                eventMap.invalidateSize();
+
+                                const coords = await geocodeAddress(roomLocation);
+                                const lat = coords ? coords.lat : 37.9575;
+                                const lng = coords ? coords.lng : 23.7025;
+
+                                eventMap.setView([lat, lng], 17);
+                                eventMarker.setLatLng([lat, lng]);
+                                eventMarker.bindPopup(`<b>${roomName}</b><br><span class="text-xs text-gray-500">${roomLocation}</span>`).openPopup();
+
+                                setTimeout(() => eventMap.invalidateSize(), 100);
+                            }
+                        }
+                    }, 300);
+                }
             }
         });
 
@@ -393,6 +465,9 @@
                         } else if (status === 'DECLINED') {
                             icon = 'x-circle';
                             colorClass = 'bg-red-50 text-red-700 border-red-200';
+                        } else if (status === 'TENTATIVE') {
+                            icon = 'help-circle';
+                            colorClass = 'bg-purple-50 text-purple-700 border-purple-200';
                         } else if (status === 'PENDING') {
                             icon = 'clock';
                             colorClass = 'bg-amber-50 text-amber-700 border-amber-200';
@@ -431,6 +506,33 @@
         });
     });
 
+    let eventMap = null;
+    let eventMarker = null;
+
+    function initEventMap() {
+        if (!eventMap) {
+            eventMap = L.map('eventMap').setView([37.9575, 23.7025], 17);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(eventMap);
+
+            eventMarker = L.marker([37.9575, 23.7025]).addTo(eventMap);
+        }
+    }
+
+    async function geocodeAddress(address) {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+            const data = await response.json();
+            if (data && data.length > 0) {
+                return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+            }
+        } catch (e) {
+            console.error("Geocoding error:", e);
+        }
+        return null;
+    }
+
     function openAllBookingsModal() {
         const listContainer = document.getElementById('allBookingsList');
         if (!listContainer) return;
@@ -445,18 +547,26 @@
         const modal = document.getElementById('allBookingsModal');
         if (modal) modal.classList.remove('hidden');
 
-        const emailInput = document.getElementById('currentUserEmail');
-        const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
-
         fetch('/api/bookings/my-smartbookings')
             .then(res => {
                 if (!res.ok) throw new Error('Network response error');
                 return res.json();
             })
             .then(bookings => {
+
+                const activeBookings = bookings.filter(booking => {
+                    const parts = booking.participants || {};
+                    for (const email of Object.keys(parts)) {
+                        if (email.trim().toLowerCase() === currentUserEmail) {
+                            return parts[email] !== 'DECLINED';
+                        }
+                    }
+                    return true;
+                });
+
                 listContainer.innerHTML = '';
 
-                if (!bookings || bookings.length === 0) {
+                if (!activeBookings || activeBookings.length === 0) {
                     listContainer.innerHTML = `
                     <div class="text-center py-12">
                         <div class="w-16 h-16 bg-white border border-slate-200 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
@@ -469,7 +579,7 @@
                     return;
                 }
 
-                bookings.forEach(booking => {
+                activeBookings.forEach(booking => {
                     const startDate = new Date(booking.startTime);
                     const endDate = booking.endTime ? new Date(booking.endTime) : null;
 
@@ -478,50 +588,8 @@
                         : startDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
 
                     const roomName = booking.room && booking.room.name ? booking.room.name : 'Unknown Room';
-
-                    const participantsMap = booking.participants || {};
-                    const participantsEntries = Object.entries(participantsMap);
-
-                    let participantsHtml = '';
-                    if (participantsEntries.length > 0) {
-                        const namesHtml = participantsEntries.map(([person, status]) => {
-                            const personLower = person.trim().toLowerCase();
-                            const isUser = (currentUserEmail && personLower === currentUserEmail) || personLower === 'you';
-                            const displayLabel = isUser ? `${person} (You)` : person;
-
-                            let icon = 'user';
-                            let colorClass = 'bg-slate-100 text-slate-700 border-slate-200/80';
-                            let iconColor = 'text-slate-400';
-
-                            if (status === 'ACCEPTED') {
-                                icon = 'check';
-                                colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                                iconColor = 'text-emerald-500';
-                            } else if (status === 'DECLINED') {
-                                icon = 'x';
-                                colorClass = 'bg-red-50 text-red-700 border-red-200';
-                                iconColor = 'text-red-500';
-                            } else if (status === 'PENDING') {
-                                icon = 'hourglass';
-                                colorClass = 'bg-amber-50 text-amber-700 border-amber-200';
-                                iconColor = 'text-amber-500';
-                            }
-
-                            return `<span class="inline-flex items-center px-2.5 py-1 ${colorClass} rounded-lg text-[10px] font-bold border truncate max-w-[200px]">
-                                        <i data-lucide="${icon}" class="w-3 h-3 mr-1 ${iconColor}"></i> ${displayLabel}
-                                    </span>`;
-                        }).join('');
-
-                        participantsHtml = `<div class="mt-4 pt-3 border-t border-slate-100">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Participants (${participantsEntries.length})</p>
-                            <div class="flex flex-wrap gap-2">${namesHtml}</div></div>`;
-                    } else {
-                        participantsHtml = `<div class="mt-4 pt-3 border-t border-slate-100">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Participants</p>
-                            <p class="text-xs text-slate-400 italic">Only you (Organizer)</p></div>`;
-                    }
-
-                    const title = booking.title || (booking.room ? booking.room.name : 'SmartBooking Meeting');
+                    const title = booking.title || roomName || 'SmartBooking Meeting';
+                    const containerId = `participants-list-${booking.id}`;
 
                     const card = document.createElement('div');
                     card.className = "flex items-start gap-5 p-5 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow group";
@@ -536,9 +604,16 @@
                             <p class="text-sm text-slate-500 font-semibold flex items-center gap-1.5"><i data-lucide="clock" class="w-4 h-4 text-slate-400"></i> ${timeStr}</p>
                             <p class="text-sm text-slate-500 font-semibold flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4 text-blue-500"></i> ${roomName}</p>
                         </div>
-                        ${participantsHtml}
+                        <div class="mt-4 pt-3 border-t border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Participants & RSVP</p>
+                            <!-- Το δοχείο που θα γεμίσει η renderLiveParticipants -->
+                            <div id="${containerId}" class="flex flex-wrap gap-2"></div>
+                        </div>
                     </div>`;
+
                     listContainer.appendChild(card);
+
+                    renderLiveParticipants(booking.id, booking.participants, containerId);
                 });
 
                 if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -672,8 +747,9 @@
             .then(data => {
                 const pendingInvites = data.map(invite => ({
                     bookingId: invite.bookingId,
-                    title: 'Meeting',
+                    title: invite.title || 'SmartBooking Meeting',
                     roomName: invite.roomName || 'Unknown Room',
+                    organizerEmail: invite.organizerEmail || 'Unknown Organizer',
                     startTime: invite.startTime,
                     endTime: invite.endTime
                 }));
@@ -729,13 +805,21 @@
             const dateStr = startDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
             const timeStr = `${startDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})} - ${endDate.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}`;
 
+            const displayTitle = (invite.title && invite.title !== 'SmartBooking Meeting')
+                ? invite.title
+                : (invite.roomName ? invite.roomName + ' Meeting' : 'SmartBooking Meeting');
+
             const card = document.createElement('div');
             card.id = `invite-card-${invite.bookingId}`;
             card.className = "bg-white p-5 border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow";
 
             card.innerHTML = `
                 <div class="mb-4">
-                    <h4 class="font-bold text-slate-900 text-lg">Invitation: ${invite.title}</h4>
+                    <h4 class="font-bold text-slate-900 text-lg truncate" title="Invitation: ${displayTitle}">Invitation: ${displayTitle}</h4>
+                    <p class="text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-1.5">
+                        <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                        Organizer: <span class="text-slate-700 font-bold">${invite.organizerEmail}</span>
+                    </p>
                 </div>
                 <div class="space-y-2 mb-5 bg-slate-50 p-3 rounded-xl border border-slate-100">
                     <p class="text-sm text-slate-700 flex items-center gap-2 font-medium">
@@ -800,12 +884,16 @@
                                 const events = window.smartCalendar.getEvents();
                                 events.forEach(ev => {
                                     if (ev.extendedProps && ev.extendedProps.bookingId === bookingId) {
-                                        let updatedParticipants = { ...ev.extendedProps.participants };
-                                        const emailInput = document.getElementById('currentUserEmail');
-                                        const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
-                                        if (currentUserEmail) {
-                                            updatedParticipants[currentUserEmail] = status;
-                                            ev.setExtendedProp('participants', updatedParticipants);
+                                        if (status === 'DECLINED') {
+                                            ev.remove();
+                                        } else {
+                                            let updatedParticipants = { ...ev.extendedProps.participants };
+                                            const emailInput = document.getElementById('currentUserEmail');
+                                            const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+                                            if (currentUserEmail) {
+                                                updatedParticipants[currentUserEmail] = status;
+                                                ev.setExtendedProp('participants', updatedParticipants);
+                                            }
                                         }
                                     }
                                 });
@@ -843,6 +931,105 @@
             if (badge) badge.classList.add('hidden');
             if (countBadge) countBadge.classList.add('hidden');
         }
+    }
+
+    function renderLiveParticipants(bookingId, fallbackParticipants, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const emailInput = document.getElementById('currentUserEmail');
+        const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+
+        const draw = (participantsRaw) => {
+            container.innerHTML = '';
+
+            let participantsEntries = [];
+            if (Array.isArray(participantsRaw)) {
+                participantsEntries = participantsRaw.map(a => [typeof a === 'string' ? a : (a.email || a.displayName), 'UNKNOWN']).filter(entry => entry[0]);
+            } else {
+                participantsEntries = Object.entries(participantsRaw || {});
+            }
+
+            if (participantsEntries.length > 0) {
+                participantsEntries.forEach(([email, status]) => {
+                    let icon = 'help-circle';
+                    let colorClass = 'bg-slate-50 text-slate-600 border-slate-200';
+                    let iconColor = 'text-slate-400';
+
+                    if (status === 'ACCEPTED') {
+                        icon = 'check-circle-2';
+                        colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                        iconColor = 'text-emerald-500';
+                    } else if (status === 'DECLINED') {
+                        icon = 'x-circle';
+                        colorClass = 'bg-red-50 text-red-700 border-red-200';
+                        iconColor = 'text-red-500';
+                    } else if (status === 'TENTATIVE') {
+                        icon = 'help-circle';
+                        colorClass = 'bg-purple-50 text-purple-700 border-purple-200';
+                        iconColor = 'text-purple-500';
+                    } else if (status === 'PENDING') {
+                        icon = 'clock';
+                        colorClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                        iconColor = 'text-amber-500';
+                    }
+
+                    const isUser = (currentUserEmail && email.trim().toLowerCase() === currentUserEmail);
+                    const displayLabel = isUser ? `${email} (You)` : email;
+
+                    const span = document.createElement('div');
+                    span.className = `flex items-center gap-2 px-3 py-2 ${colorClass} rounded-xl text-[10px] font-bold border truncate max-w-[200px]`;
+                    span.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 ${iconColor}"></i> ${displayLabel}`;
+                    container.appendChild(span);
+                });
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } else {
+                container.innerHTML = '<p class="text-xs text-slate-400 italic">No participants found.</p>';
+            }
+        };
+
+        if (!bookingId) {
+            draw(fallbackParticipants || {});
+            return;
+        }
+
+        container.innerHTML = `<div class="flex items-center gap-2 px-3 py-2 bg-slate-50 text-slate-500 border border-slate-200 rounded-xl text-xs font-bold w-fit"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Fetching Status...</div>`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        fetch(`/api/bookings/${bookingId}/participants`)
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(freshParticipants => {
+
+                if (freshParticipants) {
+                    for (const [email, status] of Object.entries(freshParticipants)) {
+                        if (email.trim().toLowerCase() === currentUserEmail && String(status).trim().toUpperCase() === 'DECLINED') {
+
+                            const cardElement = container.closest('.group');
+                            if (cardElement) {
+                                cardElement.remove();
+                            }
+
+                            if (window.smartCalendar) {
+                                const events = window.smartCalendar.getEvents();
+                                events.forEach(ev => {
+                                    if (ev.extendedProps && ev.extendedProps.bookingId === bookingId) {
+                                        ev.remove();
+                                    }
+                                });
+                            }
+
+                            const eventModal = document.getElementById('eventModal');
+                            if (eventModal && !eventModal.classList.contains('hidden')) {
+                                closeModal();
+                            }
+
+                            return;
+                        }
+                    }
+                }
+                draw(freshParticipants);
+            })
+            .catch(() => draw(fallbackParticipants || {}));
     }
 </script>
 </body>

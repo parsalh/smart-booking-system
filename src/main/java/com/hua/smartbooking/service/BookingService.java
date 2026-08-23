@@ -58,6 +58,7 @@ public class BookingService {
         newBooking.setStartTime(startInstant);
         newBooking.setEndTime(endInstant);
         newBooking.setStatus(Booking.BookingStatus.PENDING);
+        newBooking.setTitle(request.getTitle());
 
         Map<String, Booking.RsvpStatus> rsvpMap = new HashMap<>();
         List<String> googleAttendees = new ArrayList<>();
@@ -158,9 +159,10 @@ public class BookingService {
                     String orgName = booking.getUser() != null && booking.getUser().getFullname() != null
                             ? booking.getUser().getFullname() : "Unknown";
                     String rName = booking.getRoom() != null ? booking.getRoom().getName() : "Unknown Room";
+                    String meetingTitle = booking.getTitle() != null ? booking.getTitle() : "SmartBooking Meeting";
 
                     return new PendingInviteDTO(
-                            booking.getId(), orgName, booking.getUser().getEmail(),
+                            booking.getId(), meetingTitle, orgName, booking.getUser().getEmail(),
                             rName, booking.getStartTime(), booking.getEndTime());
                 })
                 .collect(Collectors.toList());
@@ -178,20 +180,32 @@ public class BookingService {
 
             if (googleStatus == null) return;
 
-            RsvpStatus mapped = switch (googleStatus) {
-                case "accepted" -> RsvpStatus.ACCEPTED;
-                case "declined" -> RsvpStatus.DECLINED;
-                case "tentative" -> RsvpStatus.TENTATIVE;
+            Booking.RsvpStatus mapped = switch (googleStatus) {
+                case "accepted" -> Booking.RsvpStatus.ACCEPTED;
+                case "declined" -> Booking.RsvpStatus.DECLINED;
+                case "tentative" -> Booking.RsvpStatus.TENTATIVE;
                 default -> null;
             };
 
             if (mapped != null) {
-                booking.getParticipants().keySet().stream()
-                        .filter(key -> key.equalsIgnoreCase(userEmail))
-                        .findFirst()
-                        .ifPresent(key -> booking.getParticipants().put(key, mapped));
+                com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();
 
-                bookingRepository.save(booking);
+                booking.getParticipants().keySet().stream()
+                        .filter(key -> {
+                            try {
+                                String dec = crypto.convertToEntityAttribute(key);
+                                return dec != null && dec.equalsIgnoreCase(userEmail);
+                            } catch (Exception e) {
+                                return key.equalsIgnoreCase(userEmail);
+                            }
+                        })
+                        .findFirst()
+                        .ifPresent(key -> {
+                            if (booking.getParticipants().get(key) != mapped) {
+                                booking.getParticipants().put(key, mapped);
+                                bookingRepository.save(booking);
+                            }
+                        });
             }
         } catch (Exception e) {
             System.err.println("Could not reconcile RSVP from Google: " + e.getMessage());
@@ -203,6 +217,7 @@ public class BookingService {
         com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();
 
         return bookingRepository.findAll().stream()
+                .filter(booking -> booking.getStatus() != Booking.BookingStatus.CANCELLED)
                 .filter(booking -> {
                     if (booking.getUser() != null && booking.getUser().getEmail().equalsIgnoreCase(targetEmail)) {
                         return true;
