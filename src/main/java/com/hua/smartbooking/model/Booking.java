@@ -50,7 +50,7 @@ public class Booking {
     @Column(name = "google_event_id")
     private String googleEventId;
 
-    @Column(name = "title", length = 1000)
+    @Column(name = "title", columnDefinition = "TEXT")
     @Convert(converter = StringCryptoConverter.class)
     private String title;
 
@@ -58,7 +58,7 @@ public class Booking {
     @CollectionTable(name = "booking_participants", joinColumns = @JoinColumn(name = "booking_id"))
     @MapKeyColumn(name = "participant_email", length = 500)
     @Convert(converter = StringCryptoConverter.class, attributeName = "key")
-    @Column(name = "rsvp_status")
+    @Column(name = "rsvp_status", columnDefinition = "TEXT")
     @Enumerated(EnumType.STRING)
     private Map<String, RsvpStatus> participants = new HashMap<>();
 

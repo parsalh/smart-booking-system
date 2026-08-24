@@ -24,7 +24,7 @@ public class User {
     private String email;
 
     @Convert(converter = StringCryptoConverter.class)
-    @Column(length = 500)
+    @Column(columnDefinition = "TEXT")
     private String fullname;
 
     @Column(name = "google_sub_id", unique = true)
@@ -37,7 +37,7 @@ public class User {
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
-    @Column(name = "avatar_url")
+    @Column(name = "avatar_url", columnDefinition = "TEXT")
     private String avatarUrl;
 
     public enum Role {

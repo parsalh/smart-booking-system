@@ -103,7 +103,23 @@ async function handleSearch(query) {
         if (searchId !== currentSearchId) return;
 
         if (users.length === 0) {
-            container.innerHTML = `<div class="p-4 text-sm text-slate-500 italic">No real users found in DB for "${searchTerm}"</div>`;
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailPattern.test(searchTerm)) {
+                container.innerHTML = `
+            <div class="p-4 flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-sm font-bold text-slate-900 truncate">${searchTerm}</div>
+                    <div class="text-[10px] text-slate-500">Not registered yet</div>
+                </div>
+                <button onclick="sendInvite('${searchTerm}', this)"
+                        class="shrink-0 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors">
+                    Invite
+                </button>
+            </div>
+        `;
+            } else {
+                container.innerHTML = `<div class="p-4 text-sm text-slate-500 italic">No real users found in DB for "${searchTerm}"</div>`;
+            }
         } else {
             const filtered = users.filter(u => !state.participants.find(p => p.email === u.email));
 
@@ -131,6 +147,33 @@ function addParticipantFromDB(id, name, email, avatar) {
     document.getElementById('participant-search').value = '';
     document.getElementById('search-results-container').classList.add('hidden');
     renderSelected();
+}
+
+async function sendInvite(email, buttonEl) {
+    buttonEl.disabled = true;
+    buttonEl.innerText = 'Sending...';
+
+    try {
+        const res = await fetch('/api/invite/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        if (!res.ok) throw new Error('Failed to send invite');
+
+        buttonEl.closest('.p-4').innerHTML = `
+            <div class="flex items-center gap-2 text-emerald-600 text-sm font-bold">
+                <i data-lucide="check-circle-2" class="w-4 h-4"></i> Invitation sent to ${email}
+            </div>
+        `;
+        lucide.createIcons();
+    } catch (error) {
+        buttonEl.disabled = false;
+        buttonEl.innerText = 'Invite';
+        alert('Failed to send invitation. Please try again.');
+        console.error(error);
+    }
 }
 
 function addParticipant(id) {

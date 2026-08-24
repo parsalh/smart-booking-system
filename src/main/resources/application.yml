@@ -37,6 +37,11 @@ spring:
 app:
   security:
     encryption-key: ${ENCRYPTION_KEY}
+  base-url: https://book-a-meeting.site
+
+resend:
+  api-key: ${RESEND_API_KEY}
+  from-email: invites@book-a-meeting.site
 
 server:
   forward-headers-strategy: framework

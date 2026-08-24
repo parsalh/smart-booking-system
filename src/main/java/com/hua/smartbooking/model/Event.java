@@ -25,11 +25,11 @@ public class Event {
     private Long id;
 
     @Convert(converter = StringCryptoConverter.class)
-    @Column(length = 500)
+    @Column(columnDefinition = "TEXT")
     private String title;
 
     @Convert(converter = StringCryptoConverter.class)
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private Instant startTime;
@@ -52,7 +52,7 @@ public class Event {
     @Convert(converter = StringCryptoConverter.class)
     @ElementCollection
     @CollectionTable(name = "event_participants", joinColumns = @JoinColumn(name = "event_id"))
-    @Column(name = "participant_email", length = 500)
+    @Column(name = "participant_email", columnDefinition = "TEXT")
     private List<String> participants = new ArrayList<>();
 
     public enum EventType {
