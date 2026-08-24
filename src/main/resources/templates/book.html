@@ -181,14 +181,14 @@
                 <span class="text-sm font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md">Ranked by availability</span>
             </h3>
 
-            <div id="recommended-times-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-2 pb-4">
+            <div id="recommended-times-container" class="space-y-4 max-h-[500px] overflow-y-auto pt-4 px-2 pb-4">
             </div>
 
             <div class="mt-8 pt-4 border-t border-slate-100 flex justify-between">
                 <button onclick="goToStep(1)" class="px-6 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all flex items-center gap-2">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
                 </button>
-                <button id="btn-to-room" onclick="fetchAvailableRooms()" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-md hover:bg-blue-700 transition-all hidden">
+                <button id="btn-to-room" onclick="fetchAvailableRooms()" class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all hidden">
                     Continue to Room Selection
                 </button>
             </div>
@@ -204,14 +204,14 @@
                 </div>
             </div>
 
-            <div id="recommended-rooms-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-2 pb-4">
+            <div id="recommended-rooms-container" class="space-y-4 max-h-[500px] overflow-y-auto pt-4 px-2 pb-4">
             </div>
 
             <div class="mt-8 pt-4 border-t border-slate-100 flex justify-between">
                 <button onclick="goToStep(2)" class="px-6 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all flex items-center gap-2">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Times
                 </button>
-                <button id="btn-to-confirm" onclick="goToStep(4); renderFinalReview();" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-all hidden flex items-center gap-2">
+                <button id="btn-to-confirm" onclick="goToStep(4); renderFinalReview();" class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all hidden flex items-center gap-2">
                     Review Booking <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
             </div>

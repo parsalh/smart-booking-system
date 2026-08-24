@@ -4,6 +4,7 @@ package com.hua.smartbooking.model;
 import com.hua.smartbooking.util.StringCryptoConverter;
 import jakarta.persistence.*;
 import lombok.*;
+import com.hua.smartbooking.enums.Role;
 
 @Entity
 @Table(name = "users",
@@ -40,9 +41,4 @@ public class User {
     @Column(name = "avatar_url", columnDefinition = "TEXT")
     private String avatarUrl;
 
-    public enum Role {
-        ADMIN,
-        STUDENT,
-        PROFESSOR
-    }
 }

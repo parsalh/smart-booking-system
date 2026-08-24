@@ -33,7 +33,8 @@ Calendar Container & Grid Layout
 }
 
 .fc .fc-day-today {
-    background-color: var(--fc-today-bg-color) !important;
+    background: linear-gradient(135deg, rgba(219, 234, 254, 0.6), rgba(209, 250, 229, 0.6)) !important;
+    box-shadow: none !important;
 }
 
 .fc-scrollgrid-sync-table,
@@ -84,8 +85,8 @@ Date Numbers & Badges
 
 .fc .fc-day-today .fc-daygrid-day-number {
     color: white !important;
-    background: linear-gradient(to bottom right, #2563eb, #10b981) !important;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+    background: linear-gradient(135deg, #2563eb, #10b981) !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4) !important;
 }
 
 /*
@@ -222,9 +223,9 @@ Event Blocks & Classifications
 }
 
 .event-other {
-    --evt-bg: rgba(191, 219, 254, 0.9);
-    --evt-border: #3b82f6;
-    --evt-text: #1e3a8a;
+    --evt-bg: rgba(226, 232, 240, 0.9);
+    --evt-border: #64748b;
+    --evt-text: #1e293b;
 }
 
 .fc-event,
@@ -255,6 +256,14 @@ Event Blocks & Classifications
 .fc-event-title {
     font-weight: 700 !important;
     letter-spacing: -0.01em;
+    font-size: 11.5px !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 .fc-event-title::before {
@@ -265,7 +274,20 @@ Event Blocks & Classifications
     border-radius: 50%;
     background: var(--evt-border, #3b82f6);
     margin-right: 5px;
-    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.fc .event-smartbooking .fc-event-title::before {
+    content: '✦' !important;
+    background: transparent !important;
+    width: auto !important;
+    height: auto !important;
+    color: var(--evt-border, #1d4ed8) !important;
+    font-size: 11.5px !important;
+    margin-right: 4px !important;
+    box-shadow: none !important;
+    flex-shrink: 0 !important;
+    margin-top: -1px !important;
 }
 
 .fc-event-time {
@@ -285,15 +307,19 @@ Event Blocks & Classifications
     color: inherit !important;
 }
 
+.event-smartbooking {
+    --evt-border: #1d4ed8;
+    --evt-text: #1e3a8a;
+}
+
 .fc .event-smartbooking {
-    background: #10b981 !important;
-    border-color: #059669 !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3) !important;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.6), rgba(52, 211, 153, 0.6)) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
 }
 
 .fc .event-smartbooking:hover {
-    background: #059669 !important;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.7), rgba(52, 211, 153, 0.7)) !important;
+    box-shadow: 0 4px 10px rgba(29, 78, 216, 0.15) !important;
 }
 
 .fc .fc-daygrid-day-top {

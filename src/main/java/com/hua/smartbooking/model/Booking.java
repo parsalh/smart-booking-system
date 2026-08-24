@@ -1,5 +1,7 @@
 package com.hua.smartbooking.model;
 
+import com.hua.smartbooking.enums.BookingStatus;
+import com.hua.smartbooking.enums.RsvpStatus;
 import com.hua.smartbooking.util.StringCryptoConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -61,13 +63,5 @@ public class Booking {
     @Column(name = "rsvp_status", columnDefinition = "TEXT")
     @Enumerated(EnumType.STRING)
     private Map<String, RsvpStatus> participants = new HashMap<>();
-
-    public enum BookingStatus {
-        PENDING, APPROVED, REJECTED, CANCELLED
-    }
-
-    public enum RsvpStatus {
-        PENDING, ACCEPTED, DECLINED, TENTATIVE
-    }
 
 }

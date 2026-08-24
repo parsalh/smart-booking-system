@@ -1,5 +1,6 @@
 package com.hua.smartbooking.mapper;
 
+import com.hua.smartbooking.enums.EventType;
 import com.hua.smartbooking.model.Event;
 import com.hua.smartbooking.model.Room;
 import com.hua.smartbooking.model.User;
@@ -93,14 +94,14 @@ public class EventMapper {
         return entity;
     }
 
-    private Event.EventType classify(String summary) {
-        if (summary == null || summary.isEmpty()) return Event.EventType.OTHER;
+    private EventType classify(String summary) {
+        if (summary == null || summary.isEmpty()) return EventType.OTHER;
         String s = summary.toLowerCase();
-        if (s.contains("lecture")) return Event.EventType.LECTURE;
-        if (s.contains("lab")) return Event.EventType.LAB;
-        if (s.contains("office")) return Event.EventType.OFFICE_HOURS;
-        if (s.contains("meeting")) return Event.EventType.MEETING;
-        return Event.EventType.OTHER;
+        if (s.contains("lecture")) return EventType.LECTURE;
+        if (s.contains("lab")) return EventType.LAB;
+        if (s.contains("office")) return EventType.OFFICE_HOURS;
+        if (s.contains("meeting")) return EventType.MEETING;
+        return EventType.OTHER;
     }
 
     private Instant convertGoogleTimeToInstant(com.google.api.services.calendar.model.EventDateTime googleTime) {

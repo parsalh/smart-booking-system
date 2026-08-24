@@ -3,6 +3,7 @@ package com.hua.smartbooking.service;
 import com.google.api.services.calendar.model.Event;
 import com.hua.smartbooking.dto.FinalBookingRequest;
 import com.hua.smartbooking.dto.PendingInviteDTO;
+import com.hua.smartbooking.enums.BookingStatus;
 import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.Room;
 import com.hua.smartbooking.model.User;
@@ -13,7 +14,7 @@ import com.hua.smartbooking.util.StringCryptoConverter;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
-import com.hua.smartbooking.model.Booking.RsvpStatus;
+import com.hua.smartbooking.enums.RsvpStatus;
 
 import java.time.Instant;
 import java.util.*;
@@ -57,21 +58,21 @@ public class BookingService {
         newBooking.setRoom(room);
         newBooking.setStartTime(startInstant);
         newBooking.setEndTime(endInstant);
-        newBooking.setStatus(Booking.BookingStatus.PENDING);
+        newBooking.setStatus(BookingStatus.PENDING);
         newBooking.setTitle(request.getTitle());
 
-        Map<String, Booking.RsvpStatus> rsvpMap = new HashMap<>();
+        Map<String, RsvpStatus> rsvpMap = new HashMap<>();
         List<String> googleAttendees = new ArrayList<>();
 
         String organizerEmail = organizer.getEmail().toLowerCase().trim();
-        rsvpMap.put(organizerEmail, Booking.RsvpStatus.ACCEPTED);
+        rsvpMap.put(organizerEmail, RsvpStatus.ACCEPTED);
         googleAttendees.add(organizerEmail);
 
         if (request.getParticipants() != null) {
             for (String email : request.getParticipants()) {
                 String normalized = email.toLowerCase().trim();
                 if (!normalized.equals(organizerEmail)) {
-                    rsvpMap.put(normalized, Booking.RsvpStatus.PENDING);
+                    rsvpMap.put(normalized, RsvpStatus.PENDING);
                     googleAttendees.add(normalized);
                 }
             }
@@ -93,7 +94,7 @@ public class BookingService {
             );
 
             newBooking.setGoogleEventId(googleEvent.getId());
-            newBooking.setStatus(Booking.BookingStatus.APPROVED);
+            newBooking.setStatus(BookingStatus.APPROVED);
 
             bookingRepository.save(newBooking);
 
@@ -106,7 +107,7 @@ public class BookingService {
             return response;
 
         } catch (Exception e) {
-            newBooking.setStatus(Booking.BookingStatus.CANCELLED);
+            newBooking.setStatus(BookingStatus.CANCELLED);
             bookingRepository.save(newBooking);
             throw new Exception("Failed to sync with Google Calendar: " + e.getMessage());
         }
@@ -146,7 +147,7 @@ public class BookingService {
         String targetEmail = userEmail.toLowerCase().trim();
 
         List<Booking> candidates = bookingRepository.findByStartTimeAfterAndStatusNot(
-                Instant.now(), Booking.BookingStatus.CANCELLED);
+                Instant.now(), BookingStatus.CANCELLED);
 
         return candidates.stream()
                 .filter(booking -> {
@@ -180,10 +181,10 @@ public class BookingService {
 
             if (googleStatus == null) return;
 
-            Booking.RsvpStatus mapped = switch (googleStatus) {
-                case "accepted" -> Booking.RsvpStatus.ACCEPTED;
-                case "declined" -> Booking.RsvpStatus.DECLINED;
-                case "tentative" -> Booking.RsvpStatus.TENTATIVE;
+            RsvpStatus mapped = switch (googleStatus) {
+                case "accepted" -> RsvpStatus.ACCEPTED;
+                case "declined" -> RsvpStatus.DECLINED;
+                case "tentative" -> RsvpStatus.TENTATIVE;
                 default -> null;
             };
 
@@ -217,7 +218,7 @@ public class BookingService {
         com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();
 
         return bookingRepository.findAll().stream()
-                .filter(booking -> booking.getStatus() != Booking.BookingStatus.CANCELLED)
+                .filter(booking -> booking.getStatus() != BookingStatus.CANCELLED)
                 .filter(booking -> {
                     if (booking.getUser() != null && booking.getUser().getEmail().equalsIgnoreCase(targetEmail)) {
                         return true;
@@ -246,8 +247,8 @@ public class BookingService {
                     if (booking.getRoom() != null) roomMap.put("name", booking.getRoom().getName());
                     map.put("room", roomMap);
 
-                    Map<String, Booking.RsvpStatus> decryptedParticipants = new HashMap<>();
-                    for (Map.Entry<String, Booking.RsvpStatus> entry : booking.getParticipants().entrySet()) {
+                    Map<String, RsvpStatus> decryptedParticipants = new HashMap<>();
+                    for (Map.Entry<String, RsvpStatus> entry : booking.getParticipants().entrySet()) {
                         try {
                             String dec = crypto.convertToEntityAttribute(entry.getKey());
                             decryptedParticipants.put(dec != null ? dec : entry.getKey(), entry.getValue());
@@ -261,5 +262,4 @@ public class BookingService {
                 })
                 .collect(Collectors.toList());
     }
-
 }

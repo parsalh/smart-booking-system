@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import com.hua.smartbooking.enums.EventType;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -54,13 +55,5 @@ public class Event {
     @CollectionTable(name = "event_participants", joinColumns = @JoinColumn(name = "event_id"))
     @Column(name = "participant_email", columnDefinition = "TEXT")
     private List<String> participants = new ArrayList<>();
-
-    public enum EventType {
-        LECTURE,
-        LAB,
-        MEETING,
-        OFFICE_HOURS,
-        OTHER
-    }
 
 }

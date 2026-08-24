@@ -1,5 +1,6 @@
 package com.hua.smartbooking.repository;
 
+import com.hua.smartbooking.enums.BookingStatus;
 import com.hua.smartbooking.model.Booking;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -30,5 +31,5 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     Optional<Booking> findByGoogleEventId(String googleEventId);
 
-    List<Booking> findByStartTimeAfterAndStatusNot(Instant now, Booking.BookingStatus excludedStatus);
+    List<Booking> findByStartTimeAfterAndStatusNot(Instant now, BookingStatus excludedStatus);
 }

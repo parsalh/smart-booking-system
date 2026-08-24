@@ -2,6 +2,7 @@ package com.hua.smartbooking.controller;
 
 import com.google.api.services.calendar.model.TimePeriod;
 import com.hua.smartbooking.dto.*;
+import com.hua.smartbooking.enums.RsvpStatus;
 import com.hua.smartbooking.exception.UserNotRegisteredException;
 import com.hua.smartbooking.mapper.RoomMapper;
 import com.hua.smartbooking.model.Booking;
@@ -18,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
-
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -234,8 +234,8 @@ public class BookingController {
                         }
                     }
 
-                    Map<String, Booking.RsvpStatus> decrypted = new HashMap<>();
-                    for (Map.Entry<String, Booking.RsvpStatus> entry : booking.getParticipants().entrySet()) {
+                    Map<String, RsvpStatus> decrypted = new HashMap<>();
+                    for (Map.Entry<String, RsvpStatus> entry : booking.getParticipants().entrySet()) {
                         try {
                             String dec = crypto.convertToEntityAttribute(entry.getKey());
                             decrypted.put(dec != null ? dec : entry.getKey(), entry.getValue());

@@ -1,6 +1,7 @@
 package com.hua.smartbooking.service;
 
 import com.google.api.services.calendar.model.EventDateTime;
+import com.hua.smartbooking.enums.EventType;
 import com.hua.smartbooking.model.Event;
 import com.hua.smartbooking.mapper.EventMapper;
 import com.hua.smartbooking.model.User;
@@ -49,7 +50,7 @@ public class EventMappingService {
         Instant now = Instant.now();
 
         return eventRepository.findByUser(user).stream()
-                .filter(e -> e.getType() == Event.EventType.MEETING)
+                .filter(e -> e.getType() == EventType.MEETING)
                 .filter(e -> e.getStartTime() != null && e.getStartTime().isAfter(now))
                 .count();
     }

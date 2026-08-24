@@ -1,6 +1,6 @@
 package com.hua.smartbooking.dto;
 
-import com.hua.smartbooking.model.Booking.RsvpStatus;
+import com.hua.smartbooking.enums.RsvpStatus;
 import lombok.Data;
 
 @Data

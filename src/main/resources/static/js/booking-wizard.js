@@ -268,7 +268,14 @@ async function handleFindBestTimes() {
     };
 
     const btn = document.getElementById('find-times-btn');
-    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Analyzing...`;
+    btn.disabled = true;
+    btn.innerHTML = `
+        <svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg> 
+        <span>Analyzing...</span>
+    `;
 
     try {
         const response = await fetch('/api/bookings/suggest-times', {
@@ -301,8 +308,9 @@ async function handleFindBestTimes() {
         alert("Search Error: " + error.message);
         console.error(error);
     } finally {
-        btn.innerHTML = `Find Best Times <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
-        lucide.createIcons();
+        btn.disabled = false;
+        btn.innerHTML = `Find Best Times <i data-lucide="arrow-right" class="w-5 h-5"></i>`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 }
 
@@ -330,12 +338,12 @@ function renderTrafficLightTimeSlots(slots) {
                 </div>`;
 
             return `
-                <div onclick="selectTimeSlot('${slot.startTime}', '${slot.endTime}')" 
-                     class="relative overflow-hidden p-[2px] rounded-2xl mb-3 shadow-md cursor-pointer group transition-all hover:scale-[1.005]">
+                <div onclick="selectTimeSlot('${slot.startTime}', '${slot.endTime}', this)" 
+                     class="time-slot-card relative overflow-hidden p-[2px] rounded-2xl mb-4 mx-1 shadow-md cursor-pointer group transition-all hover:scale-[1.005]">
                     
                     <div class="absolute inset-[-500%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_0deg,#059669_0%,#34d399_25%,#e6f4ea_50%,#34d399_75%,#059669_100%)] opacity-90"></div>
                     
-                    <div class="relative bg-emerald-50/95 rounded-[14px] p-4 transition-all group-hover:bg-emerald-100/90">
+                    <div class="relative bg-emerald-50/95 rounded-[14px] p-5 transition-all group-hover:bg-emerald-100/90">
                         <div class="flex justify-between items-center">
                             <div>
                                 ${badgeHtml}
@@ -373,8 +381,8 @@ function renderTrafficLightTimeSlots(slots) {
         }
 
         return `
-            <div onclick="selectTimeSlot('${slot.startTime}', '${slot.endTime}')" 
-                 class="cursor-pointer rounded-2xl p-4 mb-3 shadow-sm hover:shadow-md transition-all ${colorClass}">
+            <div onclick="selectTimeSlot('${slot.startTime}', '${slot.endTime}', this)" 
+                 class="time-slot-card cursor-pointer rounded-2xl p-5 mb-4 mx-1 shadow-sm hover:shadow-md transition-all ${colorClass}">
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="text-base font-bold text-slate-900">${dateString}</h3>
@@ -396,11 +404,19 @@ function renderTrafficLightTimeSlots(slots) {
     }
 }
 
-function selectTimeSlot(start, end) {
+function selectTimeSlot(start, end, element) {
     state.selectedTimeSlot = { start, end };
-    fetchAvailableRooms();
-}
 
+    document.querySelectorAll('.time-slot-card').forEach(el => {
+        el.classList.remove('ring-4', 'ring-emerald-500', 'ring-offset-2', 'border-emerald-500');
+    });
+
+    if (element) {
+        element.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'border-emerald-500');
+    }
+
+    document.getElementById('btn-to-room').classList.remove('hidden');
+}
 async function fetchAvailableRooms() {
     const payload = {
         startTime: state.selectedTimeSlot.start, endTime: state.selectedTimeSlot.end,
@@ -449,7 +465,7 @@ function renderRoomCards(rooms) {
         }).join('');
 
         return `
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all mb-4">
+            <div id="room-card-${room.id}" class="room-card bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all mb-5 mx-1">
                 <div class="w-full h-48 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative mb-4">
                     ${imageHtml}
                 </div>
@@ -476,14 +492,14 @@ function renderRoomCards(rooms) {
                     </div>
                 </div>
 
-                <button id="btn-select-room-${room.id}" type="button" onclick="selectRoom(${room.id}, '${room.name}', '${room.building || ''}', '${room.location || ''}')" class="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm flex justify-center items-center gap-2">
+                <button id="btn-select-room-${room.id}" type="button" onclick="selectRoom(${room.id}, '${room.name}', '${room.building || ''}', '${room.location || ''}')" class="room-select-btn w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm flex justify-center items-center gap-2">
                     <span>Select This Room</span>
                 </button>
             </div>
         `;
     }).join('');
 
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function selectRoom(id, name, building, location) {
@@ -491,6 +507,28 @@ function selectRoom(id, name, building, location) {
     state.selectedRoomName = name;
     state.selectedRoomBuilding = building;
     state.selectedRoomLocation = location;
+
+    document.querySelectorAll('.room-card').forEach(card => {
+        card.classList.remove('ring-4', 'ring-emerald-500', 'ring-offset-2', 'border-emerald-500');
+    });
+
+    document.querySelectorAll('.room-select-btn').forEach(btn => {
+        btn.innerHTML = '<span>Select This Room</span>';
+        btn.className = 'room-select-btn w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm flex justify-center items-center gap-2';
+    });
+
+    const selectedCard = document.getElementById(`room-card-${id}`);
+    if (selectedCard) {
+        selectedCard.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'border-emerald-500');
+    }
+
+    const selectedBtn = document.getElementById(`btn-select-room-${id}`);
+    if (selectedBtn) {
+        selectedBtn.innerHTML = '<i data-lucide="check-circle-2" class="w-5 h-5"></i> <span>Selected</span>';
+        selectedBtn.className = 'room-select-btn w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-xl shadow-lg scale-[1.02] transition-all flex justify-center items-center gap-2';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
     document.getElementById('btn-to-confirm').classList.remove('hidden');
 }
 
@@ -538,9 +576,8 @@ async function submitFinalBooking() {
         participants: state.participants.map(p => p.email)
     };
 
-    const btn = document.getElementById('final-confirm-btn');
-    btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin inline mr-2"></i> Booking & Syncing...`;
+    const btn = document.getElementById('find-times-btn');
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> <span>Analyzing...</span>`;
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     try {
@@ -630,7 +667,7 @@ function renderSuccessScreen(bookingData) {
 
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
                 ${calendarBtn}
-                <a href="/" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md">
+                <a href="/" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95">
                     <i data-lucide="home" class="w-5 h-5"></i> Back to Dashboard
                 </a>
             </div>

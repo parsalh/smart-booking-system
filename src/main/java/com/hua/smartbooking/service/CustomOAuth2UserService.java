@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
+import com.hua.smartbooking.enums.Role;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -43,7 +44,7 @@ public class CustomOAuth2UserService extends OidcUserService {
             newUser.setFullname(name);
             newUser.setGoogleSubId(sub);
             newUser.setAvatarUrl(picture);
-            newUser.setRole(User.Role.STUDENT);
+            newUser.setRole(Role.STUDENT);
             return userRepository.save(newUser);
         });
 
