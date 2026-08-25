@@ -32,10 +32,19 @@ public class MeetingOptimizerService {
             int meetingDurationMinutes,
             List<String> requiredEmails,
             List<String> optionalEmails,
-            Map<String, List<TimePeriod>> userBusyBlocks
+            Map<String, List<TimePeriod>> userBusyBlocks,
+            String dailyStartTime,
+            String dailyEndTime,
+            Integer maxResults
     ) {
         List<TimeSlotScore> viableSlots = new ArrayList<>();
         ZonedDateTime currentSlotStart = searchStart;
+        ZoneId athensZone = ZoneId.of("Europe/Athens");
+
+        LocalTime userStartTime = (dailyStartTime != null && !dailyStartTime.trim().isEmpty())
+                ? LocalTime.parse(dailyStartTime) : LocalTime.MIN;
+        LocalTime userEndTime = (dailyEndTime != null && !dailyEndTime.trim().isEmpty())
+                ? LocalTime.parse(dailyEndTime) : LocalTime.MAX;
 
         while (currentSlotStart.plusMinutes(meetingDurationMinutes).isBefore(searchEnd) ||
                 currentSlotStart.plusMinutes(meetingDurationMinutes).isEqual(searchEnd)) {
@@ -48,6 +57,13 @@ public class MeetingOptimizerService {
             }
 
             if (isOutsideBusinessHours(currentSlotStart, currentSlotEnd)) {
+                currentSlotStart = currentSlotStart.plusMinutes(30);
+                continue;
+            }
+
+            ZonedDateTime localStart = currentSlotStart.withZoneSameInstant(athensZone);
+            ZonedDateTime localEnd = currentSlotEnd.withZoneSameInstant(athensZone);
+            if (localStart.toLocalTime().isBefore(userStartTime) || localEnd.toLocalTime().isAfter(userEndTime)) {
                 currentSlotStart = currentSlotStart.plusMinutes(30);
                 continue;
             }
@@ -115,9 +131,10 @@ public class MeetingOptimizerService {
             viableSlots.add(new TimeSlotScore(currentSlotStart, currentSlotEnd, finalScore, optionalAvailable));
             currentSlotStart = currentSlotStart.plusMinutes(30);
         }
+        int limit = (maxResults != null && maxResults > 0) ? maxResults : 15;
 
         Collections.sort(viableSlots);
-        return viableSlots.stream().limit(30).toList();
+        return viableSlots.stream().limit(limit).toList();
     }
 
     private boolean isUserBusy(String email, ZonedDateTime slotStart, ZonedDateTime slotEnd, Map<String, List<TimePeriod>> allBusyBlocks) {

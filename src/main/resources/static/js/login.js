@@ -63,3 +63,4 @@ new Chart(document.getElementById('syncChart'), {
         cutout: '75%'
     }
 });
+

@@ -32,6 +32,7 @@ function openAddModal() {
     document.getElementById('roomFloor').value = "";
     document.getElementById('roomCapacity').value = "";
     document.getElementById('roomImage').value = "";
+    document.getElementById('roomIsAvailable').checked = true;
 
     document.querySelectorAll('input[name="amenities"]').forEach(cb => cb.checked = false);
 
@@ -39,7 +40,7 @@ function openAddModal() {
     document.getElementById('roomModal').classList.remove('hidden');
 }
 
-function openEditModal(id, name, building, location, floor, capacity, imageUrl, amenitiesStr) {
+function openEditModal(id, name, building, location, floor, capacity, imageUrl,isAvailable, amenitiesStr) {
     const modalTitle = document.getElementById('modalTitle');
     const form = document.getElementById('roomForm');
 
@@ -53,6 +54,12 @@ function openEditModal(id, name, building, location, floor, capacity, imageUrl, 
     document.getElementById('roomFloor').value = floor || '';
     document.getElementById('roomCapacity').value = capacity || '';
     document.getElementById('roomImage').value = imageUrl || '';
+
+    const isAvail = (isAvailable === 'true' || isAvailable === true);
+    const availableCheckbox = document.getElementById('roomIsAvailable');
+    if (availableCheckbox) {
+        availableCheckbox.checked = isAvail;
+    }
 
     document.querySelectorAll('input[name="amenities"]').forEach(cb => cb.checked = false);
     if (amenitiesStr) {
@@ -115,6 +122,23 @@ function confirmDelete() {
     }
 }
 
+function showAdminError(message) {
+    const errorDiv = document.getElementById('admin-error');
+    const errorText = document.getElementById('admin-error-text');
+
+    if (errorDiv && errorText) {
+        errorText.innerText = message;
+        errorDiv.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        setTimeout(() => {
+            errorDiv.classList.add('hidden');
+        }, 6000);
+    } else {
+        alert(message);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
@@ -155,9 +179,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const floor = btn.dataset.floor || '';
             const capacity = btn.dataset.capacity || '';
             const imageUrl = btn.dataset.image || '';
+            const isAvailable = btn.dataset.isAvailable !== 'false';
             const amenities = btn.dataset.amenities || '';
 
-            openEditModal(id, name, building, location, floor, capacity, imageUrl, amenities);
+            openEditModal(id, name, building, location, floor, capacity, imageUrl, isAvailable, amenities);
         });
     });
 

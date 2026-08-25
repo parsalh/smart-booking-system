@@ -104,6 +104,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const capacity = card.dataset.capacity || '';
             const imageUrl = card.dataset.image || '';
             const amenities = card.dataset.amenities || '';
+            const isAvailable = card.dataset.isAvailable === 'true';
+
+            const banner = document.getElementById('modalUnavailableBanner');
+            if (banner) {
+                if (!isAvailable) {
+                    banner.classList.remove('hidden');
+                } else {
+                    banner.classList.add('hidden');
+                }
+            }
 
             openModal(name, building, location, floor, capacity, imageUrl, amenities);
         });

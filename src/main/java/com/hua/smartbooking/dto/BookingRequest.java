@@ -13,4 +13,9 @@ public class BookingRequest {
     private String dateRangeStart;
     private String dateRangeEnd;
 
+    private String dailyStartTime;
+    private String dailyEndTime;
+
+    private Integer maxResults;
+
 }

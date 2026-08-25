@@ -60,6 +60,7 @@ public class AdminController {
             existingRoom.setFloor(updatedRoom.getFloor());
             existingRoom.setCapacity(updatedRoom.getCapacity());
             existingRoom.setImageUrl(updatedRoom.getImageUrl());
+            existingRoom.setIsAvailable(updatedRoom.getIsAvailable() != null && updatedRoom.getIsAvailable());
 
             if (existingRoom.getAmenities() != null) {
                 existingRoom.getAmenities().clear();
@@ -88,8 +89,12 @@ public class AdminController {
     }
 
     @PostMapping("/rooms/delete")
-    public String deleteRoom(@RequestParam Long id) {
-        roomRepository.deleteById(id);
+    public String deleteRoom(@RequestParam Long id, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        try {
+            roomRepository.deleteById(id);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Δεν μπορείτε να διαγράψετε αυτό το δωμάτιο γιατί υπάρχουν ήδη συγχρονισμένες κρατήσεις σε αυτό.");
+        }
         return "redirect:/admin/rooms";
     }
 

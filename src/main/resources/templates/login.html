@@ -3,130 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartBooking - Welcome</title>
+    <title>SmartBooking - Sign In</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body class="bg-gray-50 font-sans text-gray-900">
+<body class="min-h-screen flex font-sans text-slate-900 selection:bg-blue-100 bg-white overflow-hidden">
 
-<div class="max-w-7xl mx-auto px-6 py-12 space-y-20">
+<div class="hidden lg:flex lg:w-3/5 bg-gradient-to-br from-slate-900 via-blue-900 to-emerald-900 relative p-10 xl:p-16 flex-col justify-between h-screen overflow-y-auto">
 
-    <section class="text-center max-w-4xl mx-auto pt-10">
-        <div class="flex justify-center mb-8">
-            <img th:src="@{/images/hua-logo.png}"
-                 alt="HUA Logo"
-                 class="w-20 h-20 object-contain"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+    <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+        <div class="absolute -top-24 -left-24 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-[100px] opacity-50"></div>
+        <div class="absolute bottom-10 -right-24 w-96 h-96 bg-emerald-500 rounded-full mix-blend-screen filter blur-[100px] opacity-50"></div>
+    </div>
 
-            <div class="hidden w-20 h-20 bg-white rounded-2xl shadow-sm items-center justify-center border border-gray-100 p-4">
-                <span class="text-blue-600 font-bold text-xl">HUA</span>
+    <div class="relative z-10 flex items-center gap-3 mb-8">
+        <img th:src="@{/images/hua-logo.png}" alt="HUA Logo" class="w-12 h-12 object-contain" onerror="this.style.display='none';" />
+        <span class="text-white font-bold text-2xl tracking-tight">SmartBooking</span>
+    </div>
+
+    <div class="relative z-10 flex-1 grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-10 items-center">
+
+        <div class="max-w-xl">
+            <h1 class="text-4xl lg:text-5xl font-black text-white leading-tight mb-6">
+                Meet seamlessly.<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-emerald-300">Schedule instantly.</span>
+            </h1>
+            <p class="text-slate-300 text-lg leading-relaxed font-medium mb-10">
+                Our smart platform automatically finds the perfect time and room for your meetings by analyzing everyone's availability.
+            </p>
+
+            <div class="space-y-6">
+                <div class="flex items-center gap-4 text-slate-100">
+                    <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg">
+                        <i data-lucide="calendar-sync" class="w-6 h-6 text-blue-300"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Google Calendar Sync</h3>
+                        <p class="text-sm text-slate-400">Automated availability checking</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 text-slate-100">
+                    <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg">
+                        <i data-lucide="sparkles" class="w-6 h-6 text-emerald-300"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Smart Room Matching</h3>
+                        <p class="text-sm text-slate-400">Based on capacity and amenities</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 text-slate-100">
+                    <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg">
+                        <i data-lucide="send" class="w-6 h-6 text-purple-300"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Instant Invitations</h3>
+                        <p class="text-sm text-slate-400">One-click RSVP management</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-emerald-500/10 border border-blue-500/20 rounded-full mb-6 text-blue-600">
-            <i data-lucide="sparkles" class="w-4 h-4 text-emerald-500"></i>
-            <span class="text-sm font-semibold tracking-wide">AI-Powered Smart Scheduling</span>
+        <div class="relative w-full h-80 xl:h-[26rem] hidden md:block group rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+            <div class="relative w-full h-full">
+
+                    <img src="https://images.unsplash.com/photo-1571624436279-b272aff752b5?auto=format&fit=crop&q=80&w=800"
+                         alt="Campus"
+                         class="slide-img absolute inset-0 w-full h-full object-cover opacity-100 transition-opacity duration-700 ease-in-out z-10" />
+
+                    <img th:src="@{/images/home_page.png}"
+                         alt="SmartBooking Dashboard"
+                         class="slide-img absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-700 ease-in-out z-0" />
+
+                    <img src="https://studyingreece.edu.gr/wp-content/uploads/2021/01/hua_banner-1536x1023.jpg"
+                         alt="Campus"
+                         class="slide-img absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-700 ease-in-out z-0" />
+
+            </div>
+
+            <button id="prevSlide" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all z-20 opacity-0 group-hover:opacity-100">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            </button>
+
+            <button id="nextSlide" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all z-20 opacity-0 group-hover:opacity-100">
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+            </button>
+
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                <div class="slide-dot w-2 h-2 rounded-full bg-white transition-all cursor-pointer"></div>
+                <div class="slide-dot w-2 h-2 rounded-full bg-white/40 transition-all cursor-pointer"></div>
+                <div class="slide-dot w-2 h-2 rounded-full bg-white/40 transition-all cursor-pointer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="relative z-10 text-slate-400 text-sm font-medium mt-8">
+        &copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2026</span> Harokopio University of Athens. All rights reserved.
+    </div>
+</div>
+
+<div class="w-full lg:w-2/5 flex flex-col justify-center items-center bg-white p-8 relative shadow-[-10px_0_30px_rgba(0,0,0,0.05)] z-20">
+
+    <div class="lg:hidden absolute top-8 left-8 flex items-center gap-2">
+        <img th:src="@{/images/hua-logo.png}" alt="HUA Logo" class="w-8 h-8 object-contain" />
+        <span class="font-bold text-lg text-slate-900 tracking-tight">SmartBooking</span>
+    </div>
+
+    <div class="max-w-md w-full space-y-10">
+        <div class="text-center">
+            <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-sm border border-blue-100">
+                <i data-lucide="log-in" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-3xl font-black text-slate-900 mb-2">Welcome</h2>
+            <p class="text-slate-500 font-medium">Please sign in to your account to continue.</p>
         </div>
 
-        <h1 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-tight text-gray-900">
-            Find the Perfect Meeting Time & Room
-            <br />
-            <span class="bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent italic">
-            Automatically
-        </span>
-        </h1>
+        <div class="pt-4">
+            <a href="/oauth2/authorization/google"
+               class="w-full flex items-center justify-center gap-3 px-8 py-4 bg-white border border-slate-300 text-slate-700 rounded-2xl font-bold hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm hover:shadow-md group">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
+                     alt="Google Logo"
+                     class="w-6 h-6 object-contain group-hover:scale-110 transition-transform">
+                <span class="text-lg">Sign in with Google</span>
+            </a>
+        </div>
 
-        <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Our intelligent system analyzes everyone's Google Calendar availability and matches you with the ideal meeting room based on your preferences.
+        <p class="text-center text-xs text-slate-400 mt-8 leading-relaxed">
+            By signing in, you agree to our
+            <span onclick="openInfoModal('tosModal')" class="underline hover:text-slate-600 cursor-pointer font-bold">Terms of Service</span>
+            and
+            <span onclick="openInfoModal('privacyModal')" class="underline hover:text-slate-600 cursor-pointer font-bold">Privacy Policy</span>.
         </p>
+    </div>
+</div>
 
-        <a href="/oauth2/authorization/google"
-           class="inline-flex items-center gap-3 px-8 py-4 bg-white border-2 border-gray-300 text-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl group">
-            <svg class="w-6 h-6" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M5 5h6v6H5z"/><path fill="#EA4335" d="M13 5h6v6h-6z"/><path fill="#FBBC04" d="M5 13h6v6H5z"/><path fill="#34A853" d="M13 13h6v6h-6z"/>
-            </svg>
-            <span class="text-lg">Sign in with Google</span>
-            <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
-        </a>
-    </section>
-
-    <section class="bg-white border border-gray-200 rounded-xl p-8">
-        <div class="text-center mb-12">
-            <h2 class="text-2xl font-bold mb-2">How It Works</h2>
-            <p class="text-gray-600">Four simple steps to the perfect meeting</p>
+<div id="tosModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-[2rem] w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-300">
+        <div class="flex justify-between items-center p-6 md:p-8 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                    <i data-lucide="file-text" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-2xl font-black text-slate-900">Terms of Service</h3>
+            </div>
+            <button onclick="closeInfoModal('tosModal')" class="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 rounded-full transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
         </div>
+        <div class="p-6 md:p-8 overflow-y-auto text-sm text-slate-600 space-y-5 leading-relaxed font-medium">
+            <p>Welcome to <strong>SmartBooking</strong>, the intelligent meeting scheduling platform of Harokopio University of Athens.</p>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div class="text-center">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-white">
-                    <i data-lucide="users" class="w-8 h-8"></i>
-                </div>
-                <div class="text-lg font-semibold text-gray-900 mb-2">1. Add Participants</div>
-                <p class="text-sm text-gray-600">Select team members and set preferences</p>
-            </div>
+            <h4 class="text-slate-900 font-bold text-base mt-4 mb-2">1. Acceptance of Terms</h4>
+            <p>By accessing and using this application, you accept and agree to be bound by the terms and provision of this agreement. This platform is intended solely for academic and administrative use by authorized personnel and students.</p>
 
-            <div class="text-center">
-                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-white">
-                    <i data-lucide="brain" class="w-8 h-8"></i>
-                </div>
-                <div class="text-lg font-semibold text-gray-900 mb-2">2. AI Analysis</div>
-                <p class="text-sm text-gray-600">Optimal times from Google Calendars</p>
-            </div>
+            <h4 class="text-slate-900 font-bold text-base mt-4 mb-2">2. Use of the System</h4>
+            <p>Users are expected to utilize the booking system responsibly. Do not book rooms for durations longer than necessary. System administrators reserve the right to cancel bookings that violate university policies or demonstrate misuse of resources.</p>
 
-            <div class="text-center">
-                <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-white">
-                    <i data-lucide="map-pin" class="w-8 h-8"></i>
-                </div>
-                <div class="text-lg font-semibold text-gray-900 mb-2">3. Pick a Room</div>
-                <p class="text-sm text-gray-600">Choose from smart-ranked recommendations</p>
-            </div>
+            <h4 class="text-slate-900 font-bold text-base mt-4 mb-2">3. Google Calendar Integration</h4>
+            <p>Our application interacts with your Google Calendar to find optimal meeting times and create events. You must grant the necessary OAuth permissions for the application to function correctly. We do not modify or delete personal events outside the scope of SmartBooking.</p>
 
-            <div class="text-center">
-                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-white">
-                    <i data-lucide="check-circle" class="w-8 h-8"></i>
-                </div>
-                <div class="text-lg font-semibold text-gray-900 mb-2">4. Confirm</div>
-                <p class="text-sm text-gray-600">Book instantly and send invites</p>
-            </div>
+            <h4 class="text-slate-900 font-bold text-base mt-4 mb-2">4. Modifications</h4>
+            <p>Harokopio University reserves the right to modify these terms at any time. Continued use of the platform constitutes acceptance of any changes.</p>
         </div>
-    </section>
-
-    <section class="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-xl p-8 text-white shadow-2xl relative overflow-hidden">
-        <div class="text-center mb-12 relative z-10">
-            <h2 class="text-white text-3xl font-bold mb-2">Scheduling Made Simple</h2>
-            <p class="text-blue-100 italic">Save time and reduce scheduling friction</p>
+        <div class="p-6 border-t border-slate-100 flex justify-end">
+            <button onclick="closeInfoModal('tosModal')" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all">
+                I Understand
+            </button>
         </div>
+    </div>
+</div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
-            <div class="text-center">
-                <div class="mb-4 bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20 h-48">
-                    <canvas id="matchChart"></canvas>
+<div id="privacyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-[2rem] w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-300">
+        <div class="flex justify-between items-center p-6 md:p-8 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
                 </div>
-                <div class="text-4xl font-bold mb-2">95%</div>
-                <p class="text-blue-100 text-sm">Average match score</p>
+                <h3 class="text-2xl font-black text-slate-900">Privacy Policy</h3>
             </div>
-
-            <div class="text-center">
-                <div class="mb-4 bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20 h-48">
-                    <canvas id="efficiencyChart"></canvas>
-                </div>
-                <div class="text-4xl font-bold mb-2">30 sec</div>
-                <p class="text-blue-100 text-sm">Average scheduling time</p>
-            </div>
-
-            <div class="text-center">
-                <div class="mb-4 bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20 h-48">
-                    <canvas id="syncChart"></canvas>
-                </div>
-                <div class="text-4xl font-bold mb-2">100%</div>
-                <p class="text-blue-100 text-sm">Automated synchronization</p>
-            </div>
+            <button onclick="closeInfoModal('privacyModal')" class="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 rounded-full transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
         </div>
-    </section>
+        <div class="p-6 md:p-8 overflow-y-auto text-sm text-slate-600 space-y-5 leading-relaxed font-medium">
+            <p>Your privacy is critically important to us. This policy outlines the types of information we collect and how it is used.</p>
+
+            <h4 class="text-slate-900 font-bold text-base mt-4 mb-2">1. Data Collection</h4>
+            <p>When you log in via Google OAuth, we collect basic profile information: your <strong>Name</strong>, <strong>Email Address</strong>, and <strong>Profile Picture (Avatar)</strong>. We also securely store an access/refresh token to interact with your calendar.</p>
+
+            <h4 class="text-slate-900 font-bold text-base mt-4 mb-2">2. Calendar Data Usage</h4>
+            <p>SmartBooking fetches your upcoming calendar events <em>strictly</em> to calculate your free/busy availability. We <strong>do not</strong> store the contents, titles, or descriptions of your private calendar events in our database. We only store bookings created directly through our platform.</p>
+
+            <h4 class="text-slate-900 font-bold text-base mt-4 mb-2">3. Data Security</h4>
+            <p>All sensitive information, including email addresses of participants, is encrypted in our database using standard algorithms. Access to the backend system is strictly limited to authorized university administrators.</p>
+
+            <h4 class="text-slate-900 font-bold text-base mt-4 mb-2">4. Third-Party Sharing</h4>
+            <p>We do not sell, trade, or otherwise transfer your personally identifiable information to outside parties. Your data is used exclusively for the operation of the SmartBooking platform within Harokopio University.</p>
+        </div>
+        <div class="p-6 border-t border-slate-100 flex justify-end">
+            <button onclick="closeInfoModal('privacyModal')" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all">
+                I Agree
+            </button>
+        </div>
+    </div>
 </div>
 
 <script th:src="@{/js/login.js}"></script>
+<script>
+    window.openInfoModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+        }
+    };
+
+    window.closeInfoModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        const slides = document.querySelectorAll('.slide-img');
+        const dots = document.querySelectorAll('.slide-dot');
+        const prevBtn = document.getElementById('prevSlide');
+        const nextBtn = document.getElementById('nextSlide');
+        let currentSlide = 0;
+        let slideInterval;
+
+        if (slides.length > 0) {
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    if (i === index) {
+                        slide.classList.remove('opacity-0');
+                        slide.classList.add('opacity-100');
+                        slide.style.zIndex = '10';
+                        if(dots[i]) dots[i].classList.replace('bg-white/40', 'bg-white');
+                    } else {
+                        slide.classList.remove('opacity-100');
+                        slide.classList.add('opacity-0');
+                        slide.style.zIndex = '0';
+                        if(dots[i]) dots[i].classList.replace('bg-white', 'bg-white/40');
+                    }
+                });
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+
+            function prevSlideFunc() {
+                currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                showSlide(currentSlide);
+            }
+
+            function resetInterval() {
+                clearInterval(slideInterval);
+                slideInterval = setInterval(nextSlide, 5000);
+            }
+
+            if(nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    nextSlide();
+                    resetInterval();
+                });
+            }
+
+            if(prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    prevSlideFunc();
+                    resetInterval();
+                });
+            }
+
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    currentSlide = index;
+                    showSlide(currentSlide);
+                    resetInterval();
+                });
+            });
+
+            slideInterval = setInterval(nextSlide, 5000);
+        }
+    });
+</script>
 </body>
 </html>

@@ -23,6 +23,8 @@ const dbContacts = [
     { id: '6', name: 'Dr. Professor', email: 'prof@hua.gr', avatar: 'https://i.pravatar.cc/150?img=11' }
 ];
 
+let isAdvancedOptionsOpen = false;
+
 const amenitiesList = [
     'Projector',
     'Interactive Whiteboard',
@@ -56,6 +58,34 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAmenities();
     renderSelected();
     lucide.createIcons();
+
+    const btnAdvanced = document.getElementById('btnAdvancedOptions');
+    const advancedDiv = document.getElementById('advancedOptionsDiv');
+    const advancedChevron = document.getElementById('advancedChevron');
+
+    if (btnAdvanced && advancedDiv) {
+        btnAdvanced.addEventListener('click', () => {
+            isAdvancedOptionsOpen = !isAdvancedOptionsOpen;
+
+            if (isAdvancedOptionsOpen) {
+                advancedDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    advancedDiv.classList.remove('opacity-0', '-translate-y-2');
+                    advancedDiv.classList.add('opacity-100', 'translate-y-0');
+                }, 10);
+
+                advancedChevron.classList.add('rotate-180');
+            } else {
+                advancedDiv.classList.remove('opacity-100', 'translate-y-0');
+                advancedDiv.classList.add('opacity-0', '-translate-y-2');
+                advancedChevron.classList.remove('rotate-180');
+
+                setTimeout(() => {
+                    advancedDiv.classList.add('hidden');
+                }, 300);
+            }
+        });
+    }
 });
 
 function goToStep(stepNumber) {
@@ -170,8 +200,13 @@ async function sendInvite(email, buttonEl) {
         lucide.createIcons();
     } catch (error) {
         buttonEl.disabled = false;
-        buttonEl.innerText = 'Invite';
-        alert('Failed to send invitation. Please try again.');
+        buttonEl.innerText = 'Send Invite Link';
+
+        const errDiv = document.getElementById('invite-error');
+        document.getElementById('invite-error-text').innerText = 'Failed to send invitation. Please try again.';
+        errDiv.classList.remove('hidden');
+        setTimeout(() => errDiv.classList.add('hidden'), 5000);
+
         console.error(error);
     }
 }
@@ -251,12 +286,23 @@ async function handleFindBestTimes() {
     state.preferences.endDate = document.getElementById('pref-date-end').value;
 
     if (!state.preferences.startDate || !state.preferences.endDate) {
-        alert("Please select both 'From' and 'To' dates.");
+        showError("Please select both 'From' and 'To' dates.", 1);
         return;
     }
     if (state.preferences.endDate < state.preferences.startDate) {
-        alert("The 'To Date' cannot be earlier than the 'From Date'.");
+        showError("The 'To Date' cannot be earlier than the 'From Date'.", 1);
         return;
+    }
+
+    const advancedEnabled = isAdvancedOptionsOpen;
+    if (advancedEnabled) {
+        const startTime = document.getElementById('dailyStartTime').value;
+        const endTime = document.getElementById('dailyEndTime').value;
+
+        if (startTime && endTime && endTime <= startTime) {
+            showError("The 'To Time' must be later than the 'From Time' in Advanced Options.", 1);
+            return;
+        }
     }
 
     const payload = {
@@ -264,7 +310,10 @@ async function handleFindBestTimes() {
         optionalParticipants: opt,
         durationMinutes: state.preferences.durationMinutes,
         dateRangeStart: state.preferences.startDate,
-        dateRangeEnd: state.preferences.endDate
+        dateRangeEnd: state.preferences.endDate,
+        dailyStartTime: advancedEnabled ? document.getElementById('dailyStartTime').value : null,
+        dailyEndTime: advancedEnabled ? document.getElementById('dailyEndTime').value : null,
+        maxResults: advancedEnabled ? parseInt(document.getElementById('maxResults').value) : 15
     };
 
     const btn = document.getElementById('find-times-btn');
@@ -301,11 +350,16 @@ async function handleFindBestTimes() {
         document.getElementById('summary-options-count').innerText = data.length;
         document.getElementById('summary-duration').innerText = state.preferences.durationMinutes + 'm';
 
+        const countSpan = document.getElementById('dynamic-results-count');
+        if (countSpan) {
+            countSpan.innerText = data.length;
+        }
+
         renderTrafficLightTimeSlots(data);
         goToStep(2);
 
     } catch (error) {
-        alert("Search Error: " + error.message);
+        showError("Search Error: " + error.message, 1);
         console.error(error);
     } finally {
         btn.disabled = false;
@@ -431,7 +485,7 @@ async function fetchAvailableRooms() {
         const dateObj = new Date(state.selectedTimeSlot.start);
         document.getElementById('step3-time-text').innerText = dateObj.toLocaleString();
         goToStep(3);
-    } catch (e) { alert("Error: " + e.message); }
+    } catch (e) { showError("Error: " + e.message, 2); }
 }
 
 function renderRoomCards(rooms) {
@@ -590,7 +644,7 @@ async function submitFinalBooking() {
         const data = await res.json();
 
         if (res.status === 409) {
-            alert("Conflict Error: " + (data.error || "Room is no longer available at this time."));
+            showError("Conflict Error: " + (data.error || "Room is no longer available at this time."), 4);
             goToStep(3);
             return;
         }
@@ -602,12 +656,29 @@ async function submitFinalBooking() {
         renderSuccessScreen(data);
 
     } catch (e) {
-        alert("Booking Error: " + e.message);
+        showError("Booking Error: " + e.message, 4);
         console.error(e);
     } finally {
         btn.disabled = false;
         btn.innerHTML = `Confirm Booking`;
         if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+}
+
+function showError(message, stepId = 1) {
+    const errorDiv = document.getElementById(`step-${stepId}-error`);
+    const errorText = document.getElementById(`step-${stepId}-error-text`);
+
+    if (errorDiv && errorText) {
+        errorText.innerText = message;
+        errorDiv.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        setTimeout(() => {
+            errorDiv.classList.add('hidden');
+        }, 6000);
+    } else {
+        alert(message);
     }
 }
 

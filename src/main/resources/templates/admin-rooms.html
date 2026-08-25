@@ -81,7 +81,12 @@
                         </div>
 
                         <div>
-                            <div class="font-bold text-slate-900 text-lg" th:text="${room.name}">Conference Room A</div>
+                            <div class="flex items-center">
+                                <div class="font-bold text-slate-900 text-lg" th:text="${room.name}">Conference Room A</div>
+
+                                <span th:if="${room.isAvailable}" class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ml-2">Available</span>
+                                <span th:unless="${room.isAvailable}" class="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ml-2">Unavailable</span>
+                            </div>
                         </div>
                     </div>
                 </td>
@@ -114,6 +119,7 @@
                                 th:data-floor="${room.floor}"
                                 th:data-capacity="${room.capacity}"
                                 th:data-image="${room.imageUrl}"
+                                th:data-is-available="${room.isAvailable}"
                                 th:data-amenities="${#strings.listJoin(room.amenities, ',')}">
                             <i data-lucide="edit-3" class="w-5 h-5"></i>
                         </button>
@@ -139,6 +145,11 @@
 
 <div id="roomModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-3xl p-8 max-w-5xl w-full shadow-2xl overflow-y-auto max-h-[90vh]">
+
+        <div id="admin-error" class="hidden mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-bold flex items-center gap-3 shadow-sm transition-all text-left">
+            <i data-lucide="alert-octagon" class="w-5 h-5 shrink-0 text-rose-500"></i>
+            <span id="admin-error-text"></span>
+        </div>
 
         <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
             <h2 id="modalTitle" class="text-2xl font-bold text-slate-900">Create New Room</h2>
@@ -183,6 +194,23 @@
                     <div>
                         <label class="block text-sm font-bold mb-2 text-slate-700">Photo URL</label>
                         <input type="text" id="roomImage" name="imageUrl" placeholder="https://images.com/..." class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium">
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="flex items-center justify-between p-4 border-2 border-slate-100 rounded-xl hover:bg-slate-50 cursor-pointer transition-all bg-white shadow-sm">
+                            <div>
+                                <span class="text-sm font-bold text-slate-700 block">Room is Available</span>
+                                <span class="text-xs text-slate-400 font-medium">Turn off if the room is closed or under maintenance.</span>
+                            </div>
+
+                            <div class="relative inline-flex items-center cursor-pointer ml-4">
+                                <input type="checkbox" id="roomIsAvailable" name="isAvailable" value="true" class="sr-only peer">
+
+                                <input type="hidden" name="_isAvailable" value="on">
+
+                                <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-focus:ring-4 peer-focus:ring-emerald-300 peer-checked:bg-emerald-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                            </div>
+                        </label>
                     </div>
 
                     <div>
@@ -281,5 +309,12 @@
 </main>
 
 <script th:src="@{/js/admin-rooms.js}"></script>
+<!--/*@thymesVar id="error" type="java.lang.String"*/-->
+<script th:if="${error != null}">
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('roomModal').classList.remove('hidden');
+        showAdminError("[[${error}]]");
+    });
+</script>
 </body>
 </html>

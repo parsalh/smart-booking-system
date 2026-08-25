@@ -94,7 +94,9 @@ public class BookingController {
             List<TimeSlotScore> slots = optimizerService.findBestTimeSlots(
                     organizerEmail,
                     searchStart, searchEnd, request.getDurationMinutes(),
-                    request.getRequiredParticipants(), request.getOptionalParticipants(), busyBlocks
+                    request.getRequiredParticipants(), request.getOptionalParticipants(), busyBlocks,
+                    request.getDailyStartTime(), request.getDailyEndTime(),
+                    request.getMaxResults()
             );
 
             return ResponseEntity.ok(slots);
@@ -189,15 +191,18 @@ public class BookingController {
             @RequestBody RsvpRequest request,
             @AuthenticationPrincipal OidcUser principal) {
 
-        if (principal == null) {
-            return ResponseEntity.status(401).build();
+        try {
+            if (principal == null) {
+                return ResponseEntity.status(401).body(java.util.Map.of("error", "Unauthorized access."));
+            }
+
+            String userEmail = principal.getAttribute("email");
+            bookingService.updateRsvpStatus(bookingId, userEmail, request.getStatus());
+
+            return ResponseEntity.ok().body(java.util.Map.of("message", "RSVP updated successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(java.util.Map.of("error", e.getMessage()));
         }
-
-        String userEmail = principal.getAttribute("email");
-
-        bookingService.updateRsvpStatus(bookingId, userEmail, request.getStatus());
-
-        return ResponseEntity.ok().body("RSVP updated successfully");
     }
 
     @GetMapping("/pending-invites")

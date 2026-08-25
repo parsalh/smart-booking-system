@@ -29,8 +29,12 @@ public class InviteController {
 
     @PostMapping("/api/invite/send")
     public ResponseEntity<?> sendInvite(@RequestBody InviteRequest request, @AuthenticationPrincipal OidcUser principal) {
-        String organizerName = principal.getAttribute("name");
-        emailService.sendInvitationEmail(request.getEmail(), organizerName);
-        return ResponseEntity.ok().body("Invitation sent");
+        try {
+            String organizerName = principal.getAttribute("name");
+            emailService.sendInvitationEmail(request.getEmail(), organizerName);
+            return ResponseEntity.ok().body(java.util.Map.of("message", "Invitation sent"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(java.util.Map.of("error", "Failed to send email: " + e.getMessage()));
+        }
     }
 }

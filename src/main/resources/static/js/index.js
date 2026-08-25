@@ -4,6 +4,30 @@ function closeModal() {
     document.getElementById('eventModal').classList.add('hidden');
 }
 
+function showToast(message, isError = true) {
+    const toast = document.getElementById('global-toast');
+    const msgEl = document.getElementById('toast-message');
+    const iconEl = document.getElementById('toast-icon');
+
+    if (!toast) { alert(message); return; }
+
+    msgEl.innerText = message;
+
+    if (isError) {
+        toast.className = 'fixed top-20 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-xl transition-all duration-500 transform translate-x-0 bg-rose-600 text-white';
+        iconEl.setAttribute('data-lucide', 'alert-triangle');
+    } else {
+        toast.className = 'fixed top-20 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-xl transition-all duration-500 transform translate-x-0 bg-emerald-600 text-white';
+        iconEl.setAttribute('data-lucide', 'check-circle-2');
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    setTimeout(() => {
+        toast.classList.replace('translate-x-0', 'translate-x-[150%]');
+    }, 4000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
     const eventInput = document.getElementById('calendarEventsData');

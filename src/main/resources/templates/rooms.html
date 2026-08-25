@@ -56,36 +56,48 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
         <div th:each="room : ${rooms}"
-             class="room-card bg-white/90 backdrop-blur-md rounded-3xl p-6 border border-gray-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col cursor-pointer"
+             class="room-card bg-white/90 backdrop-blur-md rounded-3xl p-6 border border-gray-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 group flex flex-col"
              th:data-name="${room.name}"
              th:data-building="${room.building}"
              th:data-location="${room.location}"
              th:data-floor="${room.floor}"
              th:data-capacity="${room.capacity}"
              th:data-image="${room.imageUrl}"
+             th:data-is-available="${room.isAvailable}"
              th:data-amenities="${#strings.listJoin(room.amenities, ',')}">
 
             <div class="w-full h-52 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 relative mb-5">
+
                 <img th:if="${room.imageUrl != null and !#strings.isEmpty(room.imageUrl)}"
                      th:src="${room.imageUrl}"
                      alt="Room Image"
-                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                     class="w-full h-full object-cover transition-transform duration-500"
+                     th:classappend="${!room.isAvailable ? 'blur-[3px] grayscale opacity-70' : 'group-hover:scale-105'}"
                      onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
 
-                <div th:classappend="${room.imageUrl != null and !#strings.isEmpty(room.imageUrl)} ? 'hidden' : ''"
+                <div th:classappend="${(room.imageUrl != null and !#strings.isEmpty(room.imageUrl) ? 'hidden ' : '') + (!room.isAvailable ? 'blur-[3px] grayscale opacity-70 ' : '')}"
                      class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
                     <i data-lucide="image" class="w-10 h-10 text-gray-300 mb-2"></i>
                     <span class="text-xs font-semibold text-gray-400">No Image Available</span>
                 </div>
 
-                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-gray-700 shadow-sm flex items-center gap-1 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <div th:unless="${room.isAvailable}" class="absolute inset-0 bg-slate-900/20 flex items-center justify-center z-10">
+                    <div class="bg-rose-500/90 text-white font-black tracking-widest uppercase text-sm px-5 py-2.5 rounded-xl backdrop-blur-md border border-rose-400/50 shadow-xl flex items-center gap-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                        Unavailable
+                    </div>
+                </div>
+
+                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-gray-700 shadow-sm flex items-center gap-1 group-hover:bg-blue-600 group-hover:text-white transition-colors z-20">
                     <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> View Details
                 </div>
             </div>
 
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <h4 class="font-bold text-gray-900 text-xl group-hover:text-blue-600 transition-colors" th:text="${room.name}">Conference Room A</h4>
+                    <h4 class="font-bold text-xl transition-colors"
+                        th:classappend="${room.isAvailable ? 'text-gray-900 group-hover:text-blue-600' : 'text-gray-500'}"
+                        th:text="${room.name}">Conference Room A</h4>
                     <p class="text-xs text-gray-500 font-medium mt-1 flex items-center gap-1">
                         <i data-lucide="map-pin" class="w-3.5 h-3.5 text-gray-400"></i>
                         <span th:text="${room.location != null ? room.location : '-'}">Main Building</span>
@@ -133,6 +145,7 @@
         </button>
 
         <div class="mb-6 pb-4 border-b border-gray-100">
+
             <div class="flex flex-wrap items-center gap-2 mb-2">
                 <span id="modalBuildingBadge" class="text-xs font-bold text-purple-700 bg-purple-50 border border-purple-100 px-3 py-1 rounded-full uppercase tracking-wider">Building</span>
                 <span id="modalFloorBadge" class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full uppercase tracking-wider">Floor</span>
@@ -141,7 +154,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-
             <div class="space-y-4">
                 <div class="w-full h-48 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 relative">
                     <img id="modalImage" src="" alt="Room" class="w-full h-full object-cover">
@@ -173,8 +185,7 @@
 
                 <div>
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Amenities</p>
-                    <div id="modalAmenitiesList" class="flex flex-wrap gap-2">
-                    </div>
+                    <div id="modalAmenitiesList" class="flex flex-wrap gap-2"></div>
                 </div>
             </div>
 
@@ -183,6 +194,11 @@
                     <i data-lucide="map" class="w-3.5 h-3.5 text-blue-500"></i> Campus Location Map
                 </p>
                 <div id="modalMap" class="w-full h-64 md:h-full min-h-[220px] rounded-2xl border border-gray-200 overflow-hidden shadow-inner z-10"></div>
+            </div>
+
+            <div id="modalUnavailableBanner" class="hidden mb-4 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-center gap-3">
+                <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0"></i>
+                <p class="text-sm font-semibold">This room is temporarily unavailable.</p>
             </div>
         </div>
 
