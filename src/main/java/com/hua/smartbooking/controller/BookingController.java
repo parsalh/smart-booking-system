@@ -20,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -116,8 +117,8 @@ public class BookingController {
     @PostMapping("/suggest-rooms")
     public ResponseEntity<?> suggestRooms(@RequestBody RoomSuggestionRequest request) {
         try {
-            ZonedDateTime start = ZonedDateTime.parse(request.getStartTime());
-            ZonedDateTime end = ZonedDateTime.parse(request.getEndTime());
+            ZonedDateTime start = parseDateLenient(request.getStartTime());
+            ZonedDateTime end = parseDateLenient(request.getEndTime());
 
             List<Room> candidates = roomRepository.findAvailableRooms(
                     request.getMinCapacity(),
@@ -171,8 +172,107 @@ public class BookingController {
             User organizer = userRepository.findByEmail(organizerEmail)
                     .orElseThrow(() -> new IllegalStateException("Organizer not found"));
 
-            Map<String, Object> bookingResponse = bookingService.createBooking(request, organizer);
-            return ResponseEntity.ok(bookingResponse);
+            int weeks = (request.getRepeatWeeks() != null && request.getRepeatWeeks() > 0) ? request.getRepeatWeeks() : 1;
+            boolean forcePartial = Boolean.TRUE.equals(request.getForcePartial());
+
+            List<ZonedDateTime> successfulStarts = new ArrayList<>();
+            List<Map<String, String>> failedDates = new ArrayList<>();
+
+            ZonedDateTime baseStart = parseDateLenient(request.getStartTime());
+            ZonedDateTime baseEnd = parseDateLenient(request.getEndTime());
+            long durationMinutes = Duration.between(baseStart, baseEnd).toMinutes();
+
+            List<String> emailsToCheck = new ArrayList<>();
+            emailsToCheck.add(organizerEmail);
+            if (request.getParticipants() != null) {
+                emailsToCheck.addAll(request.getParticipants());
+            }
+
+            for (String email : emailsToCheck) {
+                User participant = userRepository.findByEmail(email).orElse(null);
+                if (participant != null && participant.getRefreshToken() != null) {
+                    List<com.google.api.services.calendar.model.Event> googleEvents = googleCalendarService.getUpcomingEvents(participant.getRefreshToken());
+                    eventMappingService.syncEvents(googleEvents, participant);
+                }
+            }
+
+            ZonedDateTime maxSearchEnd = baseEnd.plusWeeks(weeks);
+            Map<String, List<TimePeriod>> busyBlocks = availabilityService.fetchGroupAvailability(
+                    emailsToCheck, baseStart, maxSearchEnd, organizer
+            );
+
+            for (int i = 0; i < weeks; i++) {
+                ZonedDateTime currentStart = baseStart.plusWeeks(i);
+                ZonedDateTime currentEnd = currentStart.plusMinutes(durationMinutes);
+
+                List<Room> availableRooms = roomRepository.findAvailableRooms(
+                        request.getParticipants().size() + 1,
+                        currentStart.toInstant(),
+                        currentEnd.toInstant()
+                );
+                boolean isRoomFree = availableRooms.stream().anyMatch(r -> r.getId().equals(request.getRoomId()));
+
+                if (!isRoomFree) {
+                    Map<String, String> conflict = new HashMap<>();
+                    conflict.put("date", currentStart.toLocalDate().toString());
+                    conflict.put("reason", "The room is unavailable.");
+                    failedDates.add(conflict);
+                    continue;
+                }
+
+                boolean isUserBusy = false;
+                String busyUserEmail = "";
+
+                for (String email : emailsToCheck) {
+                    if (isParticipantBusy(email, currentStart, currentEnd, busyBlocks)) {
+                        isUserBusy = true;
+                        busyUserEmail = email;
+                        break;
+                    }
+                }
+
+                if (isUserBusy) {
+                    Map<String, String> conflict = new HashMap<>();
+                    conflict.put("date", currentStart.toLocalDate().toString());
+                    conflict.put("reason", "Participant " + busyUserEmail + " has a scheduling conflict.");
+                    failedDates.add(conflict);
+                } else {
+                    successfulStarts.add(currentStart);
+                }
+            }
+
+            if (!failedDates.isEmpty() && !forcePartial) {
+                Map<String, Object> conflictResponse = new HashMap<>();
+                conflictResponse.put("status", "partial_conflict");
+                conflictResponse.put("successfulDates", successfulStarts);
+                conflictResponse.put("failedDates", failedDates);
+
+                return ResponseEntity.status(409).body(conflictResponse);
+            }
+
+            if (successfulStarts.isEmpty()) {
+                Map<String, String> body = new HashMap<>();
+                body.put("error", "No available slots found to book for the selected weeks.");
+                return ResponseEntity.status(409).body(body);
+            }
+
+            List<Map<String, Object>> allResponses = new ArrayList<>();
+
+            for (ZonedDateTime start : successfulStarts) {
+                ZonedDateTime end = start.plusMinutes(durationMinutes);
+
+                java.time.format.DateTimeFormatter strictFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+                request.setStartTime(start.format(strictFormatter));
+                request.setEndTime(end.format(strictFormatter));
+
+                Map<String, Object> response = bookingService.createBooking(request, organizer);
+                allResponses.add(response);
+            }
+
+            Map<String, Object> finalResponse = allResponses.get(0);
+            finalResponse.put("bookedInstances", successfulStarts.size());
+
+            return ResponseEntity.ok(finalResponse);
 
         } catch (IllegalStateException e) {
             Map<String, String> body = new HashMap<>();
@@ -251,5 +351,33 @@ public class BookingController {
                     return ResponseEntity.ok(decrypted);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    private ZonedDateTime parseDateLenient(String dateStr) {
+        if (dateStr == null) return null;
+
+        if (dateStr.length() == 22) {
+            dateStr = dateStr.substring(0, 16) + ":00" + dateStr.substring(16);
+        }
+        else if (dateStr.length() == 17 && dateStr.endsWith("Z")) {
+            dateStr = dateStr.substring(0, 16) + ":00Z";
+        }
+
+        return ZonedDateTime.parse(dateStr);
+    }
+
+    private boolean isParticipantBusy(String email, ZonedDateTime start, ZonedDateTime end, Map<String, List<TimePeriod>> allBusyBlocks) {
+        List<TimePeriod> blocks = allBusyBlocks.getOrDefault(email, new ArrayList<>());
+        long startMillis = start.toInstant().toEpochMilli();
+        long endMillis = end.toInstant().toEpochMilli();
+
+        for (TimePeriod block : blocks) {
+            long blockStart = block.getStart().getValue();
+            long blockEnd = block.getEnd().getValue();
+            if (startMillis < blockEnd && endMillis > blockStart) {
+                return true;
+            }
+        }
+        return false;
     }
 }

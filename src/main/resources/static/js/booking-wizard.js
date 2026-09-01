@@ -622,16 +622,28 @@ async function submitFinalBooking() {
         return;
     }
 
+    const repeatWeeksSelect = document.getElementById('repeatWeeks');
+    const repeatWeeks = repeatWeeksSelect ? parseInt(repeatWeeksSelect.value) : 1;
+
     const payload = {
         roomId: state.selectedRoomId,
         title: meetingTitle,
         startTime: state.selectedTimeSlot.start,
         endTime: state.selectedTimeSlot.end,
-        participants: state.participants.map(p => p.email)
+        participants: state.participants.map(p => p.email),
+        repeatWeeks: repeatWeeks,
+        forcePartial: false
     };
 
+    await executeBookingRequest(payload);
+}
+
+async function executeBookingRequest(payload) {
     const btn = document.getElementById('find-times-btn');
-    btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> <span>Analyzing...</span>`;
+    const originalBtnText = btn.innerHTML;
+
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> <span>Processing...</span>`;
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     try {
@@ -644,6 +656,14 @@ async function submitFinalBooking() {
         const data = await res.json();
 
         if (res.status === 409) {
+            if (data.status === 'partial_conflict') {
+                showPartialConflictModal(data, payload);
+                btn.disabled = false;
+                btn.innerHTML = originalBtnText;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return;
+            }
+
             showError("Conflict Error: " + (data.error || "Room is no longer available at this time."), 4);
             goToStep(3);
             return;
@@ -659,10 +679,45 @@ async function submitFinalBooking() {
         showError("Booking Error: " + e.message, 4);
         console.error(e);
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = `Confirm Booking`;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+        if (!document.getElementById('partialConflictModal').classList.contains('hidden')) {
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnText;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
     }
+}
+
+function showPartialConflictModal(conflictData, originalPayload) {
+    const modal = document.getElementById('partialConflictModal');
+    const list = document.getElementById('conflict-list');
+    const forceBtn = document.getElementById('btn-force-partial');
+    const countSpan = document.getElementById('conflict-success-count');
+
+    forceBtn.disabled = false;
+    forceBtn.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> Book Partial`;
+
+    list.innerHTML = conflictData.failedDates.map(f => {
+        const dateObj = new Date(f.date);
+        const niceDate = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+        return `<li class="flex items-start gap-2"><i data-lucide="x-circle" class="w-4 h-4 mt-0.5 text-amber-500 shrink-0"></i> <span><strong>${niceDate}:</strong> ${f.reason}</span></li>`;
+    }).join('');
+
+    countSpan.innerText = conflictData.successfulDates.length;
+
+    forceBtn.onclick = async () => {
+        forceBtn.disabled = true;
+        forceBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        originalPayload.forcePartial = true;
+
+        await executeBookingRequest(originalPayload);
+        modal.classList.add('hidden');
+    };
+
+    modal.classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function showError(message, stepId = 1) {

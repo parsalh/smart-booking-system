@@ -247,6 +247,70 @@ Event Blocks & Classifications
     transition: transform 0.15s ease, box-shadow 0.15s ease !important;
 }
 
+.fc-event-pending {
+    background-image: repeating-linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.25),
+            rgba(255, 255, 255, 0.25) 10px,
+            transparent 10px,
+            transparent 20px
+    ) !important;
+    border: none !important;
+    border-left: 3px solid #1d4ed8 !important;
+    opacity: 0.95 !important;
+}
+
+.fc-event-pending {
+    background-image:
+            linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.55)),
+            linear-gradient(
+                    180deg,
+                    var(--evt-bg, rgba(191, 219, 254, 0.9)),
+                    color-mix(in srgb, var(--evt-border, #3b82f6) 15%, var(--evt-bg, rgba(191, 219, 254, 0.9)))
+            ) !important;
+
+    border: 1.5px dashed #1d4ed8 !important;
+    border-left: 3px solid #1d4ed8 !important;
+    box-shadow: none !important;
+    opacity: 0.9 !important;
+}
+
+.fc-event-pending:hover {
+    opacity: 1 !important;
+}
+
+.fc-event-pending .fc-event-title {
+    color: #1e3a8a !important;
+}
+
+.fc-event-pending .fc-event-title::before {
+    content: "";
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    margin-right: 5px;
+    vertical-align: -1px;
+    background-color: transparent;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    box-shadow: none !important;
+}
+
+.fc .event-smartbooking.fc-event-pending .fc-event-title::before {
+    content: "" !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") !important;
+    background-color: transparent !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    width: 11px !important;
+    height: 11px !important;
+    margin-right: 5px !important;
+    display: inline-block !important;
+    vertical-align: -1px !important;
+    box-shadow: none !important;
+}
+
 .fc-event:hover {
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;

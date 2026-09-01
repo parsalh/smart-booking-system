@@ -13,4 +13,7 @@ public class FinalBookingRequest {
     private String endTime;
     private List<String> participants;
 
+    private Integer repeatWeeks;
+    private Boolean forcePartial;
+
 }

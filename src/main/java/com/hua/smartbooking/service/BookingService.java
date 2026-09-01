@@ -138,7 +138,7 @@ public class BookingService {
                         googleStatus
                 );
             } catch (Exception e) {
-                System.err.println("Αποτυχία συγχρονισμού RSVP με τη Google: " + e.getMessage());
+                System.err.println("Failed to sync RSVP with Google: " + e.getMessage());
             }
         }
     }
@@ -257,6 +257,14 @@ public class BookingService {
                         }
                     }
                     map.put("participants", decryptedParticipants);
+
+                    String myStatus = "PENDING";
+                    if (booking.getUser() != null && booking.getUser().getEmail().equalsIgnoreCase(targetEmail)) {
+                        myStatus = "ACCEPTED";
+                    } else {
+                        myStatus = decryptedParticipants.getOrDefault(targetEmail, RsvpStatus.PENDING).name();
+                    }
+                    map.put("myRsvpStatus", myStatus);
 
                     return map;
                 })

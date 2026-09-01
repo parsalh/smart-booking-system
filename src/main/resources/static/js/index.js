@@ -94,11 +94,36 @@ document.addEventListener('DOMContentLoaded', function() {
         eventClassNames: function(arg) {
             const now = new Date();
             const eventDate = arg.event.end || arg.event.start;
+            let classes = [];
 
             if (eventDate < now) {
-                return ['opacity-50', 'hover:opacity-100', 'transition-opacity'];
+                classes.push('opacity-50', 'hover:opacity-100', 'transition-opacity');
             }
-            return [];
+
+            const emailInput = document.getElementById('currentUserEmail');
+            const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+            const props = arg.event.extendedProps || {};
+            const parts = props.participants || {};
+
+            let myStatus = props.myRsvpStatus;
+            if (!myStatus) {
+                for (const email of Object.keys(parts)) {
+                    if (email.trim().toLowerCase() === currentUserEmail) {
+                        myStatus = parts[email];
+                        break;
+                    }
+                }
+            }
+
+            if (myStatus === 'PENDING') {
+                classes.push('fc-event-pending');
+            }
+
+            return classes;
+        },
+
+        eventDidMount: function(info) {
+
         },
 
         eventClick: function(info) {
@@ -116,10 +141,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }) : '';
             document.getElementById('modalTime').innerText = endTime ? `${startTime} - ${endTime}` : startTime;
 
-            const roomLocation = props['roomLocation'] || props['fullLocation'] || 'El. Venizelou 70, Kallithea';
-            const roomName = props['locationName'] || 'Room Details';
+            const rawRoomName = props['locationName'];
+            const rawLocation = props['roomLocation'] || props['fullLocation'];
 
-            document.getElementById('modalLocation').innerText = roomLocation !== 'No location specified' ? `${roomName} - ${roomLocation}` : roomName;
+            let displayLocation = 'No location specified';
+
+            if (rawRoomName && rawRoomName !== 'No location specified' && rawLocation && rawLocation !== 'No location specified') {
+                displayLocation = `${rawRoomName} - ${rawLocation}`;
+            } else if (rawRoomName && rawRoomName !== 'No location specified') {
+                displayLocation = rawRoomName;
+            } else if (rawLocation && rawLocation !== 'No location specified') {
+                displayLocation = rawLocation;
+            }
+
+            document.getElementById('modalLocation').innerText = displayLocation;
+
+            document.getElementById('modalLocation').innerText = displayLocation;
 
             const descriptionText = props.description || 'No details available.';
             const isSmartBooking = props.bookingId || descriptionText.includes('Automatically scheduled via SmartBooking App');
@@ -350,7 +387,7 @@ function openAllBookingsModal() {
                         </div>
                         <div class="mt-4 pt-3 border-t border-slate-100">
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Participants & RSVP</p>
-                            <!-- Το δοχείο που θα γεμίσει η renderLiveParticipants -->
+                           
                             <div id="${containerId}" class="flex flex-wrap gap-2"></div>
                         </div>
                     </div>`;

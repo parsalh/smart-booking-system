@@ -286,6 +286,21 @@
                     <p id="title-error" class="text-xs text-red-500 mt-1 hidden"></p>
                 </div>
 
+                <div class="mt-4">
+                    <label class="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1 flex items-center gap-1">
+                        <i data-lucide="repeat" class="w-3.5 h-3.5 text-blue-500"></i> Repeat Meeting (Optional)
+                    </label>
+                    <select id="repeatWeeks" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white font-medium text-slate-700">
+                        <option value="1">Does not repeat (Just this once)</option>
+                        <option value="2">Weekly (For 2 weeks total)</option>
+                        <option value="3">Weekly (For 3 weeks total)</option>
+                        <option value="4">Weekly (For 4 weeks total)</option>
+                    </select>
+                    <p class="text-[10px] text-slate-400 mt-1.5 italic">
+                        *If conflicts occur in future weeks, you'll be able to book only the available ones.
+                    </p>
+                </div>
+
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100/50">
@@ -354,6 +369,38 @@
         <button onclick="document.getElementById('inviteModal').classList.add('hidden')" class="w-full py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition-all">
             Cancel
         </button>
+    </div>
+</div>
+
+<div id="partialConflictModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-200">
+
+        <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+            <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+        </div>
+
+        <h3 class="text-2xl font-black text-center text-slate-900 mb-2">Scheduling Conflicts Found</h3>
+        <p class="text-center text-slate-600 text-sm mb-6">
+            We couldn't book all of the requested weeks. Some dates are unavailable:
+        </p>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 max-h-40 overflow-y-auto">
+            <ul id="conflict-list" class="space-y-2 text-sm text-amber-800 font-medium">
+            </ul>
+        </div>
+
+        <p class="text-center text-slate-700 text-sm font-bold mb-6" id="conflict-success-msg">
+            Do you want to book the remaining <span id="conflict-success-count" class="text-emerald-600">0</span> available weeks?
+        </p>
+
+        <div class="flex gap-3 justify-center">
+            <button onclick="document.getElementById('partialConflictModal').classList.add('hidden')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all">
+                Cancel
+            </button>
+            <button id="btn-force-partial" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/30 flex items-center gap-2">
+                <i data-lucide="check-circle-2" class="w-4 h-4"></i> Book Partial
+            </button>
+        </div>
     </div>
 </div>
 
