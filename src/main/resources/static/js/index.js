@@ -105,17 +105,24 @@ document.addEventListener('DOMContentLoaded', function() {
             const props = arg.event.extendedProps || {};
             const parts = props.participants || {};
 
-            let myStatus = props.myRsvpStatus;
-            if (!myStatus) {
-                for (const email of Object.keys(parts)) {
-                    if (email.trim().toLowerCase() === currentUserEmail) {
-                        myStatus = parts[email];
-                        break;
-                    }
+            let myStatus = null;
+
+            for (const email of Object.keys(parts)) {
+                if (email.trim().toLowerCase() === currentUserEmail) {
+                    myStatus = parts[email];
+                    break;
                 }
             }
 
-            if (myStatus === 'PENDING') {
+            if (!myStatus) {
+                if (props.organizerEmail && props.organizerEmail.toLowerCase() === currentUserEmail) {
+                    myStatus = 'ACCEPTED';
+                } else {
+                    myStatus = props.myRsvpStatus;
+                }
+            }
+
+            if (String(myStatus).toUpperCase() === 'PENDING') {
                 classes.push('fc-event-pending');
             }
 
