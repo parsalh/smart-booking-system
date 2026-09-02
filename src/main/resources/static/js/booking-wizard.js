@@ -1,4 +1,3 @@
-
 const state = {
     step: 1,
     participants: [],
@@ -57,6 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderAmenities();
     renderSelected();
+    loadFrequentCollaborators();
+    attachDatePicker('pref-date-start');
+    attachDatePicker('pref-date-end');
     lucide.createIcons();
 
     const btnAdvanced = document.getElementById('btnAdvancedOptions');
@@ -100,16 +102,23 @@ function updateProgressBar(activeStep) {
         const circle = document.getElementById(`step-circle-${i}`);
         if(!circle) continue;
         if(i < activeStep) {
-            circle.className = "w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold shadow-md";
+            circle.className = "w-10 h-10 rounded-full bg-white text-emerald-600 flex items-center justify-center font-bold shadow-md";
             circle.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i>`;
         } else if (i === activeStep) {
-            circle.className = "w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow-lg scale-110";
+            circle.className = "w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold shadow-lg scale-110";
             circle.innerHTML = i;
         } else {
-            circle.className = "w-10 h-10 rounded-full bg-white border-2 border-slate-300 text-slate-400 flex items-center justify-center font-bold";
+            circle.className = "w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 text-white flex items-center justify-center font-bold";
             circle.innerHTML = i;
         }
     }
+
+    const fill = document.getElementById('progress-fill');
+    if (fill) {
+        const percent = ((activeStep - 1) / 3) * 100;
+        fill.style.width = `${percent}%`;
+    }
+
     lucide.createIcons();
 }
 
@@ -154,12 +163,16 @@ async function handleSearch(query) {
             const filtered = users.filter(u => !state.participants.find(p => p.email === u.email));
 
             container.innerHTML = filtered.map(user => `
-                <div onclick="addParticipantFromDB('${user.id}', '${user.fullname}', '${user.email}', '${user.avatarUrl || ''}')"
+                <div onclick="addParticipantFromDB('${user.id}', '${user.fullname}', '${user.email}', '${user.avatarUrl || ''}', '${user.outOfOfficeStart || ''}', '${user.outOfOfficeEnd || ''}')"
                      class="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b border-slate-100 last:border-0 transition-all group">
                     <img src="${user.avatarUrl || ''}" referrerpolicy="no-referrer" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullname)}&background=dbeafe&color=2563eb'" class="w-8 h-8 rounded-full object-cover">
                     <div class="flex-1">
                         <div class="text-sm font-bold text-slate-900 group-hover:text-blue-600">${user.fullname}</div>
                         <div class="text-[10px] text-slate-500">${user.email}</div>
+                        ${user.outOfOfficeStart && user.outOfOfficeEnd ? `
+                        <div class="mt-1 inline-flex items-center gap-1 text-[9px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded">
+                            <i data-lucide="palmtree" class="w-2.5 h-2.5"></i> Out of office ${formatDateDMY(user.outOfOfficeStart)} to ${formatDateDMY(user.outOfOfficeEnd)}
+                        </div>` : ''}
                     </div>
                     <i data-lucide="plus-circle" class="w-4 h-4 text-slate-300 group-hover:text-blue-500"></i>
                 </div>
@@ -172,11 +185,54 @@ async function handleSearch(query) {
     }
 }
 
-function addParticipantFromDB(id, name, email, avatar) {
-    state.participants.push({ id, name, email, avatar, required: true });
+function addParticipantFromDB(id, name, email, avatar, outOfOfficeStart, outOfOfficeEnd) {
+    state.participants.push({
+        id, name, email, avatar, required: true,
+        outOfOfficeStart: outOfOfficeStart || null,
+        outOfOfficeEnd: outOfOfficeEnd || null
+    });
     document.getElementById('participant-search').value = '';
     document.getElementById('search-results-container').classList.add('hidden');
     renderSelected();
+    renderFrequentCollaborators();
+}
+
+async function loadFrequentCollaborators() {
+    try {
+        const response = await fetch('/api/users/frequent-collaborators');
+        if (!response.ok) return;
+
+        state.frequentCollaborators = await response.json();
+        renderFrequentCollaborators();
+    } catch (error) {
+        console.error('Failed to load frequent collaborators:', error);
+    }
+}
+
+function renderFrequentCollaborators() {
+    const container = document.getElementById('frequent-collaborators-container');
+    const list = document.getElementById('frequent-collaborators-list');
+    if (!container || !list || !state.frequentCollaborators) return;
+
+    const remaining = state.frequentCollaborators.filter(
+        u => !state.participants.find(p => p.email === u.email)
+    );
+
+    if (remaining.length === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden');
+    list.innerHTML = remaining.map(user => `
+        <button onclick="addParticipantFromDB('${user.id}', '${user.fullname}', '${user.email}', '${user.avatarUrl || ''}', '${user.outOfOfficeStart || ''}', '${user.outOfOfficeEnd || ''}')"
+                class="flex items-center gap-2 pl-1.5 pr-3 py-1.5 bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 rounded-full shadow-sm transition-all group">
+            <img src="${user.avatarUrl || ''}" referrerpolicy="no-referrer" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullname)}&background=dbeafe&color=2563eb'" class="w-6 h-6 rounded-full object-cover">
+            <span class="text-xs font-bold text-slate-700 group-hover:text-blue-600">${user.fullname}</span>
+            <i data-lucide="plus" class="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-500"></i>
+        </button>
+    `).join('');
+    lucide.createIcons();
 }
 
 async function sendInvite(email, buttonEl) {
@@ -224,6 +280,7 @@ function addParticipant(id) {
 function removeParticipant(id) {
     state.participants = state.participants.filter(p => p.id !== id);
     renderSelected();
+    renderFrequentCollaborators();
 }
 
 function toggleRequired(id) {
@@ -264,6 +321,10 @@ function renderSelected() {
             <div class="flex-1 overflow-hidden">
                 <div class="text-sm font-bold text-slate-900 truncate">${p.name}</div>
                 <div class="text-xs text-slate-500 truncate">${p.email}</div>
+                ${p.outOfOfficeStart && p.outOfOfficeEnd ? `
+                <div class="mt-1 inline-flex items-center gap-1 text-[9px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded">
+                    <i data-lucide="palmtree" class="w-2.5 h-2.5"></i> Out of office ${formatDateDMY(p.outOfOfficeStart)} to ${formatDateDMY(p.outOfOfficeEnd)}
+                </div>` : ''}
             </div>
             <label class="flex items-center gap-2 cursor-pointer bg-slate-50 px-2 py-1 rounded-lg border">
                 <input type="checkbox" ${p.required ? 'checked' : ''} onchange="toggleRequired('${p.id}')" class="w-4 h-4 text-blue-600">
@@ -282,8 +343,8 @@ async function handleFindBestTimes() {
     state.preferences.durationMinutes = parseInt(document.getElementById('pref-duration').value);
     state.preferences.minCapacity = parseInt(document.getElementById('pref-capacity').value) || 1;
 
-    state.preferences.startDate = document.getElementById('pref-date-start').value;
-    state.preferences.endDate = document.getElementById('pref-date-end').value;
+    state.preferences.startDate = document.getElementById('pref-date-start').dataset.iso || '';
+    state.preferences.endDate = document.getElementById('pref-date-end').dataset.iso || '';
 
     if (!state.preferences.startDate || !state.preferences.endDate) {
         showError("Please select both 'From' and 'To' dates.", 1);
@@ -338,6 +399,11 @@ async function handleFindBestTimes() {
         if (response.status === 404 && data.status === 'requires_invite') {
             document.getElementById('invite-email-display').innerText = data.missingEmail;
             document.getElementById('inviteModal').classList.remove('hidden');
+            return;
+        }
+
+        if (response.status === 409 && data.status === 'stale_token') {
+            showError(`${data.affectedEmail} needs to sign in to SmartBooking again — their Google Calendar connection has expired.`, 1);
             return;
         }
 

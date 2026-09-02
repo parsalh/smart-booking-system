@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBooking - Terms of Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-700">
+
+<main class="max-w-2xl mx-auto px-6 py-16">
+
+    <a href="/login" class="text-sm font-bold text-blue-600 hover:text-blue-700">&larr; Back to SmartBooking</a>
+
+    <h1 class="text-3xl font-black text-slate-900 mt-6 mb-8">Terms of Service</h1>
+
+    <div class="space-y-6 text-sm leading-relaxed font-medium">
+        <p>Welcome to <strong>SmartBooking</strong>, the intelligent meeting scheduling platform of Harokopio University of Athens.</p>
+
+        <div>
+            <h2 class="text-slate-900 font-bold text-base mb-2">1. Acceptance of Terms</h2>
+            <p>By accessing and using this application, you accept and agree to be bound by the terms and provision of this agreement. This platform is intended solely for academic and administrative use by authorized personnel and students.</p>
+        </div>
+
+        <div>
+            <h2 class="text-slate-900 font-bold text-base mb-2">2. Use of the System</h2>
+            <p>Users are expected to utilize the booking system responsibly. Do not book rooms for durations longer than necessary. System administrators reserve the right to cancel bookings that violate university policies or demonstrate misuse of resources.</p>
+        </div>
+
+        <div>
+            <h2 class="text-slate-900 font-bold text-base mb-2">3. Google Calendar Integration</h2>
+            <p>Our application interacts with your Google Calendar to find optimal meeting times and create events. You must grant the necessary OAuth permissions for the application to function correctly. We do not modify or delete personal events outside the scope of SmartBooking.</p>
+        </div>
+
+        <div>
+            <h2 class="text-slate-900 font-bold text-base mb-2">4. Modifications</h2>
+            <p>Harokopio University reserves the right to modify these terms at any time. Continued use of the platform constitutes acceptance of any changes.</p>
+        </div>
+    </div>
+
+</main>
+</body>
+</html>

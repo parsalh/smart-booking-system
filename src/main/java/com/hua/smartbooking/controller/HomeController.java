@@ -55,6 +55,15 @@ public class HomeController {
         model.addAttribute("avatar", dbUser.getAvatarUrl());
         model.addAttribute("role", dbUser.getRole().name());
 
+        model.addAttribute("outOfOfficeStart",
+                dbUser.getOutOfOfficeStart() != null
+                        ? dbUser.getOutOfOfficeStart().atZone(java.time.ZoneId.of("Europe/Athens")).toLocalDate().toString()
+                        : null);
+        model.addAttribute("outOfOfficeEnd",
+                dbUser.getOutOfOfficeEnd() != null
+                        ? dbUser.getOutOfOfficeEnd().atZone(java.time.ZoneId.of("Europe/Athens")).toLocalDate().toString()
+                        : null);
+
         String currentRefreshToken = handleRefreshToken(token, dbUser);
 
         if (currentRefreshToken != null) {
@@ -99,6 +108,16 @@ public class HomeController {
     @GetMapping("/login")
     public String login() {
         return "login";
+    }
+
+    @GetMapping("/privacy")
+    public String privacy() {
+        return "privacy";
+    }
+
+    @GetMapping("/terms")
+    public String terms() {
+        return "terms";
     }
 
     @GetMapping("/book")

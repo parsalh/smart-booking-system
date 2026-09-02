@@ -210,25 +210,24 @@ public class MeetingOptimizerService {
         return fraction * 20;
     }
 
-    // Gives a bonus for "sweet spot" hours (morning/afternoon) and a penalty for very early or very late slots.
+    // Continuous preference curve peaked around 11:00 and 15:00 — every 30-min slot
+    // gets a distinct value based on its distance from the nearest peak, instead of
+    // a handful of flat buckets that make separate slots tie on score.
     private double calculateTimeOfDayScore(ZonedDateTime start) {
         ZoneId athensZone = ZoneId.of("Europe/Athens");
         ZonedDateTime local = start.withZoneSameInstant(athensZone);
         double hourFraction = local.getHour() + local.getMinute() / 60.0;
 
-        if (hourFraction >= 10.0 && hourFraction < 12.0) {
-            return 25;
-        }
-        if (hourFraction >= 14.0 && hourFraction < 16.0) {
-            return 25;
-        }
-        if (hourFraction < 9.0 || hourFraction >= 18.0) {
-            return -15;
-        }
-        return 0;
+        double distanceToMorningPeak = Math.abs(hourFraction - 11.0);
+        double distanceToAfternoonPeak = Math.abs(hourFraction - 15.0);
+        double distanceToNearestPeak = Math.min(distanceToMorningPeak, distanceToAfternoonPeak);
+
+        return Math.max(-30, 30 - (distanceToNearestPeak * 8));
     }
 
-    // Penalizes slots that overlap with the classic lunch break (12:00-14:00).
+    // Penalizes slots proportionally to how much of the meeting overlaps the classic
+    // lunch break (12:00-14:00) , a 5-minute overlap is barely penalized, a fully
+    // contained lunch meeting gets the full penalty, instead of one flat number for any overlap.
     private double calculateLunchOverlapPenalty(ZonedDateTime start, ZonedDateTime end) {
         ZoneId athensZone = ZoneId.of("Europe/Athens");
         ZonedDateTime localStart = start.withZoneSameInstant(athensZone);
@@ -237,8 +236,17 @@ public class MeetingOptimizerService {
         ZonedDateTime lunchStart = localStart.withHour(12).withMinute(0).withSecond(0).withNano(0);
         ZonedDateTime lunchEnd = localStart.withHour(14).withMinute(0).withSecond(0).withNano(0);
 
-        boolean overlapsLunch = localStart.isBefore(lunchEnd) && localEnd.isAfter(lunchStart);
-        return overlapsLunch ? 30 : 0;
+        long overlapSeconds = Math.max(0,
+                Math.min(localEnd.toEpochSecond(), lunchEnd.toEpochSecond())
+                        - Math.max(localStart.toEpochSecond(), lunchStart.toEpochSecond()));
+
+        long meetingSeconds = Math.max(1, Duration.between(localStart, localEnd).getSeconds());
+        double overlapFraction = Math.min(1.0, (double) overlapSeconds / meetingSeconds);
+
+        // Squared instead of linear: a 25% overlap is only lightly penalized, while a
+        // meeting fully inside lunch still gets the full penalty. This keeps a slot that
+        // barely dips into lunch from losing to a slot with no "prime hour" bonus at all.
+        return (overlapFraction * overlapFraction) * 40;
     }
 
     // Gives a small tie-breaker bonus to the slots closest to the start of the requested date range.
@@ -249,6 +257,6 @@ public class MeetingOptimizerService {
         }
         long minutesFromStart = Duration.between(searchStart, slotStart).toMinutes();
         double fraction = 1.0 - ((double) minutesFromStart / totalRangeMinutes);
-        return Math.max(0, fraction) * 15;
+        return Math.max(0, fraction) * 20;
     }
 }

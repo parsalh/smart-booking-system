@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBooking - Privacy Policy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-700">
+
+<main class="max-w-2xl mx-auto px-6 py-16">
+
+    <a href="/login" class="text-sm font-bold text-blue-600 hover:text-blue-700">&larr; Back to SmartBooking</a>
+
+    <h1 class="text-3xl font-black text-slate-900 mt-6 mb-8">Privacy Policy</h1>
+
+    <div class="space-y-6 text-sm leading-relaxed font-medium">
+        <p>Your privacy is critically important to us. This policy outlines the types of information we collect and how it is used.</p>
+
+        <div>
+            <h2 class="text-slate-900 font-bold text-base mb-2">1. Data Collection</h2>
+            <p>When you log in via Google OAuth, we collect basic profile information: your <strong>Name</strong>, <strong>Email Address</strong>, and <strong>Profile Picture (Avatar)</strong>. We also securely store an access/refresh token to interact with your calendar.</p>
+        </div>
+
+        <div>
+            <h2 class="text-slate-900 font-bold text-base mb-2">2. Calendar Data Usage</h2>
+            <p>SmartBooking fetches your upcoming calendar events <em>strictly</em> to calculate your free/busy availability. We <strong>do not</strong> store the contents, titles, or descriptions of your private calendar events in our database. We only store bookings created directly through our platform.</p>
+        </div>
+
+        <div>
+            <h2 class="text-slate-900 font-bold text-base mb-2">3. Data Security</h2>
+            <p>All sensitive information, including email addresses of participants, is encrypted in our database using standard algorithms. Access to the backend system is strictly limited to authorized university administrators.</p>
+        </div>
+
+        <div>
+            <h2 class="text-slate-900 font-bold text-base mb-2">4. Third-Party Sharing</h2>
+            <p>We do not sell, trade, or otherwise transfer your personally identifiable information to outside parties. Your data is used exclusively for the operation of the SmartBooking platform within Harokopio University.</p>
+        </div>
+    </div>
+
+</main>
+</body>
+</html>

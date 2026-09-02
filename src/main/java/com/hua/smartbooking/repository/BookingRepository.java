@@ -32,4 +32,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Optional<Booking> findByGoogleEventId(String googleEventId);
 
     List<Booking> findByStartTimeAfterAndStatusNot(Instant now, BookingStatus excludedStatus);
+
+    List<Booking> findByStatusNotOrderByStartTimeDesc(BookingStatus excludedStatus);
+
+    List<Booking> findByStatusNot(BookingStatus excludedStatus);
 }

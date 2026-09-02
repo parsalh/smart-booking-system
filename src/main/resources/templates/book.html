@@ -37,32 +37,34 @@
 
 <main class="max-w-5xl mx-auto p-6 mt-6">
 
-    <div class="glass-card p-6 mb-8 flex justify-between items-center relative shadow-sm">
-        <div class="absolute left-10 right-10 top-1/2 h-1 bg-slate-200 -z-10 rounded-full transform -translate-y-1/2"></div>
+    <div class="glass-card-gradient p-6 mb-8 flex justify-between items-center relative shadow-sm">
+        <div class="absolute left-10 right-10 top-1/2 h-1 bg-white/20 -z-10 rounded-full transform -translate-y-1/2 overflow-hidden">
+            <div id="progress-fill" class="h-full bg-white rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+        </div>
 
         <div class="flex flex-col items-center gap-2">
-            <div id="step-circle-1" class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow-lg scale-110 transition-all z-10">1</div>
-            <span class="text-xs font-bold text-slate-700 bg-slate-50/80 px-2 py-0.5 rounded">Meeting Details</span>
+            <div id="step-circle-1" class="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold shadow-lg scale-110 transition-all z-10">1</div>
+            <span class="text-xs font-bold text-white bg-black/10 px-2 py-0.5 rounded">Meeting Details</span>
         </div>
         <div class="flex flex-col items-center gap-2">
-            <div id="step-circle-2" class="w-10 h-10 rounded-full bg-white border-2 border-slate-300 text-slate-400 flex items-center justify-center font-bold transition-all z-10">2</div>
-            <span class="text-xs font-bold text-slate-500 bg-slate-50/80 px-2 py-0.5 rounded">Best Time</span>
+            <div id="step-circle-2" class="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 text-white flex items-center justify-center font-bold transition-all z-10">2</div>
+            <span class="text-xs font-bold text-white/80 bg-black/10 px-2 py-0.5 rounded">Best Time</span>
         </div>
         <div class="flex flex-col items-center gap-2">
-            <div id="step-circle-3" class="w-10 h-10 rounded-full bg-white border-2 border-slate-300 text-slate-400 flex items-center justify-center font-bold transition-all z-10">3</div>
-            <span class="text-xs font-bold text-slate-500 bg-slate-50/80 px-2 py-0.5 rounded">Select Room</span>
+            <div id="step-circle-3" class="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 text-white flex items-center justify-center font-bold transition-all z-10">3</div>
+            <span class="text-xs font-bold text-white/80 bg-black/10 px-2 py-0.5 rounded">Select Room</span>
         </div>
         <div class="flex flex-col items-center gap-2">
-            <div id="step-circle-4" class="w-10 h-10 rounded-full bg-white border-2 border-slate-300 text-slate-400 flex items-center justify-center font-bold transition-all z-10">4</div>
-            <span class="text-xs font-bold text-slate-500 bg-slate-50/80 px-2 py-0.5 rounded">Confirm</span>
+            <div id="step-circle-4" class="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 text-white flex items-center justify-center font-bold transition-all z-10">4</div>
+            <span class="text-xs font-bold text-white/80 bg-black/10 px-2 py-0.5 rounded">Confirm</span>
         </div>
     </div>
 
     <div id="step-1-container" class="wizard-step-container block transition-all duration-300">
-        <div class="glass-card p-6 md:p-8 shadow-lg">
-            <div class="mb-6 border-b border-slate-100 pb-4">
-                <h2 class="text-2xl font-bold text-slate-900 mb-1">Meeting Details & Participants</h2>
-                <p class="text-sm text-slate-500">
+        <div class="glass-card-gradient p-6 md:p-8 shadow-lg">
+            <div class="mb-6 border-b border-white/20 pb-4">
+                <h2 class="text-2xl font-bold text-white mb-1">Meeting Details & Participants</h2>
+                <p class="text-sm text-white/80">
                     Set your meeting preferences and add participants. The system will automatically analyze their calendars to find the best times.
                 </p>
             </div>
@@ -71,21 +73,28 @@
 
                 <div class="space-y-5 relative">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">
-                            <i data-lucide="user-plus" class="w-4 h-4 inline text-blue-500 mr-1"></i> Search Participants
+                        <label class="block text-sm font-bold text-white mb-2">
+                            <i data-lucide="user-plus" class="w-4 h-4 inline text-white/90 mr-1"></i> Search Participants
                         </label>
                         <div class="relative">
                             <i data-lucide="search" class="w-5 h-5 absolute left-3 top-3.5 text-slate-400"></i>
-                            <input type="text" id="participant-search" placeholder="Type a name or email..." class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm" autocomplete="off">
+                            <input type="text" id="participant-search" placeholder="Type a name or email..." class="w-full pl-10 pr-4 py-3 border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white shadow-sm text-sm bg-white text-slate-900" autocomplete="off">
                         </div>
 
                         <div id="search-results-container" class="hidden absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-[250px] overflow-y-auto">
                         </div>
                     </div>
 
-                    <div class="pt-4 border-t border-slate-100">
+                    <div id="frequent-collaborators-container" class="hidden">
+                        <p class="text-[10px] font-bold text-white/70 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <i data-lucide="star" class="w-3 h-3 text-amber-300"></i> Quick Add
+                        </p>
+                        <div id="frequent-collaborators-list" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div class="pt-4 border-t border-white/20">
                         <div class="flex justify-between items-end mb-3 pl-1">
-                            <div class="text-[10px] font-bold text-blue-600 uppercase tracking-wider" id="selected-count-label">
+                            <div class="text-[10px] font-bold text-white/90 uppercase tracking-wider" id="selected-count-label">
                                 Selected Participants (0)
                             </div>
                         </div>
@@ -95,12 +104,12 @@
                     </div>
                 </div>
 
-                <div class="space-y-6 lg:pl-6 lg:border-l border-slate-100">
+                <div class="space-y-6 lg:pl-6 lg:border-l border-white/20">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">
-                            <i data-lucide="clock" class="w-4 h-4 inline text-emerald-500 mr-1"></i> Meeting Duration
+                        <label class="block text-sm font-bold text-white mb-2">
+                            <i data-lucide="clock" class="w-4 h-4 inline text-white/90 mr-1"></i> Meeting Duration
                         </label>
-                        <select id="pref-duration" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm text-sm font-medium">
+                        <select id="pref-duration" class="w-full px-4 py-3 border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white bg-white shadow-sm text-sm font-medium text-slate-900">
                             <option value="15">15 minutes</option>
                             <option value="30">30 minutes</option>
                             <option value="60" selected>1 hour</option>
@@ -111,31 +120,23 @@
                         </select>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">
-                                <i data-lucide="calendar-days" class="w-4 h-4 inline text-blue-500 mr-1"></i> Search Window
-                            </label>
-                            <div class="flex items-center gap-3">
-                                <div class="relative flex-1">
-                                    <span class="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">From</span>
-                                    <input type="date" id="pref-date-start" class="w-full px-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm font-medium text-slate-700 bg-white mt-1">
-                                </div>
+                    <div>
+                        <label class="block text-sm font-bold text-white mb-2">
+                            <i data-lucide="calendar-days" class="w-4 h-4 inline text-white/90 mr-1"></i> Search Window
+                        </label>
+                        <div class="relative grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
+                            <input type="text" id="pref-date-start" readonly placeholder="FROM" autocomplete="off"
+                                   class="w-full px-4 py-3 border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white shadow-sm text-sm font-medium text-slate-700 bg-white cursor-pointer">
 
-                                <div class="text-slate-300 mt-1">
-                                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                                </div>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-white/70 shrink-0"></i>
 
-                                <div class="relative flex-1">
-                                    <span class="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">To</span>
-                                    <input type="date" id="pref-date-end" class="w-full px-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm font-medium text-slate-700 bg-white mt-1">
-                                </div>
-                            </div>
+                            <input type="text" id="pref-date-end" readonly placeholder="TO" autocomplete="off"
+                                   class="w-full px-4 py-3 border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white shadow-sm text-sm font-medium text-slate-700 bg-white cursor-pointer">
                         </div>
                     </div>
 
                     <div class="mt-6">
-                        <button type="button" id="btnAdvancedOptions" class="w-full flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm text-slate-700 font-bold group z-10 relative">
+                        <button type="button" id="btnAdvancedOptions" class="w-full flex items-center justify-between p-4 bg-white border border-white/30 rounded-xl hover:bg-slate-50 transition-all shadow-sm text-slate-700 font-bold group z-10 relative">
                             <div class="flex items-center gap-3">
                                 <i data-lucide="sliders-horizontal" class="w-5 h-5 text-slate-400 group-hover:text-blue-600 transition-colors"></i>
                                 <span class="group-hover:text-blue-600 transition-colors">Advanced Options</span>
@@ -144,7 +145,7 @@
                         </button>
 
                         <div id="advancedOptionsDiv" class="hidden transform opacity-0 -translate-y-2 transition-all duration-300 origin-top">
-                            <div class="p-5 bg-slate-50 border border-t-0 border-slate-200 rounded-b-xl flex flex-wrap gap-4 -mt-2 pt-6">
+                            <div class="p-5 bg-white border border-t-0 border-white/30 rounded-b-xl flex flex-wrap gap-4 -mt-2 pt-6">
                                 <div class="flex-1 min-w-[120px]">
                                     <label class="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1">From Time</label>
                                     <input type="time" id="dailyStartTime" value="09:00" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
@@ -168,14 +169,14 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">
-                            <i data-lucide="users" class="w-4 h-4 inline text-purple-500 mr-1"></i> Minimum Room Capacity
+                        <label class="block text-sm font-bold text-white mb-2">
+                            <i data-lucide="users" class="w-4 h-4 inline text-white/90 mr-1"></i> Minimum Room Capacity
                         </label>
-                        <input type="number" id="pref-capacity" min="1" value="4" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm font-medium">
+                        <input type="number" id="pref-capacity" min="1" value="4" class="w-full px-4 py-3 border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-white shadow-sm text-sm font-medium bg-white text-slate-900">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-3">Required Amenities</label>
+                        <label class="block text-sm font-bold text-white mb-3">Required Amenities</label>
                         <div id="amenities-container" class="grid grid-cols-2 gap-3">
                         </div>
                     </div>
@@ -187,10 +188,10 @@
                 <span id="step-1-error-text"></span>
             </div>
 
-            <div class="mt-8 pt-6 border-t border-slate-200 flex justify-end">
-                <button id="find-times-btn" onclick="handleFindBestTimes()" disabled class="px-8 py-3.5 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md">
-                    Find Best Times
-                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            <div class="mt-8 pt-6 border-t border-white/20 flex justify-end">
+                <button id="find-times-btn" onclick="handleFindBestTimes()" disabled class="px-8 py-3.5 bg-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md">
+                    <span class="btn-gradient-text">Find Best Times</span>
+                    <i data-lucide="arrow-right" class="w-5 h-5 text-blue-600"></i>
                 </button>
             </div>
         </div>
@@ -213,9 +214,9 @@
             </div>
         </div>
 
-        <div class="glass-card p-8 shadow-lg">
-            <h2 class="text-2xl font-black text-slate-900 mb-2">Top <span id="dynamic-results-count">15</span> Available Slots
-                <span class="text-sm font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md">Ranked by availability</span>
+        <div class="glass-card-gradient p-8 shadow-lg">
+            <h2 class="text-2xl font-black text-white mb-2">Top <span id="dynamic-results-count">15</span> Available Slots
+                <span class="text-sm font-medium text-white/80 bg-white/10 px-2 py-1 rounded-md">Ranked by availability</span>
             </h2>
 
             <div id="recommended-times-container" class="space-y-4 max-h-[500px] overflow-y-auto pt-4 px-2 pb-4">
@@ -226,22 +227,22 @@
                 <span id="step-2-error-text"></span>
             </div>
 
-            <div class="mt-8 pt-4 border-t border-slate-100 flex justify-between">
-                <button onclick="goToStep(1)" class="px-6 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all flex items-center gap-2">
+            <div class="mt-8 pt-4 border-t border-white/20 flex justify-between">
+                <button onclick="goToStep(1)" class="px-6 py-3 font-bold text-white/80 hover:bg-white/10 rounded-xl transition-all flex items-center gap-2">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
                 </button>
-                <button id="btn-to-room" onclick="fetchAvailableRooms()" class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all hidden">
-                    Continue to Room Selection
+                <button id="btn-to-room" onclick="fetchAvailableRooms()" class="bg-white px-8 py-3 rounded-xl font-bold shadow-xl hover:scale-[1.02] active:scale-95 transition-all hidden">
+                    <span class="btn-gradient-text">Continue to Room Selection</span>
                 </button>
             </div>
         </div>
     </div>
 
     <div id="step-3-container" class="wizard-step-container hidden transition-all duration-300">
-        <div class="glass-card p-8 shadow-lg">
-            <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                <h2 class="text-2xl font-bold text-slate-900">Smart Room Recommendations</h2>
-                <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-bold border border-blue-100 shadow-sm flex items-center gap-2" id="step3-time-summary">
+        <div class="glass-card-gradient p-8 shadow-lg">
+            <div class="flex justify-between items-center mb-6 border-b border-white/20 pb-4">
+                <h2 class="text-2xl font-bold text-white">Smart Room Recommendations</h2>
+                <div class="bg-white/10 text-white px-4 py-2 rounded-lg text-sm font-bold border border-white/20 shadow-sm flex items-center gap-2" id="step3-time-summary">
                     <i data-lucide="calendar-check" class="w-4 h-4"></i> <span id="step3-time-text"></span>
                 </div>
             </div>
@@ -254,25 +255,25 @@
                 <span id="step-3-error-text"></span>
             </div>
 
-            <div class="mt-8 pt-4 border-t border-slate-100 flex justify-between">
-                <button onclick="goToStep(2)" class="px-6 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all flex items-center gap-2">
+            <div class="mt-8 pt-4 border-t border-white/20 flex justify-between">
+                <button onclick="goToStep(2)" class="px-6 py-3 font-bold text-white/80 hover:bg-white/10 rounded-xl transition-all flex items-center gap-2">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Times
                 </button>
-                <button id="btn-to-confirm" onclick="goToStep(4); renderFinalReview();" class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all hidden flex items-center gap-2">
-                    Review Booking <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                <button id="btn-to-confirm" onclick="goToStep(4); renderFinalReview();" class="bg-white px-8 py-3 rounded-xl font-bold shadow-xl hover:scale-[1.02] active:scale-95 transition-all hidden flex items-center gap-2">
+                    <span class="btn-gradient-text">Review Booking</span> <i data-lucide="arrow-right" class="w-4 h-4 text-blue-600"></i>
                 </button>
             </div>
         </div>
     </div>
 
     <div id="step-4-container" class="wizard-step-container hidden transition-all duration-300">
-        <div class="glass-card p-8 shadow-lg text-center max-w-2xl mx-auto">
+        <div class="glass-card-gradient p-8 shadow-lg text-center max-w-2xl mx-auto">
 
-            <div class="w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner ring-4 ring-emerald-50">
+            <div class="w-20 h-20 bg-white text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner ring-4 ring-white/30">
                 <i data-lucide="check-circle-2" class="w-10 h-10"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-900 mb-2">Ready to book your meeting</h2>
-            <p class="text-slate-500 mb-8">Review the details below and confirm your booking.</p>
+            <h2 class="text-2xl font-bold text-white mb-2">Ready to book your meeting</h2>
+            <p class="text-white/80 mb-8">Review the details below and confirm your booking.</p>
 
             <div class="text-left bg-white rounded-3xl border border-slate-200 p-8 space-y-6 mb-8 shadow-sm">
 
@@ -335,10 +336,10 @@
                 <span id="step-4-error-text"></span>
             </div>
 
-            <div class="flex justify-between items-center border-t border-slate-100 pt-6">
-                <button onclick="goToStep(3)" class="px-6 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all">Back to Rooms</button>
-                <button id="final-confirm-btn" onclick="submitFinalBooking()" class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-10 py-4 rounded-xl font-black shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all text-lg flex items-center gap-2">
-                    Confirm Booking <i data-lucide="check" class="w-5 h-5"></i>
+            <div class="flex justify-between items-center border-t border-white/20 pt-6">
+                <button onclick="goToStep(3)" class="px-6 py-3 font-bold text-white/80 hover:bg-white/10 rounded-xl transition-all">Back to Rooms</button>
+                <button id="final-confirm-btn" onclick="submitFinalBooking()" class="bg-white px-10 py-4 rounded-xl font-black shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-lg flex items-center gap-2">
+                    <span class="btn-gradient-text">Confirm Booking</span> <i data-lucide="check" class="w-5 h-5 text-blue-600"></i>
                 </button>
             </div>
         </div>
@@ -404,6 +405,7 @@
     </div>
 </div>
 
+<script th:src="@{/js/date-picker.js}"></script>
 <script th:src="@{/js/booking-wizard.js}"></script>
 </body>
 </html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>SmartBooking - All Bookings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
+    <div class="flex items-center gap-2">
+        <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" />
+            <span class="text-lg font-bold tracking-tight text-slate-900">SmartBooking</span>
+        </a>
+    </div>
+    <div class="flex items-center gap-4">
+        <a href="/"
+           onclick="this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-4 h-4 text-blue-600 animate-spin\'></i> Loading...'; lucide.createIcons(); this.classList.add('opacity-70', 'pointer-events-none');"
+           class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
+            <i data-lucide="arrow-left" class="w-4 h-4 text-blue-600"></i> Back to Dashboard
+        </a>
+
+        <div class="text-right hidden md:block">
+            <p class="text-xs font-bold text-slate-900" th:text="${name}">User</p>
+            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold"
+               th:text="${role == 'ADMIN' ? 'Administrator' : email}">user@email.com</p>
+        </div>
+
+        <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
+             alt="Profile"
+             class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover">
+
+        <a href="/profile" class="text-slate-400 hover:text-blue-600 transition-colors p-2" title="My Profile">
+            <i data-lucide="user-cog" class="w-5 h-5"></i>
+        </a>
+
+        <a href="/logout" class="text-slate-400 hover:text-red-600 transition-colors p-2" title="Logout">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+        </a>
+    </div>
+</nav>
+
+<main class="p-10">
+    <div class="max-w-6xl mx-auto">
+
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">Bookings</h1>
+            <p class="text-slate-500">Every room booking made through SmartBooking.</p>
+        </div>
+
+        <div class="flex items-center gap-2 mb-6 border-b border-slate-200">
+            <a href="/admin/rooms" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
+                Rooms
+            </a>
+            <a href="/admin/bookings" class="px-4 py-2.5 text-sm font-bold text-blue-600 border-b-2 border-blue-600">
+                Bookings
+            </a>
+        </div>
+
+        <div th:if="${#lists.isEmpty(bookings)}" class="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm">
+            <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="calendar-x" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">No bookings yet</h3>
+            <p class="text-sm text-slate-500">Bookings made through the app will appear here.</p>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(bookings)}" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <table class="w-full text-sm">
+                <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-left">
+                    <th class="px-6 py-3 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Room</th>
+                    <th class="px-6 py-3 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Organizer</th>
+                    <th class="px-6 py-3 font-bold text-slate-500 uppercase tracking-wider text-[10px]">When</th>
+                    <th class="px-6 py-3 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="booking : ${bookings}" class="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                                <img th:if="${booking.room != null and booking.room.imageUrl != null and !#strings.isEmpty(booking.room.imageUrl)}"
+                                     th:src="${booking.room.imageUrl}"
+                                     alt="Room"
+                                     class="w-full h-full object-cover"
+                                     onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center text-slate-300\'><i data-lucide=\'image-off\' class=\'w-5 h-5\'></i></div>'; lucide.createIcons();">
+                                <div th:unless="${booking.room != null and booking.room.imageUrl != null and !#strings.isEmpty(booking.room.imageUrl)}"
+                                     class="w-full h-full flex items-center justify-center text-slate-300">
+                                    <i data-lucide="door-open" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <span class="font-bold text-slate-900" th:text="${booking.room != null ? booking.room.name : 'Room deleted'}">Conference Room A</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="font-bold text-slate-900" th:text="${booking.user != null ? booking.user.fullname : 'Unknown'}">Jane Doe</p>
+                        <p class="text-[11px] text-slate-500" th:text="${booking.user != null ? booking.user.email : ''}">jane@hua.gr</p>
+                    </td>
+                    <td class="px-6 py-4 text-slate-700">
+                        <p class="font-semibold" th:text="${#temporals.format(booking.startTime, 'd MMM yyyy, HH:mm')}">1 Sep 2026, 10:00</p>
+                        <p class="text-[11px] text-slate-400" th:text="${#temporals.format(booking.endTime, 'HH:mm')} + ' end'">11:00 end</p>
+                    </td>
+                    <td class="px-6 py-4">
+                    <span th:text="${booking.status}"
+                          th:classappend="${booking.status.name() == 'APPROVED'} ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                          : (${booking.status.name() == 'PENDING'} ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                          : 'bg-slate-100 text-slate-600 border-slate-200')"
+                          class="text-[10px] font-bold px-2.5 py-1 rounded-lg border uppercase tracking-wider">
+                    </span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    lucide.createIcons();
+</script>
+</body>
+</html>

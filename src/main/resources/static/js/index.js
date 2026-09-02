@@ -56,6 +56,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    if (eventInput && eventInput.dataset.oooStart && eventInput.dataset.oooEnd) {
+        const oooEndExclusive = new Date(eventInput.dataset.oooEnd);
+        oooEndExclusive.setDate(oooEndExclusive.getDate() + 1);
+
+        eventsData.push({
+            start: eventInput.dataset.oooStart,
+            end: oooEndExclusive.toISOString().split('T')[0],
+            display: 'background',
+            color: '#f97316',
+            allDay: true
+        });
+    }
+
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         initialDate: new Date(),
@@ -134,6 +147,10 @@ document.addEventListener('DOMContentLoaded', function() {
         },
 
         eventClick: function(info) {
+            if (info.event.display === 'background') {
+                return;
+            }
+
             const props = info.event.extendedProps;
 
             document.getElementById('modalTitle').innerText = props['fullTitle'] || info.event.title || 'Untitled Event';

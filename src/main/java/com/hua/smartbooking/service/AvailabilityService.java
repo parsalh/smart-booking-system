@@ -7,6 +7,7 @@ import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.*;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.UserCredentials;
+import com.hua.smartbooking.exception.StaleGoogleTokenException;
 import com.hua.smartbooking.exception.UserNotRegisteredException;
 import com.hua.smartbooking.factory.GoogleCalendarClientFactory;
 import com.hua.smartbooking.model.User;
@@ -67,20 +68,56 @@ public class AvailabilityService {
             request.setTimeMax(new DateTime(searchEnd.toInstant().toEpochMilli()));
             request.setItems(List.of(new FreeBusyRequestItem().setId("primary")));
 
-            FreeBusyResponse response = service.freebusy().query(request).execute();
+            FreeBusyResponse response;
+            try {
+                response = service.freebusy().query(request).execute();
+            } catch (IOException e) {
+                if (e.getMessage() != null && e.getMessage().contains("invalid_grant")) {
+                    participant.setRefreshToken(null);
+                    userRepository.save(participant);
+                    throw new StaleGoogleTokenException(
+                            "Google Calendar access for " + email + " has expired. They need to sign in again.",
+                            email);
+                }
+                throw e;
+            }
 
             FreeBusyCalendar calendar = response.getCalendars().get("primary");
             boolean hasError = calendar != null && calendar.getErrors() != null && !calendar.getErrors().isEmpty();
 
+            List<TimePeriod> busyBlocks;
             if (calendar == null || hasError) {
-                userBusyBlocks.put(email, new ArrayList<>());
+                busyBlocks = new ArrayList<>();
             } else {
                 List<TimePeriod> busy = calendar.getBusy();
-                userBusyBlocks.put(email, busy != null ? busy : new ArrayList<>());
+                busyBlocks = busy != null ? new ArrayList<>(busy) : new ArrayList<>();
             }
+
+            addOutOfOfficeBlock(participant, searchStart, searchEnd, busyBlocks);
+
+            userBusyBlocks.put(email, busyBlocks);
         }
 
         return userBusyBlocks;
+    }
+
+    private void addOutOfOfficeBlock(User participant, ZonedDateTime searchStart, ZonedDateTime searchEnd,
+                                     List<TimePeriod> busyBlocks) {
+        if (participant.getOutOfOfficeStart() == null || participant.getOutOfOfficeEnd() == null) {
+            return;
+        }
+
+        long oooStartMillis = participant.getOutOfOfficeStart().toEpochMilli();
+        long oooEndMillis = participant.getOutOfOfficeEnd().toEpochMilli();
+
+        boolean overlaps = oooStartMillis < searchEnd.toInstant().toEpochMilli()
+                && oooEndMillis > searchStart.toInstant().toEpochMilli();
+
+        if (overlaps) {
+            busyBlocks.add(new TimePeriod()
+                    .setStart(new DateTime(oooStartMillis))
+                    .setEnd(new DateTime(oooEndMillis)));
+        }
     }
 
 }

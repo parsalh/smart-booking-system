@@ -435,6 +435,16 @@ Event Blocks & Classifications
     background: rgba(37, 99, 235, 0.15) !important;
 }
 
+/* --- Past days: fade events to show they're no longer actionable --- */
+.fc-day-past .fc-event {
+    opacity: 0.45 !important;
+    filter: grayscale(25%);
+}
+
+.fc-day-past .fc-daygrid-day-number {
+    color: #94a3b8 !important;
+}
+
 
 /*
 =====================
@@ -445,6 +455,14 @@ General UI Components
     background: rgba(255, 255, 255, 0.45);
     backdrop-filter: blur(14px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 2rem;
+}
+
+/* Signature blue-to-emerald gradient variant, used for the booking wizard containers */
+.glass-card-gradient {
+    background: linear-gradient(to right, #2563eb, #10b981);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 2rem;
 }
 

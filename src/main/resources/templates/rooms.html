@@ -33,6 +33,11 @@
         <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
              alt="Profile"
              class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover">
+
+        <a href="/profile" class="text-slate-400 hover:text-blue-600 transition-colors p-2" title="My Profile">
+            <i data-lucide="user-cog" class="w-5 h-5"></i>
+        </a>
+
         <a href="/logout" class="text-gray-400 hover:text-red-600 transition-colors p-2" title="Logout">
             <i data-lucide="log-out" class="w-5 h-5"></i>
         </a>

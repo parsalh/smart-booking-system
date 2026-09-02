@@ -1,5 +1,6 @@
 package com.hua.smartbooking.controller;
 
+import com.hua.smartbooking.enums.BookingStatus;
 import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.Room;
 import com.hua.smartbooking.model.User;
@@ -22,16 +23,16 @@ public class AdminController {
 
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
-    public AdminController(RoomRepository roomRepository, UserRepository userRepository) {
+    public AdminController(RoomRepository roomRepository, UserRepository userRepository,
+                           BookingRepository bookingRepository) {
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
     }
 
-    @GetMapping("/rooms")
-    public String listRooms(Model model, @AuthenticationPrincipal OAuth2User principal) {
-        model.addAttribute("rooms", roomRepository.findAll());
-
+    private void addUserAttributes(Model model, OAuth2User principal) {
         if (principal != null) {
             String email = principal.getAttribute("email");
             User user = userRepository.findByEmail(email).orElse(null);
@@ -43,8 +44,21 @@ public class AdminController {
                 model.addAttribute("email", user.getEmail());
             }
         }
+    }
 
+    @GetMapping("/rooms")
+    public String listRooms(Model model, @AuthenticationPrincipal OAuth2User principal) {
+        model.addAttribute("rooms", roomRepository.findAll());
+        addUserAttributes(model, principal);
         return "admin-rooms";
+    }
+
+    @GetMapping("/bookings")
+    public String listBookings(Model model, @AuthenticationPrincipal OAuth2User principal) {
+        List<Booking> bookings = bookingRepository.findByStatusNotOrderByStartTimeDesc(BookingStatus.CANCELLED);
+        model.addAttribute("bookings", bookings);
+        addUserAttributes(model, principal);
+        return "admin-bookings";
     }
 
     @PostMapping("/rooms/update")
@@ -93,7 +107,7 @@ public class AdminController {
         try {
             roomRepository.deleteById(id);
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Δεν μπορείτε να διαγράψετε αυτό το δωμάτιο γιατί υπάρχουν ήδη συγχρονισμένες κρατήσεις σε αυτό.");
+            redirectAttributes.addFlashAttribute("error", "This room cannot be deleted because it already has synced bookings.");
         }
         return "redirect:/admin/rooms";
     }

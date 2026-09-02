@@ -3,6 +3,7 @@ package com.hua.smartbooking.controller;
 import com.google.api.services.calendar.model.TimePeriod;
 import com.hua.smartbooking.dto.*;
 import com.hua.smartbooking.enums.RsvpStatus;
+import com.hua.smartbooking.exception.StaleGoogleTokenException;
 import com.hua.smartbooking.exception.UserNotRegisteredException;
 import com.hua.smartbooking.mapper.RoomMapper;
 import com.hua.smartbooking.model.Booking;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
+import java.io.IOException;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -84,8 +86,19 @@ public class BookingController {
                 User participant = userRepository.findByEmail(email)
                         .orElseThrow(() -> new UserNotRegisteredException("Participant " + email + " is not registered.", email));
                 if (participant.getRefreshToken() != null) {
-                    List<com.google.api.services.calendar.model.Event> googleEvents = googleCalendarService.getUpcomingEvents(participant.getRefreshToken());
-                    eventMappingService.syncEvents(googleEvents, participant);
+                    try {
+                        List<com.google.api.services.calendar.model.Event> googleEvents = googleCalendarService.getUpcomingEvents(participant.getRefreshToken());
+                        eventMappingService.syncEvents(googleEvents, participant);
+                    } catch (IOException e) {
+                        if (e.getMessage() != null && e.getMessage().contains("invalid_grant")) {
+                            participant.setRefreshToken(null);
+                            userRepository.save(participant);
+                            throw new StaleGoogleTokenException(
+                                    "Google Calendar access for " + email + " has expired. They need to sign in again.",
+                                    email);
+                        }
+                        throw e;
+                    }
                 }
             }
 
@@ -107,6 +120,12 @@ public class BookingController {
             body.put("status", "requires_invite");
             body.put("missingEmail", e.getMissingEmail());
             return ResponseEntity.status(404).body(body);
+        } catch (StaleGoogleTokenException e) {
+            Map<String, String> body = new HashMap<>();
+            body.put("status", "stale_token");
+            body.put("affectedEmail", e.getUserEmail());
+            body.put("message", e.getMessage());
+            return ResponseEntity.status(409).body(body);
         } catch (Exception e) {
             Map<String, String> body = new HashMap<>();
             body.put("error", e.getMessage());

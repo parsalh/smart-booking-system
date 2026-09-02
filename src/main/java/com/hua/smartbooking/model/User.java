@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import com.hua.smartbooking.enums.Role;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "users",
     uniqueConstraints = {
@@ -40,5 +42,8 @@ public class User {
 
     @Column(name = "avatar_url", columnDefinition = "TEXT")
     private String avatarUrl;
+
+    private Instant outOfOfficeStart;
+    private Instant outOfOfficeEnd;
 
 }

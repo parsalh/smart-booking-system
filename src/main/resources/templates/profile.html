@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBooking - My Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="min-h-screen font-sans text-gray-900 selection:bg-blue-100">
+
+<nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
+    <div class="flex items-center gap-2">
+        <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" />
+            <span class="text-lg font-bold tracking-tight text-gray-900">SmartBooking</span>
+        </a>
+    </div>
+    <div class="flex items-center gap-4">
+        <a th:if="${role == 'ADMIN'}" href="/admin/rooms" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
+            <i data-lucide="shield" class="w-4 h-4 text-purple-600"></i> Admin Panel
+        </a>
+        <div class="text-right hidden md:block">
+            <p class="text-xs font-bold text-gray-900" th:text="${name}">User</p>
+            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold"
+               th:text="${role == 'ADMIN' ? 'Administrator' : email}">user@email.com</p>
+        </div>
+        <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
+             alt="Profile"
+             class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover">
+        <a href="/logout" class="text-gray-400 hover:text-red-600 transition-colors p-2" title="Logout">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+        </a>
+    </div>
+</nav>
+
+<main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8 flex justify-between items-end gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-2">My Profile</h1>
+            <p class="text-gray-600 text-sm font-medium">Manage your availability preferences for SmartBooking.</p>
+        </div>
+        <a href="/" class="px-5 py-2.5 bg-white/90 backdrop-blur-md border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-white hover:text-blue-600 transition-all shadow-sm flex items-center gap-2 text-sm">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 border border-gray-200/80 shadow-sm">
+
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center">
+                <i data-lucide="palmtree" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-gray-900">Out of Office</h2>
+                <p class="text-xs text-gray-500 font-medium">While active, SmartBooking will treat this period as unavailable when suggesting meeting times for you.</p>
+            </div>
+        </div>
+
+        <div id="oooActiveBanner" class="hidden mb-6 bg-orange-50 border border-orange-200 rounded-2xl p-4">
+            <div class="flex items-center gap-2 text-orange-800 text-xs font-bold uppercase tracking-wider mb-1">
+                <i data-lucide="calendar-off" class="w-3.5 h-3.5"></i> Active Status
+            </div>
+            <div class="flex items-center justify-between gap-4">
+                <p id="oooActiveText" class="text-sm font-bold text-orange-900">Currently out of office</p>
+                <button onclick="clearOutOfOffice()"
+                        class="shrink-0 flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove
+                </button>
+            </div>
+        </div>
+
+        <form id="oooForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4" onsubmit="saveOutOfOffice(event)"
+              th:attr="data-initial-start=${outOfOfficeStart},data-initial-end=${outOfOfficeEnd}">
+            <div class="relative">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Start Date</label>
+                <input type="text" id="ooo-start" readonly placeholder="dd-mm-yyyy" autocomplete="off"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm font-medium cursor-pointer">
+            </div>
+            <div class="relative">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">End Date</label>
+                <input type="text" id="ooo-end" readonly placeholder="dd-mm-yyyy" autocomplete="off"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm font-medium cursor-pointer">
+            </div>
+
+            <p id="oooError" class="hidden sm:col-span-2 text-xs font-bold text-red-600"></p>
+
+            <div class="sm:col-span-2 flex items-center gap-3 pt-2">
+                <button type="submit"
+                        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all text-sm flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Save
+                </button>
+                <span id="oooSavedMsg" class="hidden text-xs font-bold text-emerald-600 flex items-center gap-1.5">
+            <i data-lucide="check-circle-2" class="w-4 h-4"></i> Saved
+        </span>
+            </div>
+        </form>
+
+    </div>
+
+</main>
+
+<script th:src="@{/js/date-picker.js}"></script>
+<script th:src="@{/js/profile.js}"></script>
+
+</body>
+</html>
