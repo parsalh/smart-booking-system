@@ -132,7 +132,7 @@ public class GoogleCalendarService {
                 extendedProps.put("fullTitle", entity.getTitle() != null ? entity.getTitle() : "Untitled Event");
 
                 String roomLoc = entity.getRoom() != null && entity.getRoom().getLocation() != null ? entity.getRoom().getLocation() : null;
-                String fallbackLoc = gEvent.getLocation() != null ? gEvent.getLocation() : "El. Venizelou 70, Kallithea";
+                String fallbackLoc = gEvent.getLocation() != null && !gEvent.getLocation().isBlank() ? gEvent.getLocation() : "No location specified";
                 extendedProps.put("fullLocation", roomLoc != null ? roomLoc : fallbackLoc);
 
                 extendedProps.put("description", description != null ? description : "No description available.");
@@ -164,7 +164,7 @@ public class GoogleCalendarService {
 
                 calendarEvents.add(map);
             } catch (Exception e) {
-                System.err.println("Skipping event due to error: " + gEvent.getSummary() + " -> " + e.getMessage());
+                System.err.println("Skipping event due to error.html: " + gEvent.getSummary() + " -> " + e.getMessage());
             }
         }
 
@@ -210,7 +210,7 @@ public class GoogleCalendarService {
 
                 String roomName = dbBooking.getRoom() != null ? dbBooking.getRoom().getName() : "Room Details";
                 String roomLoc = dbBooking.getRoom() != null && dbBooking.getRoom().getLocation() != null
-                        ? dbBooking.getRoom().getLocation() : "El. Venizelou 70, Kallithea";
+                        ? dbBooking.getRoom().getLocation() : "No location specified";
 
                 extendedProps.put("fullLocation", roomLoc);
                 extendedProps.put("description", "Automatically scheduled via SmartBooking App");

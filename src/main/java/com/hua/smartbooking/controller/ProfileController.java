@@ -4,6 +4,10 @@ import com.hua.smartbooking.dto.OutOfOfficeRequest;
 import com.hua.smartbooking.dto.TitleRequest;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -20,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
+@Tag(name = "Profile", description = "Manage the logged-in user's own SmartBooking preferences")
 public class ProfileController {
 
     private final UserRepository userRepository;
@@ -58,6 +63,15 @@ public class ProfileController {
         return "profile";
     }
 
+    @Operation(
+            summary = "Update the user's title",
+            description = "Sets or clears the salutation (Mr./Mrs./Ms./Dr.) shown across SmartBooking for the currently logged-in user."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Title saved or cleared successfully"),
+            @ApiResponse(responseCode = "400", description = "Title value is blank, or not one of the allowed titles"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated")
+    })
     @PostMapping("/api/profile/title")
     @ResponseBody
     public ResponseEntity<?> setTitle(@Valid @RequestBody TitleRequest request,
@@ -90,9 +104,19 @@ public class ProfileController {
         return ResponseEntity.ok().body("Title saved");
     }
 
+    @Operation(
+            summary = "Set or clear the user's out-of-office period",
+            description = "While active, SmartBooking treats this date range as unavailable when suggesting meeting times "
+                    + "for the currently logged-in user. Send blank startDate/endDate to clear it."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Out-of-office period saved or cleared successfully"),
+            @ApiResponse(responseCode = "400", description = "Missing dates, or end date is before start date"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated")
+    })
     @PostMapping("/api/profile/out-of-office")
     @ResponseBody
-    public ResponseEntity<?> setOutOfOffice(@RequestBody OutOfOfficeRequest request,
+    public ResponseEntity<?> setOutOfOffice(@Valid @RequestBody OutOfOfficeRequest request,
                                             OAuth2AuthenticationToken token) {
         if (token == null) {
             return ResponseEntity.status(401).build();

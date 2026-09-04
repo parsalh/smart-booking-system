@@ -23,4 +23,5 @@ public class RoomDTO {
 
     private String imageUrl;
     private List<String> amenities;
+    private Boolean isAvailable;
 }

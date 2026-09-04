@@ -75,7 +75,7 @@ public class EventMapper {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("NLP Service error: " + e.getMessage());
+                System.err.println("NLP Service error.html: " + e.getMessage());
                 System.out.println("Falling back to basic parsing.");
             }
 

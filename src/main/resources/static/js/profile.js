@@ -82,13 +82,14 @@ async function saveOutOfOffice(event) {
         })
         .catch((err) => {
             console.error(err);
-            errorMsg.innerText = err.message === 'Failed to fetch' ? 'Network error.' : err.message;
+            errorMsg.innerText = err.message === 'Failed to fetch' ? 'Network error.html.' : err.message;
             errorMsg.classList.remove('hidden');
         })
         .finally(() => {
             if (submitBtn) submitBtn.disabled = false;
         });
 }
+
 
 function clearOutOfOffice() {
     const modal = document.getElementById('oooConfirmModal');
@@ -149,5 +150,38 @@ function executeOooClear() {
                 errorMsg.classList.remove('hidden');
             }
             console.error(err);
+        });
+}
+
+function saveTitle(event) {
+    event.preventDefault();
+
+    const select = document.getElementById('userTitle');
+    const savedMsg = document.getElementById('titleSavedMsg');
+    const errorMsg = document.getElementById('titleErrorMsg');
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+
+    savedMsg.classList.add('hidden');
+    errorMsg.classList.add('hidden');
+    if (submitBtn) submitBtn.disabled = true;
+
+    fetch('/api/profile/title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: select.value })
+    })
+        .then(function (res) {
+            if (!res.ok) throw new Error('Request failed');
+            savedMsg.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            setTimeout(function () { savedMsg.classList.add('hidden'); }, 3000);
+        })
+        .catch(function (err) {
+            console.error('Failed to save title:', err);
+            errorMsg.innerText = 'Could not save your title. Please try again.';
+            errorMsg.classList.remove('hidden');
+        })
+        .finally(function () {
+            if (submitBtn) submitBtn.disabled = false;
         });
 }

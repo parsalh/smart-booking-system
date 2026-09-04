@@ -423,7 +423,7 @@ async function geocodeAddress(address) {
             return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
         }
     } catch (e) {
-        console.error("Geocoding error:", e);
+        console.error("Geocoding error.html:", e);
     }
     return null;
 }
@@ -444,7 +444,7 @@ function openAllBookingsModal() {
 
     fetch('/api/bookings/my-smartbookings')
         .then(res => {
-            if (!res.ok) throw new Error('Network response error');
+            if (!res.ok) throw new Error('Network response error.html');
             return res.json();
         })
         .then(bookings => {
@@ -913,6 +913,12 @@ function renderLiveParticipants(bookingId, fallbackParticipants, containerId) {
                             }
                         }
                     });
+
+                    // eventClassNames (used for the dashed/pending calendar chip style) is only
+                    // re-evaluated on a full render pass — setExtendedProp alone updates the data
+                    // but not the chip's visual class. Force a re-render so the calendar reflects
+                    // the just-reconciled RSVP status immediately, without needing a page reload.
+                    window.smartCalendar.render();
                 }
 
                 for (const [email, status] of Object.entries(freshParticipants)) {

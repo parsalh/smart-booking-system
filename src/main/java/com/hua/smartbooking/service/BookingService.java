@@ -239,7 +239,8 @@ public class BookingService {
                 .map(booking -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", booking.getId());
-                    map.put("title", booking.getRoom() != null ? booking.getRoom().getName() : "SmartBooking");
+                    map.put("title", booking.getTitle() != null && !booking.getTitle().isBlank()
+                            ? booking.getTitle() : "SmartBooking Meeting");
                     map.put("startTime", booking.getStartTime().toString());
                     map.put("endTime", booking.getEndTime() != null ? booking.getEndTime().toString() : null);
 

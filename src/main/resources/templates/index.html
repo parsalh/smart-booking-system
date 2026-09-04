@@ -38,6 +38,15 @@
             box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
 
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
         .glass-nav {
             background: rgba(255, 255, 255, 0.75) !important;
             backdrop-filter: blur(20px) !important;
@@ -105,131 +114,6 @@
 
 <main class="max-w-7xl mx-auto p-6 space-y-6">
 
-    <div id="eventModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
-        <div class="glass-surface-hero p-8 relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-48 h-48 bg-blue-400/10 rounded-full blur-3xl"></div>
-            <div class="absolute -bottom-10 -left-10 w-48 h-48 bg-emerald-400/10 rounded-full blur-3xl"></div>
-            <div class="relative z-10">
-                <div class="flex justify-between items-start mb-6">
-                    <div class="p-3 bg-gradient-to-br from-blue-500/20 to-emerald-500/20 rounded-2xl border border-white/50">
-                        <i data-lucide="info" class="w-6 h-6 text-blue-600"></i>
-                    </div>
-                    <button onclick="closeModal()" class="p-2 hover:bg-white/50 rounded-full transition-colors group">
-                        <i data-lucide="x" class="w-5 h-5 text-gray-400 group-hover:text-red-500"></i>
-                    </button>
-                </div>
-
-                <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 mb-2 leading-tight tracking-tight"></h3>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-3 text-gray-700 bg-white/40 p-3 rounded-2xl border border-white/60 shadow-sm">
-                            <div class="p-2 bg-blue-100 rounded-lg">
-                                <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i>
-                            </div>
-                            <span id="modalTime" class="text-sm font-bold"></span>
-                        </div>
-
-                        <div class="flex items-center gap-3 text-gray-700 bg-white/40 p-3 rounded-2xl border border-white/60 shadow-sm">
-                            <div class="p-2 bg-emerald-100 rounded-lg">
-                                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i>
-                            </div>
-                            <span id="modalLocation" class="text-sm font-bold"></span>
-                        </div>
-
-                        <div id="modalAmenitiesContainer" class="pt-2 hidden">
-                            <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-800/60 mb-2 font-bold px-1">Room Features</p>
-                            <div id="modalAmenitiesList" class="flex flex-wrap gap-2"></div>
-                        </div>
-
-                        <div id="modalParticipantsContainer" class="pt-2 hidden">
-                            <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Participants & RSVP</p>
-                            <div id="modalParticipantsList" class="flex flex-col gap-2"></div>
-                        </div>
-                    </div>
-
-                    <div id="eventMapSection" class="hidden flex flex-col justify-between">
-                        <div>
-                            <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-800/60 mb-2 font-bold px-1">Location Map</p>
-                            <div id="eventMap" class="w-full h-56 rounded-2xl border border-white/60 shadow-sm z-10"></div>
-                        </div>
-                        <div class="pt-4">
-                            <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Details</p>
-                            <div class="bg-white/30 p-3 rounded-2xl border border-white/40">
-                                <p id="modalDescription" class="text-sm text-gray-600 leading-relaxed font-medium"></p>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div id="eventDescSection" class="pt-4">
-                    <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Details</p>
-                    <div class="bg-white/30 p-4 rounded-2xl border border-white/40">
-                        <p id="modalDescriptionFull" class="text-sm text-gray-600 leading-relaxed font-medium"></p>
-                    </div>
-                </div>
-
-                <button onclick="closeModal()" class="w-full mt-8 py-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all">
-                    Got it
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="allBookingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4 transition-opacity">
-        <div class="bg-white rounded-3xl shadow-2xl border border-gray-200 max-w-4xl w-full max-h-[85vh] flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
-
-            <div class="flex justify-between items-center p-6 border-b border-slate-100">
-                <div class="flex items-center gap-4">
-                    <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100">
-                        <i data-lucide="calendar-check" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-black text-slate-900">My SmartBookings</h3>
-                        <p class="text-xs text-slate-500 font-medium mt-0.5">Meetings scheduled via the SmartBooking App</p>
-                    </div>
-                </div>
-                <button onclick="closeAllBookingsModal()" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-
-            <div id="allBookingsList" class="p-6 overflow-y-auto flex-1 space-y-3 bg-slate-50/50">
-            </div>
-
-            <div class="p-4 border-t border-slate-100 flex justify-end">
-                <button onclick="closeAllBookingsModal()" class="px-6 py-2.5 bg-slate-100 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-all text-sm">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="pendingInvitesModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4 transition-opacity">
-        <div class="bg-white rounded-3xl shadow-2xl border border-gray-200 max-w-lg w-full max-h-[85vh] flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
-
-            <div class="flex justify-between items-center p-6 border-b border-slate-100">
-                <div class="flex items-center gap-4">
-                    <div class="p-3 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100 relative">
-                        <i data-lucide="bell-ring" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-black text-slate-900">Meeting Invites</h3>
-                        <p class="text-xs text-slate-500 font-medium mt-0.5">You have pending invitations to respond to</p>
-                    </div>
-                </div>
-                <button onclick="closePendingInvitesModal()" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-
-            <div id="pendingInvitesList" class="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50/50">
-            </div>
-
-        </div>
-    </div>
 
     <div class="glass-surface-hero p-8 relative overflow-hidden">
         <div class="absolute -top-10 -right-10 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl"></div>
@@ -375,8 +259,133 @@
             </div>
         </div>
     </div>
-    </div>
 </main>
+
+<div id="eventModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+    <div class="glass-modal p-8 relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-48 h-48 bg-blue-400/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-10 -left-10 w-48 h-48 bg-emerald-400/10 rounded-full blur-3xl"></div>
+        <div class="relative z-10">
+            <div class="flex justify-between items-start mb-6">
+                <div class="p-3 bg-gradient-to-br from-blue-500/20 to-emerald-500/20 rounded-2xl border border-white/50">
+                    <i data-lucide="info" class="w-6 h-6 text-blue-600"></i>
+                </div>
+                <button onclick="closeModal()" class="p-2 hover:bg-white/50 rounded-full transition-colors group">
+                    <i data-lucide="x" class="w-5 h-5 text-gray-400 group-hover:text-red-500"></i>
+                </button>
+            </div>
+
+            <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 mb-2 leading-tight tracking-tight"></h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3 text-gray-700 bg-white/40 p-3 rounded-2xl border border-white/60 shadow-sm">
+                        <div class="p-2 bg-blue-100 rounded-lg">
+                            <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i>
+                        </div>
+                        <span id="modalTime" class="text-sm font-bold"></span>
+                    </div>
+
+                    <div class="flex items-center gap-3 text-gray-700 bg-white/40 p-3 rounded-2xl border border-white/60 shadow-sm">
+                        <div class="p-2 bg-emerald-100 rounded-lg">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i>
+                        </div>
+                        <span id="modalLocation" class="text-sm font-bold"></span>
+                    </div>
+
+                    <div id="modalAmenitiesContainer" class="pt-2 hidden">
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-800/60 mb-2 font-bold px-1">Room Features</p>
+                        <div id="modalAmenitiesList" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div id="modalParticipantsContainer" class="pt-2 hidden">
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Participants & RSVP</p>
+                        <div id="modalParticipantsList" class="flex flex-col gap-2"></div>
+                    </div>
+                </div>
+
+                <div id="eventMapSection" class="hidden flex flex-col justify-between">
+                    <div>
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-800/60 mb-2 font-bold px-1">Location Map</p>
+                        <div id="eventMap" class="w-full h-56 rounded-2xl border border-white/60 shadow-sm z-10"></div>
+                    </div>
+                    <div class="pt-4">
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Details</p>
+                        <div class="bg-white/30 p-3 rounded-2xl border border-white/40">
+                            <p id="modalDescription" class="text-sm text-gray-600 leading-relaxed font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="eventDescSection" class="pt-4">
+                <p class="text-[10px] uppercase tracking-[0.2em] text-blue-800/60 mb-2 font-bold px-1">Details</p>
+                <div class="bg-white/30 p-4 rounded-2xl border border-white/40">
+                    <p id="modalDescriptionFull" class="text-sm text-gray-600 leading-relaxed font-medium"></p>
+                </div>
+            </div>
+
+            <button onclick="closeModal()" class="w-full mt-8 py-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all">
+                Got it
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="allBookingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-3xl shadow-2xl border border-gray-200 max-w-4xl w-full max-h-[85vh] flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
+
+        <div class="flex justify-between items-center p-6 border-b border-slate-100">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100">
+                    <i data-lucide="calendar-check" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-900">My SmartBookings</h3>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">Meetings scheduled via the SmartBooking App</p>
+                </div>
+            </div>
+            <button onclick="closeAllBookingsModal()" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div id="allBookingsList" class="p-6 overflow-y-auto flex-1 space-y-3 bg-slate-50/50">
+        </div>
+
+        <div class="p-4 border-t border-slate-100 flex justify-end">
+            <button onclick="closeAllBookingsModal()" class="px-6 py-2.5 bg-slate-100 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-all text-sm">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="pendingInvitesModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-3xl shadow-2xl border border-gray-200 max-w-lg w-full max-h-[85vh] flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
+
+        <div class="flex justify-between items-center p-6 border-b border-slate-100">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100 relative">
+                    <i data-lucide="bell-ring" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-900">Meeting Invites</h3>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">You have pending invitations to respond to</p>
+                </div>
+            </div>
+            <button onclick="closePendingInvitesModal()" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div id="pendingInvitesList" class="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50/50">
+        </div>
+
+    </div>
+</div>
 
 <script th:src="@{/js/index.js}"></script>
 <script>

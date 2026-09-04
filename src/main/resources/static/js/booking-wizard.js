@@ -276,8 +276,8 @@ async function sendInvite(email, buttonEl) {
         buttonEl.disabled = false;
         buttonEl.innerText = 'Send Invite Link';
 
-        const errDiv = document.getElementById('invite-error');
-        document.getElementById('invite-error-text').innerText = 'Failed to send invitation. Please try again.';
+        const errDiv = document.getElementById('invite-error.html');
+        document.getElementById('invite-error.html-text').innerText = 'Failed to send invitation. Please try again.';
         errDiv.classList.remove('hidden');
         setTimeout(() => errDiv.classList.add('hidden'), 5000);
 
@@ -700,7 +700,7 @@ function renderFinalReview() {
 
 async function submitFinalBooking() {
     const titleInput = document.getElementById('final-title-input');
-    const errorElement = document.getElementById('title-error');
+    const errorElement = document.getElementById('title-error.html');
     const meetingTitle = titleInput ? titleInput.value.trim() : "";
 
     if (errorElement) {

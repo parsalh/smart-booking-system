@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${status != null ? 'SmartBooking - Error ' + status : 'SmartBooking - Error'}">SmartBooking - Error</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body.light-glass-theme {
+            background: linear-gradient(135deg, #e8edf8 0%, #dbeafe 45%, #d1fae5 100%) !important;
+            background-attachment: fixed !important;
+        }
+
+        .glass-surface {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans text-slate-800 light-glass-theme flex items-center justify-center p-6">
+
+<div class="glass-surface p-10 max-w-lg w-full text-center">
+    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-rose-100 mb-6">
+        <i data-lucide="alert-triangle" class="h-8 w-8 text-rose-600"></i>
+    </div>
+
+    <p class="text-xs font-bold uppercase tracking-[0.2em] text-rose-500 mb-2"
+       th:text="'Error ' + (${status} ?: '')">Error</p>
+
+    <h1 class="text-2xl font-black text-slate-900 mb-3"
+        th:text="${error != null and !#strings.isEmpty(error)} ? ${error} : 'Something went wrong'">
+        Something went wrong
+    </h1>
+
+    <p class="text-sm text-slate-500 font-medium mb-2"
+       th:if="${status != null and status.toString() == '413'}">
+        The file you tried to upload is too large. Please choose a smaller image (under 5MB) and try again.
+    </p>
+    <p class="text-sm text-slate-500 font-medium mb-8"
+       th:unless="${status != null and status.toString() == '413'}"
+       th:text="${message != null and !#strings.isEmpty(message)} ? ${message} : 'An unexpected error occurred. Please try again, or contact support if the problem continues.'">
+        An unexpected error occurred.
+    </p>
+
+    <a href="/" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all text-sm">
+        <i data-lucide="home" class="w-4 h-4"></i> Back to Dashboard
+    </a>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+</body>
+</html>

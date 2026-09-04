@@ -14,6 +14,12 @@ import com.hua.smartbooking.repository.BookingRepository;
 import com.hua.smartbooking.repository.RoomRepository;
 import com.hua.smartbooking.repository.UserRepository;
 import com.hua.smartbooking.service.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +36,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/bookings")
+@Tag(name = "Bookings", description = "Find meeting times, suggest rooms, confirm bookings, and manage RSVPs")
 public class BookingController {
 
     private final AvailabilityService availabilityService;
@@ -63,8 +70,19 @@ public class BookingController {
         this.bookingRepository = bookingRepository;
     }
 
+    @Operation(
+            summary = "Find the best available meeting times",
+            description = "Runs the scheduling optimizer over the given date range and participants, and returns "
+                    + "ranked candidate time slots based on everyone's Google Calendar availability."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ranked list of candidate time slots"),
+            @ApiResponse(responseCode = "404", description = "One of the participants is not registered on SmartBooking yet — response includes their email so the organizer can invite them"),
+            @ApiResponse(responseCode = "409", description = "A participant's Google Calendar connection has expired and needs re-authentication"),
+            @ApiResponse(responseCode = "500", description = "Unexpected error.html while computing availability")
+    })
     @PostMapping("/suggest-times")
-    public ResponseEntity<?> suggestTimes(@RequestBody BookingRequest request,
+    public ResponseEntity<?> suggestTimes(@Valid @RequestBody BookingRequest request,
                                           @AuthenticationPrincipal OidcUser principal) {
         try {
             String organizerEmail = principal.getAttribute("email");
@@ -133,8 +151,17 @@ public class BookingController {
         }
     }
 
+    @Operation(
+            summary = "Suggest available rooms for a chosen time slot",
+            description = "Returns rooms free during the given window, sorted by how well they match the requested "
+                    + "amenities and capacity — best matches first."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ranked list of candidate rooms, best match first"),
+            @ApiResponse(responseCode = "500", description = "Unexpected error.html while checking room availability")
+    })
     @PostMapping("/suggest-rooms")
-    public ResponseEntity<?> suggestRooms(@RequestBody RoomSuggestionRequest request) {
+    public ResponseEntity<?> suggestRooms(@Valid @RequestBody RoomSuggestionRequest request) {
         try {
             ZonedDateTime start = parseDateLenient(request.getStartTime());
             ZonedDateTime end = parseDateLenient(request.getEndTime());
@@ -183,8 +210,19 @@ public class BookingController {
         }
     }
 
+    @Operation(
+            summary = "Confirm and create a meeting booking",
+            description = "Books the selected room and time slot, sends calendar invites to participants, and — if "
+                    + "repeatWeeks is set — repeats the booking on the same weekday/time for that many weeks, skipping "
+                    + "weeks with conflicts unless forcePartial is true."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Booking(s) created successfully"),
+            @ApiResponse(responseCode = "409", description = "The room or a participant is no longer free for one or more of the requested weeks (partial_conflict), or no week could be booked at all"),
+            @ApiResponse(responseCode = "500", description = "Unexpected error.html while creating the booking")
+    })
     @PostMapping("/confirm")
-    public ResponseEntity<?> confirmBooking(@RequestBody FinalBookingRequest request,
+    public ResponseEntity<?> confirmBooking(@Valid @RequestBody FinalBookingRequest request,
                                             @AuthenticationPrincipal OidcUser principal) {
         try {
             String organizerEmail = principal.getAttribute("email");
@@ -304,15 +342,24 @@ public class BookingController {
         }
     }
 
+    @Operation(
+            summary = "Respond to a meeting invitation",
+            description = "Records the currently logged-in user's RSVP (accepted/declined/tentative) for a booking they were invited to."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "RSVP recorded successfully"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated"),
+            @ApiResponse(responseCode = "500", description = "Unexpected error.html while updating the RSVP")
+    })
     @PostMapping("/{bookingId}/rsvp")
     public ResponseEntity<?> respondToInvite(
-            @PathVariable Long bookingId,
-            @RequestBody RsvpRequest request,
+            @Parameter(description = "ID of the booking being responded to") @PathVariable Long bookingId,
+            @Valid @RequestBody RsvpRequest request,
             @AuthenticationPrincipal OidcUser principal) {
 
         try {
             if (principal == null) {
-                return ResponseEntity.status(401).body(java.util.Map.of("error", "Unauthorized access."));
+                return ResponseEntity.status(401).body(java.util.Map.of("error.html", "Unauthorized access."));
             }
 
             String userEmail = principal.getAttribute("email");
@@ -320,10 +367,18 @@ public class BookingController {
 
             return ResponseEntity.ok().body(java.util.Map.of("message", "RSVP updated successfully"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(java.util.Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(java.util.Map.of("error.html", e.getMessage()));
         }
     }
 
+    @Operation(
+            summary = "List the user's pending meeting invitations",
+            description = "Returns bookings the currently logged-in user has been invited to but hasn't responded to yet."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of pending invites (empty if none)"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated")
+    })
     @GetMapping("/pending-invites")
     public ResponseEntity<List<PendingInviteDTO>> getMyPendingInvites(@AuthenticationPrincipal OidcUser principal) {
         if (principal == null) {
@@ -336,6 +391,15 @@ public class BookingController {
         return ResponseEntity.ok(pendingInvites);
     }
 
+    @Operation(
+            summary = "List the user's SmartBooking-created meetings",
+            description = "Returns meetings that were scheduled via SmartBooking's optimizer for the currently logged-in user, "
+                    + "for display on their calendar/dashboard."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of SmartBooking meetings (empty if none)"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated")
+    })
     @GetMapping("/my-smartbookings")
     public ResponseEntity<List<Map<String, Object>>> getMySmartBookings(@AuthenticationPrincipal OidcUser principal) {
         if (principal == null) return ResponseEntity.status(401).build();
@@ -343,8 +407,17 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getSmartBookingsForUser(userEmail));
     }
 
+    @Operation(
+            summary = "Get a booking's participants and their RSVP status",
+            description = "Reconciles each participant's RSVP against Google Calendar first, then returns the current status per (decrypted) email."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Map of participant email to RSVP status"),
+            @ApiResponse(responseCode = "404", description = "Booking not found")
+    })
     @GetMapping("/{bookingId}/participants")
-    public ResponseEntity<?> getParticipants(@PathVariable Long bookingId) {
+    public ResponseEntity<?> getParticipants(
+            @Parameter(description = "ID of the booking") @PathVariable Long bookingId) {
         return bookingRepository.findById(bookingId)
                 .<ResponseEntity<?>>map(booking -> {
                     com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();

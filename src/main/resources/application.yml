@@ -34,6 +34,11 @@ spring:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth?prompt=consent&access_type=offline
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
 app:
   security:
     encryption-key: ${ENCRYPTION_KEY}
@@ -43,5 +48,13 @@ resend:
   api-key: ${RESEND_API_KEY}
   from-email: invites@book-a-meeting.site
 
+springdoc:
+  paths-to-match:
+    - /api/**
+    - /admin/users/**
+
 server:
+  tomcat:
+    max-http-form-post-size: 6MB
+    max-part-count: 50
   forward-headers-strategy: framework

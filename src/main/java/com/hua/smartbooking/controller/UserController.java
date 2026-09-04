@@ -6,6 +6,11 @@ import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.BookingRepository;
 import com.hua.smartbooking.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -20,6 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
+@Tag(name = "Users", description = "Search for other SmartBooking users when adding meeting participants")
 public class UserController {
 
     private static final ZoneId ATHENS_ZONE = ZoneId.of("Europe/Athens");
@@ -34,8 +40,16 @@ public class UserController {
         this.bookingRepository = bookingRepository;
     }
 
+    @Operation(
+            summary = "Search registered users by name or email",
+            description = "Used when adding participants to a meeting. Excludes the currently logged-in user from the results."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Matching users (empty list if none, or if the query is blank)")
+    })
     @GetMapping("/search")
     public ResponseEntity<List<UserSearchResult>> searchUsers(
+            @Parameter(description = "Search text — matched against full name and email", example = "jane")
             @RequestParam("q") String query,
             @AuthenticationPrincipal OAuth2User principal) {
 
@@ -60,6 +74,15 @@ public class UserController {
         return ResponseEntity.ok(results);
     }
 
+    @Operation(
+            summary = "List the user's frequent meeting collaborators",
+            description = "Returns up to 5 people the currently logged-in user has organized meetings with or been "
+                    + "invited by at least " + FREQUENT_COLLABORATOR_THRESHOLD + " times, most-frequent first. "
+                    + "Used to suggest quick-add participants when booking a meeting."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of frequent collaborators (empty if none qualify)")
+    })
     @GetMapping("/frequent-collaborators")
     public ResponseEntity<List<UserSearchResult>> frequentCollaborators(@AuthenticationPrincipal OAuth2User principal) {
         if (principal == null) {

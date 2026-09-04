@@ -59,6 +59,19 @@ Calendar Container & Grid Layout
     background-color: rgba(37, 99, 235, 0.10) !important;
 }
 
+/* Week view (timeGrid) uses different element classes than Month view (dayGrid) —
+   the rules above only ever applied to .fc-daygrid-day, so weekends never got
+   highlighted in Week view. Mirror the same treatment here. */
+.fc .fc-timegrid-col.fc-day-sat,
+.fc .fc-timegrid-col.fc-day-sun {
+    background-color: rgba(37, 99, 235, 0.06) !important;
+}
+
+.fc .fc-col-header-cell.fc-day-sat,
+.fc .fc-col-header-cell.fc-day-sun {
+    background-color: rgba(37, 99, 235, 0.06) !important;
+}
+
 .fc-daygrid-body tr:nth-child(even) .fc-daygrid-day:hover {
     background-color: rgba(105, 145, 151, 0.16) !important;
 }
