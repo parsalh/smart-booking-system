@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>SmartBooking - Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,8 +14,56 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body.light-glass-theme {
+            background: linear-gradient(135deg, #e8edf8 0%, #dbeafe 45%, #d1fae5 100%) !important;
+            background-attachment: fixed !important;
+        }
+
+        .glass-surface {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .glass-surface-hero {
+            background: rgba(255, 255, 255, 0.70);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 2rem;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25) !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .glass-row {
+            background: rgba(248, 250, 252, 0.80);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+            transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        }
+
+        .glass-row:hover {
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .glass-row-blue:hover { background: rgba(239, 246, 255, 0.90); border-color: rgba(37, 99, 235, 0.25); }
+        .glass-row-green:hover { background: rgba(236, 253, 245, 0.90); border-color: rgba(16, 185, 129, 0.25); }
+        .glass-row-amber:hover { background: rgba(255, 251, 235, 0.90); border-color: rgba(245, 158, 11, 0.25); }
+    </style>
 </head>
-<body class="min-h-screen font-sans text-gray-900 selection:bg-blue-100">
+<body class="min-h-screen font-sans text-slate-800 selection:bg-blue-100 light-glass-theme">
 
 <div id="global-toast" class="fixed top-20 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl transition-all duration-300 transform translate-x-[150%]">
     <i id="toast-icon" data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i>
@@ -24,16 +75,16 @@
        th:data-ooo-end="${outOfOfficeEnd}" />
 <input type="hidden" id="currentUserEmail" th:value="${email}"/>
 
-<nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
+<nav class="glass-nav py-3 px-8 flex justify-between items-center sticky top-0 z-50">
     <div class="flex items-center gap-2">
         <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" />
-            <span class="text-lg font-bold tracking-tight text-gray-900">SmartBooking</span>
+            <span class="text-lg font-bold tracking-tight btn-gradient-text">SmartBooking</span>
         </a>
     </div>
     <div class="flex items-center gap-4">
-        <a th:if="${role == 'ADMIN'}" href="/admin/rooms" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
-            <i data-lucide="shield" class="w-4 h-4 text-purple-600"></i> Admin Panel
+        <a sec:authorize="hasAuthority('ADMIN')" href="/admin/rooms" style="background: rgba(167,130,246,0.15); color: #6d28d9;" class="hover:opacity-80 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
+            <i data-lucide="shield" class="w-4 h-4"></i> Admin Panel
         </a>
         <div class="text-right hidden md:block">
             <p class="text-xs font-bold text-gray-900" th:text="${name}">User</p>
@@ -55,11 +106,9 @@
 <main class="max-w-7xl mx-auto p-6 space-y-6">
 
     <div id="eventModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white/90 backdrop-blur-2xl border border-white rounded-[2.5rem] p-8 max-w-2xl w-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] transform transition-all relative overflow-hidden">
-
-            <div class="absolute -top-10 -left-10 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl"></div>
-            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl"></div>
-
+        <div class="glass-surface-hero p-8 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-48 h-48 bg-blue-400/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-10 -left-10 w-48 h-48 bg-emerald-400/10 rounded-full blur-3xl"></div>
             <div class="relative z-10">
                 <div class="flex justify-between items-start mb-6">
                     <div class="p-3 bg-gradient-to-br from-blue-500/20 to-emerald-500/20 rounded-2xl border border-white/50">
@@ -182,48 +231,60 @@
         </div>
     </div>
 
-    <div class="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden group">
-        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all"></div>
+    <div class="glass-surface-hero p-8 relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-10 -left-10 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl"></div>
         <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
                 <div class="flex items-center gap-3 mb-4">
-                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-inner">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center shadow-inner">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg"
                              alt="Google Calendar"
                              class="w-7 h-7 object-contain">
                     </div>
                     <div>
-                        <p class="text-[10px] uppercase tracking-widest text-white/70 leading-none mb-1">Status</p>
-                        <p class="text-sm font-bold">Connected to Google Calendar</p>
+                        <p class="text-[10px] uppercase tracking-widest text-slate-400 leading-none mb-1">Status</p>
+                        <p class="text-sm font-bold text-slate-700">Connected to Google Calendar</p>
                     </div>
                 </div>
-                <h2 class="text-3xl font-bold mb-1 tracking-tight">Welcome back!</h2>
+                <h2 class="text-3xl font-bold mb-1 tracking-tight btn-gradient-text"
+                    th:text="${name != null and !#strings.isEmpty(name)} ? ('Welcome back, ' + (${title != null and !#strings.isEmpty(title)} ? ${title} + ' ' : '') + ${name} + '!') : 'Welcome back!'">
+                </h2>
             </div>
-            <button onclick="window.location.href='/book'" class="bg-white flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all shadow-xl active:scale-95 group border border-blue-50">
-                <i data-lucide="sparkles" class="w-5 h-5 text-blue-600 group-hover:rotate-12 transition-transform"></i>
-                <span class="btn-gradient-text">Schedule New Meeting</span>
+            <button onclick="window.location.href='/book'" class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 group">
+                <i data-lucide="sparkles" class="w-5 h-5 group-hover:rotate-12 transition-transform"></i>
+                Schedule New Meeting
             </button>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div class="lg:col-span-3 bg-white/30 backdrop-blur-xl border border-white/50 rounded-3xl p-6 shadow-lg relative overflow-hidden">
+        <div class="lg:col-span-3 glass-surface p-6 relative overflow-hidden">
             <div id="calendar"></div>
+
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 pt-4 border-t border-slate-200/60 text-xs font-semibold text-slate-500">
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:#8b5cf6"></span> Lecture</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:#f59e0b"></span> Lab</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:#10b981"></span> Meeting</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:#f43f5e"></span> Office Hours</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:#64748b"></span> Other</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full shrink-0 bg-gradient-to-br from-blue-600 to-emerald-500"></span> Smartbooking</span>
+            </div>
         </div>
 
         <div class="space-y-6">
-            <div class="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-white rounded-3xl p-6 shadow-sm backdrop-blur-sm relative overflow-hidden">
-                <h3 class="font-bold mb-4 text-emerald-900 text-xs uppercase tracking-[0.2em]">Quick Actions</h3>
+            <div class="glass-surface p-6 relative overflow-hidden">
+                <h3 class="font-bold mb-4 btn-gradient-text text-xs uppercase tracking-[0.2em]">Quick Actions</h3>
                 <div class="space-y-3">
-                    <button onclick="openAllBookingsModal()" class="w-full flex items-center gap-3 p-4 border border-white/50 bg-white/40 rounded-2xl hover:bg-white/60 font-semibold transition-all group shadow-sm">
+                    <button onclick="openAllBookingsModal()" class="glass-row glass-row-blue w-full flex items-center gap-3 p-4 rounded-2xl font-semibold transition-all group">
                         <i data-lucide="calendar-days" class="w-5 h-5 text-blue-600 group-hover:scale-110 transition-transform"></i>
                         <span class="text-gray-700 text-sm">View SmartBookings</span>
                     </button>
-                    <a href="/rooms" class="w-full flex items-center gap-3 p-4 border border-white/50 bg-white/40 rounded-2xl hover:bg-white/60 font-semibold transition-all group shadow-sm block">
+                    <a href="/rooms" class="glass-row glass-row-green w-full flex items-center gap-3 p-4 rounded-2xl font-semibold transition-all group block">
                         <i data-lucide="map-pin" class="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform"></i>
                         <span class="text-gray-700 text-sm">Browse Rooms</span>
                     </a>
-                    <button onclick="openPendingInvitesModal()" class="w-full flex items-center justify-between p-4 border border-white/50 bg-white/40 rounded-2xl hover:bg-white/60 font-semibold transition-all group shadow-sm">
+                    <button onclick="openPendingInvitesModal()" class="glass-row glass-row-amber w-full flex items-center justify-between p-4 rounded-2xl font-semibold transition-all group">
                         <div class="flex items-center gap-3">
                             <div class="relative">
                                 <i data-lucide="bell-ring" class="w-5 h-5 text-amber-500 group-hover:scale-110 transition-transform"></i>
@@ -239,8 +300,8 @@
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-white rounded-3xl p-6 shadow-sm backdrop-blur-sm relative overflow-hidden">
-                <h3 class="font-bold mb-4 text-emerald-900 text-xs uppercase tracking-[0.2em]">This Week's Breakdown</h3>
+            <div class="glass-surface p-6 relative overflow-hidden">
+                <h3 class="font-bold mb-4 btn-gradient-text text-xs uppercase tracking-[0.2em]">This Week's Breakdown</h3>
                 <div class="space-y-4">
 
                     <div>
@@ -305,11 +366,157 @@
 
                 </div>
             </div>
+
+            <div class="glass-surface p-6 relative overflow-hidden">
+                <h3 class="font-bold mb-4 btn-gradient-text text-xs uppercase tracking-[0.2em]">Up Next</h3>
+                <div id="upNextList" class="space-y-3">
+                    <p class="text-xs text-slate-400 font-medium">Loading...</p>
+                </div>
+            </div>
         </div>
     </div>
     </div>
 </main>
 
 <script th:src="@{/js/index.js}"></script>
+<script>
+    (function () {
+        const TYPE_STYLES = {
+            lecture: { bg: 'rgba(221,214,254,0.55)', text: '#4c1d95', dot: '#8b5cf6' },
+            lab: { bg: 'rgba(253,230,138,0.55)', text: '#78350f', dot: '#f59e0b' },
+            meeting: { bg: 'rgba(167,243,208,0.55)', text: '#064e3b', dot: '#10b981' },
+            office_hours: { bg: 'rgba(254,205,211,0.55)', text: '#881337', dot: '#f43f5e' },
+            other: { bg: 'rgba(226,232,240,0.55)', text: '#1e293b', dot: '#64748b' },
+            smartbooking: {
+                bg: 'rgba(191,219,254,0.55)',
+                text: '#1e3a8a',
+                dot: 'linear-gradient(135deg, #2563eb, #10b981)'
+            }
+        };
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str == null ? '' : String(str);
+            return div.innerHTML;
+        }
+
+        function normalizeEvent(raw) {
+            const props = raw.extendedProps || {};
+
+            const TYPE_MAP = {
+                'SMART_BOOKING': 'smartbooking',
+                'LECTURE': 'lecture',
+                'LAB': 'lab',
+                'MEETING': 'meeting',
+                'OFFICE_HOURS': 'office_hours'
+            };
+            const type = TYPE_MAP[String(props.type || '').toUpperCase()] || 'other';
+
+            const rawRoomName = props.locationName;
+            const rawLocation = props.roomLocation || props.fullLocation;
+            let location = '';
+            if (rawRoomName && rawRoomName !== 'No location specified' && rawLocation && rawLocation !== 'No location specified') {
+                location = rawRoomName + ' - ' + rawLocation;
+            } else if (rawRoomName && rawRoomName !== 'No location specified') {
+                location = rawRoomName;
+            } else if (rawLocation && rawLocation !== 'No location specified') {
+                location = rawLocation;
+            }
+
+            return {
+                title: raw.title || props.fullTitle || 'Untitled Event',
+                type: type,
+                location: location,
+                start: raw.start ? new Date(raw.start) : null,
+                end: raw.end ? new Date(raw.end) : null,
+                display: raw.display,
+                participants: props.participants || {},
+                organizerEmail: props.organizerEmail
+            };
+        }
+
+        function isDeclinedByCurrentUser(e, currentUserEmail) {
+            if (!currentUserEmail) return false;
+            const parts = e.participants || {};
+            for (const email of Object.keys(parts)) {
+                if (email.trim().toLowerCase() === currentUserEmail) {
+                    return String(parts[email]).toUpperCase() === 'DECLINED';
+                }
+            }
+            return false;
+        }
+
+        function formatTimeRange(start, end) {
+            const opts = { hour: '2-digit', minute: '2-digit', hour12: false };
+            const dateStr = start.toLocaleDateString([], { day: 'numeric', month: 'short' });
+            const startStr = start.toLocaleTimeString([], opts);
+            const endStr = end ? end.toLocaleTimeString([], opts) : '';
+            return dateStr + ' \u00b7 ' + startStr + (endStr ? '\u2013' + endStr : '');
+        }
+
+        function renderUpNext(events, currentUserEmail) {
+            const container = document.getElementById('upNextList');
+            if (!container) return;
+
+            window.upNextRawEvents = [];
+
+            const now = new Date();
+            const upcoming = events
+                .filter(function (raw) { return raw.display !== 'background'; })
+                .map(function(raw) {
+                    const norm = normalizeEvent(raw);
+                    norm.rawEvent = raw;
+                    return norm;
+                })
+                .filter(function (e) { return e.start && e.start.getTime() >= now.getTime(); })
+                .filter(function (e) { return !isDeclinedByCurrentUser(e, currentUserEmail); })
+                .sort(function (a, b) { return a.start - b.start; })
+                .slice(0, 3);
+
+            if (!upcoming.length) {
+                container.innerHTML = '<p class="text-xs text-slate-400 font-medium">No upcoming events.</p>';
+                return;
+            }
+
+            container.innerHTML = upcoming.map(function (e, index) {
+                window.upNextRawEvents.push(e.rawEvent);
+
+                const colors = TYPE_STYLES[e.type] || TYPE_STYLES.other;
+                const timeStr = formatTimeRange(e.start, e.end);
+
+                let displayTitle = e.title;
+                if (displayTitle.trim() === 'SmartBooking' && e.rawEvent.extendedProps) {
+                    displayTitle = e.rawEvent.extendedProps.fullTitle || e.rawEvent.extendedProps.locationName + ' Meeting' || 'Meeting';
+                }
+
+                return '' +
+                    '<div onclick="window.openCalendarEventModal(window.upNextRawEvents[' + index + '])" ' +
+                    'class="px-3 py-2 rounded-xl mb-2 border border-white/60 shadow-sm cursor-pointer hover:scale-[1.01] hover:shadow-md transition-all flex items-center gap-2" style="background:' + colors.bg + '">' +
+                    '<div class="w-1.5 h-1.5 rounded-full shrink-0" style="background:' + colors.dot + '"></div>' +
+                    '<div class="flex-1 min-w-0 text-xs truncate" style="color:' + colors.text + '">' +
+                    '<span class="font-bold">' + escapeHtml(displayTitle) + '</span>' +
+                    '<span class="opacity-40 mx-1.5">-</span>' +
+                    '<span class="text-[10px] font-semibold opacity-80">' + timeStr + '</span>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                const input = document.getElementById('calendarEventsData');
+                const raw = input ? input.value : null;
+                const events = raw ? JSON.parse(raw) : [];
+                const emailInput = document.getElementById('currentUserEmail');
+                const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+                renderUpNext(Array.isArray(events) ? events : [], currentUserEmail);
+            } catch (err) {
+                console.error('Up Next render failed:', err);
+                const container = document.getElementById('upNextList');
+                if (container) container.innerHTML = '<p class="text-xs text-slate-400 font-medium">No upcoming events.</p>';
+            }
+        });
+    })();
+</script>
 </body>
 </html>

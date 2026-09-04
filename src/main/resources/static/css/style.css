@@ -43,12 +43,24 @@ Calendar Container & Grid Layout
     width: 100% !important;
 }
 
-.fc-day-sat {
-    background-color: rgba(37, 99, 235, 0.035) !important;
+.fc .fc-daygrid-day.fc-day-sat {
+    background-color: rgba(37, 99, 235, 0.06) !important;
 }
 
-.fc-day-sun {
-    background-color: rgba(37, 99, 235, 0.035) !important;
+.fc .fc-daygrid-day.fc-day-sun {
+    background-color: rgba(37, 99, 235, 0.06) !important;
+}
+
+.fc .fc-daygrid-body .fc-daygrid-day.fc-day-sat:hover {
+    background-color: rgba(37, 99, 235, 0.10) !important;
+}
+
+.fc .fc-daygrid-body .fc-daygrid-day.fc-day-sun:hover {
+    background-color: rgba(37, 99, 235, 0.10) !important;
+}
+
+.fc-daygrid-body tr:nth-child(even) .fc-daygrid-day:hover {
+    background-color: rgba(105, 145, 151, 0.16) !important;
 }
 
 .fc-daygrid-day-frame {
@@ -117,10 +129,8 @@ Header Toolbar & Standard Buttons
 }
 
 .fc .fc-button-primary {
-    background: rgba(255, 255, 255, 0.7) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
     color: #475569 !important;
     border-radius: 14px !important;
     font-weight: 700 !important;
@@ -435,7 +445,6 @@ Event Blocks & Classifications
     background: rgba(37, 99, 235, 0.15) !important;
 }
 
-/* --- Past days: fade events to show they're no longer actionable --- */
 .fc-day-past .fc-event {
     opacity: 0.45 !important;
     filter: grayscale(25%);
@@ -458,19 +467,27 @@ General UI Components
     border-radius: 2rem;
 }
 
-/* Signature blue-to-emerald gradient variant, used for the booking wizard containers */
 .glass-card-gradient {
-    background: linear-gradient(to right, #2563eb, #10b981);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.85);
     border-radius: 2rem;
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .btn-gradient-text {
+    display: inline-block;
     background: linear-gradient(135deg, #2563eb, #10b981);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
+}
+
+.btn-gradient-text::selection {
+    -webkit-text-fill-color: #1e293b;
+    color: #1e293b;
+    background: rgba(37, 99, 235, 0.25);
 }
 
 .btn-admin {

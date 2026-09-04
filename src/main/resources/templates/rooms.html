@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,24 +12,57 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
-<body class="min-h-screen font-sans text-gray-900 selection:bg-blue-100">
+    <style>
+        body.light-glass-theme {
+            background: linear-gradient(135deg, #e8edf8 0%, #dbeafe 45%, #d1fae5 100%) !important;
+            background-attachment: fixed !important;
+        }
 
-<nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
+        .glass-surface {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25) !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans text-slate-800 selection:bg-blue-100 light-glass-theme">
+
+<nav class="glass-nav py-3 px-8 flex justify-between items-center sticky top-0 z-50">
     <div class="flex items-center gap-2">
         <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" />
-            <span class="text-lg font-bold tracking-tight text-gray-900">SmartBooking</span>
+            <span class="text-lg font-bold tracking-tight btn-gradient-text">SmartBooking</span>
         </a>
     </div>
     <div class="flex items-center gap-4">
-        <a th:if="${role == 'ADMIN'}" href="/admin/rooms" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
-            <i data-lucide="shield" class="w-4 h-4 text-purple-600"></i> Admin Panel
+        <a th:if="${role == 'ADMIN'}" href="/admin/rooms" style="background: rgba(167,130,246,0.15); color: #6d28d9;" class="hover:opacity-80 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
+            <i data-lucide="shield" class="w-4 h-4"></i> Admin Panel
         </a>
         <div class="text-right hidden md:block">
-            <p class="text-xs font-bold text-gray-900" th:text="${name}">User</p>
-            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold"
-               th:text="${role == 'ADMIN' ? 'Administrator' : email}">user@email.com</p>
+            <p class="text-xs font-bold text-slate-900" th:text="${name}">User</p>
+
+            <p sec:authorize="hasAuthority('ADMIN')" class="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Administrator</p>
+
+            <p sec:authorize="!hasAuthority('ADMIN')" class="text-[10px] text-gray-500 uppercase tracking-wider font-bold" th:text="${email}">user@email.com</p>
         </div>
         <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
              alt="Profile"
@@ -53,7 +87,8 @@
         </div>
         <a href="/"
            onclick="this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-4 h-4 animate-spin\'></i> Loading...'; lucide.createIcons(); this.classList.add('opacity-70', 'pointer-events-none');"
-           class="px-6 py-2.5 bg-white/90 backdrop-blur-md border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-white hover:text-blue-600 transition-all shadow-sm flex items-center gap-2 text-sm">
+           style="background: rgba(248,250,252,0.80); border: 1px solid rgba(148,163,184,0.20); color: #475569;"
+           class="px-6 py-2.5 font-bold rounded-xl hover:bg-white/90 hover:text-blue-600 transition-all shadow-sm flex items-center gap-2 text-sm">
             <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
         </a>
     </div>
@@ -61,7 +96,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
         <div th:each="room : ${rooms}"
-             class="room-card bg-white/90 backdrop-blur-md rounded-3xl p-6 border border-gray-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 group flex flex-col"
+             class="room-card glass-surface p-6 hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 group flex flex-col"
              th:data-name="${room.name}"
              th:data-building="${room.building}"
              th:data-location="${room.location}"
@@ -132,7 +167,7 @@
 
     </div>
 
-    <div th:if="${#lists.isEmpty(rooms)}" class="text-center py-20 bg-white/90 backdrop-blur-md rounded-3xl border border-gray-200 shadow-sm">
+    <div th:if="${#lists.isEmpty(rooms)}" class="text-center py-20 glass-surface">
         <div class="w-20 h-20 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
             <i data-lucide="door-closed" class="w-10 h-10"></i>
         </div>
@@ -142,8 +177,8 @@
 
 </main>
 
-<div id="roomModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
-    <div class="bg-white rounded-3xl shadow-2xl border border-gray-200 max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-200">
+<div id="roomModal" class="fixed inset-0 bg-slate-900/35 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="glass-modal rounded-[2.5rem] max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-200">
 
         <button onclick="closeModal()" class="absolute top-6 right-6 p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
             <i data-lucide="x" class="w-6 h-6"></i>

@@ -4,6 +4,85 @@ function closeModal() {
     document.getElementById('eventModal').classList.add('hidden');
 }
 
+window.openCalendarEventModal = function(eventObj) {
+    if (eventObj.display === 'background') return;
+
+    const props = eventObj.extendedProps || {};
+    document.getElementById('modalTitle').innerText = props['fullTitle'] || eventObj.title || 'Untitled Event';
+
+    const start = eventObj.start instanceof Date ? eventObj.start : new Date(eventObj.start);
+    const end = eventObj.end ? (eventObj.end instanceof Date ? eventObj.end : new Date(eventObj.end)) : null;
+
+    const startTime = start && !isNaN(start) ? start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    const endTime = end && !isNaN(end) ? end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    document.getElementById('modalTime').innerText = endTime ? `${startTime} - ${endTime}` : startTime;
+
+    const rawRoomName = props['locationName'];
+    const rawLocation = props['roomLocation'] || props['fullLocation'];
+
+    let displayLocation = 'No location specified';
+
+    if (rawRoomName && rawRoomName !== 'No location specified' && rawLocation && rawLocation !== 'No location specified') {
+        displayLocation = `${rawRoomName} - ${rawLocation}`;
+    } else if (rawRoomName && rawRoomName !== 'No location specified') {
+        displayLocation = rawRoomName;
+    } else if (rawLocation && rawLocation !== 'No location specified') {
+        displayLocation = rawLocation;
+    }
+
+    document.getElementById('modalLocation').innerText = displayLocation;
+
+    const descriptionText = props.description || 'No details available.';
+    const isSmartBooking = props.bookingId || descriptionText.includes('Automatically scheduled via SmartBooking App');
+
+    const mapSection = document.getElementById('eventMapSection');
+    const descSection = document.getElementById('eventDescSection');
+
+    if (isSmartBooking) {
+        mapSection.classList.remove('hidden');
+        descSection.classList.add('hidden');
+        document.getElementById('modalDescription').innerText = descriptionText;
+    } else {
+        mapSection.classList.add('hidden');
+        descSection.classList.remove('hidden');
+        document.getElementById('modalDescriptionFull').innerText = descriptionText;
+    }
+
+    document.getElementById('eventModal').classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    const participantsContainer = document.getElementById('modalParticipantsContainer');
+    participantsContainer.classList.remove('hidden');
+
+    if (isSmartBooking && props.bookingId) {
+        renderLiveParticipants(props.bookingId, props.participants, 'modalParticipantsList');
+    } else {
+        participantsContainer.classList.add('hidden');
+    }
+
+    if (isSmartBooking) {
+        setTimeout(async () => {
+            if (typeof initEventMap === 'function') {
+                initEventMap();
+                if (window.eventMap) {
+                    window.eventMap.invalidateSize();
+
+                    const coords = await geocodeAddress(rawLocation || '');
+                    const lat = coords ? coords.lat : 37.9575;
+                    const lng = coords ? coords.lng : 23.7025;
+
+                    window.eventMap.setView([lat, lng], 17);
+                    if (window.eventMarker) {
+                        window.eventMarker.setLatLng([lat, lng]);
+                        window.eventMarker.bindPopup(`<b>${rawRoomName || 'Unknown Room'}</b><br><span class="text-xs text-gray-500">${rawLocation || ''}</span>`).openPopup();
+                    }
+                    setTimeout(() => window.eventMap.invalidateSize(), 100);
+                }
+            }
+        }, 300);
+    }
+};
+
 function showToast(message, isError = true) {
     const toast = document.getElementById('global-toast');
     const msgEl = document.getElementById('toast-message');
@@ -147,87 +226,96 @@ document.addEventListener('DOMContentLoaded', function() {
         },
 
         eventClick: function(info) {
-            if (info.event.display === 'background') {
-                return;
-            }
 
-            const props = info.event.extendedProps;
+            window.openCalendarEventModal({
+                title: info.event.title,
+                start: info.event.start,
+                end: info.event.end,
+                display: info.event.display,
+                extendedProps: info.event.extendedProps
+            });
 
-            document.getElementById('modalTitle').innerText = props['fullTitle'] || info.event.title || 'Untitled Event';
-
-            const startTime = info.event.start ? info.event.start.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit'
-            }) : '';
-            const endTime = info.event.end ? info.event.end.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit'
-            }) : '';
-            document.getElementById('modalTime').innerText = endTime ? `${startTime} - ${endTime}` : startTime;
-
-            const rawRoomName = props['locationName'];
-            const rawLocation = props['roomLocation'] || props['fullLocation'];
-
-            let displayLocation = 'No location specified';
-
-            if (rawRoomName && rawRoomName !== 'No location specified' && rawLocation && rawLocation !== 'No location specified') {
-                displayLocation = `${rawRoomName} - ${rawLocation}`;
-            } else if (rawRoomName && rawRoomName !== 'No location specified') {
-                displayLocation = rawRoomName;
-            } else if (rawLocation && rawLocation !== 'No location specified') {
-                displayLocation = rawLocation;
-            }
-
-            document.getElementById('modalLocation').innerText = displayLocation;
-
-            document.getElementById('modalLocation').innerText = displayLocation;
-
-            const descriptionText = props.description || 'No details available.';
-            const isSmartBooking = props.bookingId || descriptionText.includes('Automatically scheduled via SmartBooking App');
-
-            const mapSection = document.getElementById('eventMapSection');
-            const descSection = document.getElementById('eventDescSection');
-
-            if (isSmartBooking) {
-                mapSection.classList.remove('hidden');
-                descSection.classList.add('hidden');
-                document.getElementById('modalDescription').innerText = descriptionText;
-            } else {
-                mapSection.classList.add('hidden');
-                descSection.classList.remove('hidden');
-                document.getElementById('modalDescriptionFull').innerText = descriptionText;
-            }
-
-            document.getElementById('eventModal').classList.remove('hidden');
-            lucide.createIcons();
-            document.getElementById('modalParticipantsContainer').classList.remove('hidden');
-
-            if (isSmartBooking && props.bookingId) {
-                renderLiveParticipants(props.bookingId, props.participants, 'modalParticipantsList');
-            } else {
-                document.getElementById('modalParticipantsContainer').classList.add('hidden');
-            }
-
-            if (isSmartBooking) {
-                setTimeout(async () => {
-                    if (typeof initEventMap === 'function') {
-                        initEventMap();
-                        if (eventMap) {
-                            eventMap.invalidateSize();
-
-                            const coords = await geocodeAddress(roomLocation);
-                            const lat = coords ? coords.lat : 37.9575;
-                            const lng = coords ? coords.lng : 23.7025;
-
-                            eventMap.setView([lat, lng], 17);
-                            eventMarker.setLatLng([lat, lng]);
-                            eventMarker.bindPopup(`<b>${roomName}</b><br><span class="text-xs text-gray-500">${roomLocation}</span>`).openPopup();
-
-                            setTimeout(() => eventMap.invalidateSize(), 100);
-                        }
-                    }
-                }, 300);
-            }
+            // if (info.event.display === 'background') {
+            //     return;
+            // }
+            //
+            // const props = info.event.extendedProps;
+            //
+            // document.getElementById('modalTitle').innerText = props['fullTitle'] || info.event.title || 'Untitled Event';
+            //
+            // const startTime = info.event.start ? info.event.start.toLocaleTimeString([], {
+            //     hour: '2-digit',
+            //     minute: '2-digit'
+            // }) : '';
+            // const endTime = info.event.end ? info.event.end.toLocaleTimeString([], {
+            //     hour: '2-digit',
+            //     minute: '2-digit'
+            // }) : '';
+            // document.getElementById('modalTime').innerText = endTime ? `${startTime} - ${endTime}` : startTime;
+            //
+            // const rawRoomName = props['locationName'];
+            // const rawLocation = props['roomLocation'] || props['fullLocation'];
+            //
+            // let displayLocation = 'No location specified';
+            //
+            // if (rawRoomName && rawRoomName !== 'No location specified' && rawLocation && rawLocation !== 'No location specified') {
+            //     displayLocation = `${rawRoomName} - ${rawLocation}`;
+            // } else if (rawRoomName && rawRoomName !== 'No location specified') {
+            //     displayLocation = rawRoomName;
+            // } else if (rawLocation && rawLocation !== 'No location specified') {
+            //     displayLocation = rawLocation;
+            // }
+            //
+            // document.getElementById('modalLocation').innerText = displayLocation;
+            //
+            // document.getElementById('modalLocation').innerText = displayLocation;
+            //
+            // const descriptionText = props.description || 'No details available.';
+            // const isSmartBooking = props.bookingId || descriptionText.includes('Automatically scheduled via SmartBooking App');
+            //
+            // const mapSection = document.getElementById('eventMapSection');
+            // const descSection = document.getElementById('eventDescSection');
+            //
+            // if (isSmartBooking) {
+            //     mapSection.classList.remove('hidden');
+            //     descSection.classList.add('hidden');
+            //     document.getElementById('modalDescription').innerText = descriptionText;
+            // } else {
+            //     mapSection.classList.add('hidden');
+            //     descSection.classList.remove('hidden');
+            //     document.getElementById('modalDescriptionFull').innerText = descriptionText;
+            // }
+            //
+            // document.getElementById('eventModal').classList.remove('hidden');
+            // lucide.createIcons();
+            // document.getElementById('modalParticipantsContainer').classList.remove('hidden');
+            //
+            // if (isSmartBooking && props.bookingId) {
+            //     renderLiveParticipants(props.bookingId, props.participants, 'modalParticipantsList');
+            // } else {
+            //     document.getElementById('modalParticipantsContainer').classList.add('hidden');
+            // }
+            //
+            // if (isSmartBooking) {
+            //     setTimeout(async () => {
+            //         if (typeof initEventMap === 'function') {
+            //             initEventMap();
+            //             if (eventMap) {
+            //                 eventMap.invalidateSize();
+            //
+            //                 const coords = await geocodeAddress(roomLocation);
+            //                 const lat = coords ? coords.lat : 37.9575;
+            //                 const lng = coords ? coords.lng : 23.7025;
+            //
+            //                 eventMap.setView([lat, lng], 17);
+            //                 eventMarker.setLatLng([lat, lng]);
+            //                 eventMarker.bindPopup(`<b>${roomName}</b><br><span class="text-xs text-gray-500">${roomLocation}</span>`).openPopup();
+            //
+            //                 setTimeout(() => eventMap.invalidateSize(), 100);
+            //             }
+            //         }
+            //     }, 300);
+            // }
         }
     });
 
@@ -292,6 +380,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     calendar.render();
     window.smartCalendar = calendar;
+
+    syncCalendarWithDatabase();
 
     setTimeout(() => {
         const todayCell = document.querySelector('.fc-day-today');
@@ -659,10 +749,14 @@ function handleRsvp(bookingId, status) {
         card.style.pointerEvents = 'none';
     }
 
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
     fetch(`/api/bookings/${bookingId}/rsvp`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
         },
         body: JSON.stringify({ status: status })
     })
@@ -806,9 +900,23 @@ function renderLiveParticipants(bookingId, fallbackParticipants, containerId) {
         .then(freshParticipants => {
 
             if (freshParticipants) {
+                if (window.smartCalendar) {
+                    const events = window.smartCalendar.getEvents();
+                    events.forEach(ev => {
+                        if (ev.extendedProps && ev.extendedProps.bookingId === bookingId) {
+                            ev.setExtendedProp('participants', freshParticipants);
+
+                            for (const [email, status] of Object.entries(freshParticipants)) {
+                                if (email.trim().toLowerCase() === currentUserEmail) {
+                                    ev.setExtendedProp('myRsvpStatus', status);
+                                }
+                            }
+                        }
+                    });
+                }
+
                 for (const [email, status] of Object.entries(freshParticipants)) {
                     if (email.trim().toLowerCase() === currentUserEmail && String(status).trim().toUpperCase() === 'DECLINED') {
-
                         const cardElement = container.closest('.group');
                         if (cardElement) {
                             cardElement.remove();
@@ -827,7 +935,6 @@ function renderLiveParticipants(bookingId, fallbackParticipants, containerId) {
                         if (eventModal && !eventModal.classList.contains('hidden')) {
                             closeModal();
                         }
-
                         return;
                     }
                 }
@@ -835,4 +942,46 @@ function renderLiveParticipants(bookingId, fallbackParticipants, containerId) {
             draw(freshParticipants);
         })
         .catch(() => draw(fallbackParticipants || {}));
+}
+
+function syncCalendarWithDatabase() {
+    if (!window.smartCalendar) return;
+
+    fetch('/api/bookings/my-smartbookings')
+        .then(res => res.ok ? res.json() : [])
+        .then(dbBookings => {
+            const events = window.smartCalendar.getEvents();
+            const emailInput = document.getElementById('currentUserEmail');
+            const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+
+            events.forEach(ev => {
+                const props = ev.extendedProps;
+
+                if (props && props.bookingId) {
+                    const dbMatch = dbBookings.find(b => b.id == props.bookingId);
+
+                    if (dbMatch && dbMatch.participants) {
+                        ev.setExtendedProp('participants', dbMatch.participants);
+
+                        let myLiveStatus = null;
+                        for (const [email, status] of Object.entries(dbMatch.participants)) {
+                            if (email.trim().toLowerCase() === currentUserEmail) {
+                                myLiveStatus = status;
+                                ev.setExtendedProp('myRsvpStatus', status);
+                                break;
+                            }
+                        }
+
+                        if (myLiveStatus && String(myLiveStatus).toUpperCase() !== 'PENDING') {
+                            const originalTitle = ev.title;
+                            ev.setProp('title', originalTitle + ' ');
+                            setTimeout(() => {
+                                ev.setProp('title', originalTitle);
+                            }, 50);
+                        }
+                    }
+                }
+            });
+        })
+        .catch(err => console.log("Background sync skipped", err));
 }

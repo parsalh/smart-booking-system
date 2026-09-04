@@ -1,18 +1,22 @@
 package com.hua.smartbooking.controller;
 
 import com.hua.smartbooking.dto.OutOfOfficeRequest;
+import com.hua.smartbooking.dto.TitleRequest;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -20,6 +24,7 @@ public class ProfileController {
 
     private final UserRepository userRepository;
     private static final ZoneId ATHENS_ZONE = ZoneId.of("Europe/Athens");
+    private static final List<String> ALLOWED_TITLES = List.of("Mr.", "Mrs.", "Ms.", "Dr.");
 
     public ProfileController(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -39,6 +44,7 @@ public class ProfileController {
         model.addAttribute("email", dbUser.getEmail());
         model.addAttribute("avatar", dbUser.getAvatarUrl());
         model.addAttribute("role", dbUser.getRole().name());
+        model.addAttribute("title", dbUser.getTitle());
 
         model.addAttribute("outOfOfficeStart",
                 dbUser.getOutOfOfficeStart() != null
@@ -50,6 +56,38 @@ public class ProfileController {
                         : null);
 
         return "profile";
+    }
+
+    @PostMapping("/api/profile/title")
+    @ResponseBody
+    public ResponseEntity<?> setTitle(@Valid @RequestBody TitleRequest request,
+                                      OAuth2AuthenticationToken token) {
+        if (token == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String email = token.getPrincipal().getAttribute("email");
+        User dbUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String title = request.getTitle();
+
+        if (title == null || title.isBlank()) {
+            dbUser.setTitle(null);
+            userRepository.save(dbUser);
+            return ResponseEntity.ok().body("Title cleared");
+        }
+
+        if (!ALLOWED_TITLES.contains(title)) {
+            Map<String, String> body = new HashMap<>();
+            body.put("error", "Invalid title");
+            return ResponseEntity.badRequest().body(body);
+        }
+
+        dbUser.setTitle(title);
+        userRepository.save(dbUser);
+
+        return ResponseEntity.ok().body("Title saved");
     }
 
     @PostMapping("/api/profile/out-of-office")

@@ -37,61 +37,117 @@ if (initialStart && initialEnd) {
     updateBanner();
 }
 
-async function saveOutOfOffice(e) {
-    e.preventDefault();
+async function saveOutOfOffice(event) {
+    event.preventDefault();
 
-    const startDate = startInput.dataset.iso || '';
-    const endDate = endInput.dataset.iso || '';
-    const errorEl = document.getElementById('oooError');
+    const startDate = document.getElementById('ooo-start').value;
+    const endDate = document.getElementById('ooo-end').value;
+    const errorMsg = document.getElementById('oooError');
     const savedMsg = document.getElementById('oooSavedMsg');
+    const submitBtn = event.target.querySelector('button[type="submit"]');
 
-    errorEl.classList.add('hidden');
+    errorMsg.classList.add('hidden');
     savedMsg.classList.add('hidden');
 
-    if ((startDate && !endDate) || (!startDate && endDate)) {
-        errorEl.innerText = 'Please provide both a start and end date, or leave both empty.';
-        errorEl.classList.remove('hidden');
+    if (!startDate || !endDate) {
+        errorMsg.innerText = 'Please select both start and end dates.';
+        errorMsg.classList.remove('hidden');
         return;
     }
 
-    try {
-        const res = await fetch('/api/profile/out-of-office', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ startDate, endDate })
+    if (submitBtn) submitBtn.disabled = true;
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    fetch('/api/profile/out-of-office', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify({ startDate: startDate, endDate: endDate })
+    })
+        .then(async (res) => {
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || 'Failed to save out of office');
+            }
+
+            savedMsg.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            setTimeout(() => savedMsg.classList.add('hidden'), 3000);
+
+            document.getElementById('oooActiveBanner').classList.remove('hidden');
+        })
+        .catch((err) => {
+            console.error(err);
+            errorMsg.innerText = err.message === 'Failed to fetch' ? 'Network error.' : err.message;
+            errorMsg.classList.remove('hidden');
+        })
+        .finally(() => {
+            if (submitBtn) submitBtn.disabled = false;
         });
-
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            errorEl.innerText = data.error || 'Failed to save. Please try again.';
-            errorEl.classList.remove('hidden');
-            return;
-        }
-
-        updateBanner();
-        savedMsg.classList.remove('hidden');
-        setTimeout(() => savedMsg.classList.add('hidden'), 3000);
-    } catch (err) {
-        errorEl.innerText = 'Something went wrong. Please try again.';
-        errorEl.classList.remove('hidden');
-        console.error(err);
-    }
 }
 
-async function clearOutOfOffice() {
-    const confirmed = confirm('Remove your out-of-office period? SmartBooking will treat you as available again for future meeting suggestions.');
-    if (!confirmed) return;
+function clearOutOfOffice() {
+    const modal = document.getElementById('oooConfirmModal');
+    modal.classList.remove('hidden');
 
-    startInput.value = '';
-    delete startInput.dataset.iso;
-    endInput.value = '';
-    delete endInput.dataset.iso;
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.children[0].classList.remove('scale-95');
+    }, 10);
+}
 
-    await fetch('/api/profile/out-of-office', {
+function cancelOooClear() {
+    closeOooModal();
+}
+
+function closeOooModal() {
+    const modal = document.getElementById('oooConfirmModal');
+    modal.classList.add('opacity-0');
+    modal.children[0].classList.add('scale-95');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function executeOooClear() {
+    closeOooModal();
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    fetch('/api/profile/out-of-office', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+        },
         body: JSON.stringify({ startDate: '', endDate: '' })
-    });
+    })
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to clear out-of-office status');
 
-    updateBanner();
+            document.getElementById('ooo-start').value = '';
+            document.getElementById('ooo-end').value = '';
+            document.getElementById('oooActiveBanner').classList.add('hidden');
+
+            const savedMsg = document.getElementById('oooSavedMsg');
+            if (savedMsg) {
+                savedMsg.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                setTimeout(() => savedMsg.classList.add('hidden'), 3000);
+            }
+        })
+        .catch(err => {
+            const errorMsg = document.getElementById('oooError');
+            if (errorMsg) {
+                errorMsg.innerText = 'Could not remove out of office. Please try again.';
+                errorMsg.classList.remove('hidden');
+            }
+            console.error(err);
+        });
 }

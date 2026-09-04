@@ -61,6 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
     attachDatePicker('pref-date-end');
     lucide.createIcons();
 
+    document.querySelectorAll('.icon-gradient').forEach(icon => {
+        icon.setAttribute('stroke', 'url(#icon-gradient)');
+    });
+
     const btnAdvanced = document.getElementById('btnAdvancedOptions');
     const advancedDiv = document.getElementById('advancedOptionsDiv');
     const advancedChevron = document.getElementById('advancedChevron');
@@ -98,25 +102,28 @@ function goToStep(stepNumber) {
 }
 
 function updateProgressBar(activeStep) {
+    const stepIcons = { 1: 'users', 2: 'clock', 3: 'door-open', 4: 'check-circle-2' };
+
     for(let i=1; i<=4; i++) {
         const circle = document.getElementById(`step-circle-${i}`);
         if(!circle) continue;
         if(i < activeStep) {
-            circle.className = "w-10 h-10 rounded-full bg-white text-emerald-600 flex items-center justify-center font-bold shadow-md";
+            circle.className = "w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shrink-0 transition-all";
             circle.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i>`;
         } else if (i === activeStep) {
-            circle.className = "w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold shadow-lg scale-110";
-            circle.innerHTML = i;
+            circle.className = "w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-emerald-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 scale-105 shrink-0 transition-all";
+            circle.innerHTML = `<i data-lucide="${stepIcons[i]}" class="w-5 h-5"></i>`;
         } else {
-            circle.className = "w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 text-white flex items-center justify-center font-bold";
-            circle.innerHTML = i;
+            circle.className = "w-11 h-11 rounded-2xl bg-white border-2 border-slate-300 text-slate-400 flex items-center justify-center shrink-0 transition-all";
+            circle.innerHTML = `<i data-lucide="${stepIcons[i]}" class="w-5 h-5"></i>`;
         }
     }
 
-    const fill = document.getElementById('progress-fill');
-    if (fill) {
-        const percent = ((activeStep - 1) / 3) * 100;
-        fill.style.width = `${percent}%`;
+    for (let i=1; i<=3; i++) {
+        const segment = document.getElementById(`progress-segment-${i}`);
+        if (segment) {
+            segment.style.width = (activeStep > i) ? '100%' : '0%';
+        }
     }
 
     lucide.createIcons();
@@ -142,8 +149,13 @@ async function handleSearch(query) {
         if (searchId !== currentSearchId) return;
 
         if (users.length === 0) {
+            const currentUserEmail = document.getElementById('current-user-email')?.value?.toLowerCase().trim();
+            const normalizedSearch = searchTerm.toLowerCase().trim();
             const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (emailPattern.test(searchTerm)) {
+
+            if (currentUserEmail && normalizedSearch === currentUserEmail) {
+                container.innerHTML = `<div class="p-4 text-sm text-slate-500 italic">You're the organizer — no need to add yourself.</div>`;
+            } else if (emailPattern.test(searchTerm)) {
                 container.innerHTML = `
             <div class="p-4 flex items-center justify-between gap-3">
                 <div class="min-w-0">
@@ -239,10 +251,16 @@ async function sendInvite(email, buttonEl) {
     buttonEl.disabled = true;
     buttonEl.innerText = 'Sending...';
 
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
     try {
         const res = await fetch('/api/invite/send', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
             body: JSON.stringify({ email })
         });
 
@@ -387,10 +405,16 @@ async function handleFindBestTimes() {
         <span>Analyzing...</span>
     `;
 
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
     try {
         const response = await fetch('/api/bookings/suggest-times', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
             body: JSON.stringify(payload)
         });
 
@@ -537,14 +561,24 @@ function selectTimeSlot(start, end, element) {
 
     document.getElementById('btn-to-room').classList.remove('hidden');
 }
+
 async function fetchAvailableRooms() {
     const payload = {
         startTime: state.selectedTimeSlot.start, endTime: state.selectedTimeSlot.end,
         minCapacity: state.preferences.minCapacity, requiredAmenities: state.preferences.requiredAmenities
     };
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
     try {
         const res = await fetch('/api/bookings/suggest-rooms', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify(payload)
         });
         const rooms = await res.json();
         renderRoomCards(rooms);
@@ -664,7 +698,6 @@ function renderFinalReview() {
     }
 }
 
-
 async function submitFinalBooking() {
     const titleInput = document.getElementById('final-title-input');
     const errorElement = document.getElementById('title-error');
@@ -712,10 +745,16 @@ async function executeBookingRequest(payload) {
     btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> <span>Processing...</span>`;
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
     try {
         const res = await fetch('/api/bookings/confirm', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
             body: JSON.stringify(payload)
         });
 

@@ -1,20 +1,27 @@
 package com.hua.smartbooking.controller;
 
+import com.hua.smartbooking.dto.RoleUpdateRequest;
 import com.hua.smartbooking.enums.BookingStatus;
+import com.hua.smartbooking.enums.Role;
 import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.Room;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.BookingRepository;
 import com.hua.smartbooking.repository.RoomRepository;
 import com.hua.smartbooking.repository.UserRepository;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -59,6 +66,55 @@ public class AdminController {
         model.addAttribute("bookings", bookings);
         addUserAttributes(model, principal);
         return "admin-bookings";
+    }
+
+    @GetMapping("/users")
+    public String listUsers(Model model, @AuthenticationPrincipal OAuth2User principal) {
+        model.addAttribute("users", userRepository.findAll());
+        addUserAttributes(model, principal);
+        return "admin-users";
+    }
+
+    @PostMapping("/users/{id}/role")
+    @ResponseBody
+    public ResponseEntity<?> updateUserRole(@PathVariable Long id,
+                                            @Valid @RequestBody RoleUpdateRequest request,
+                                            @AuthenticationPrincipal OAuth2User principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String callerEmail = principal.getAttribute("email");
+        User caller = userRepository.findByEmail(callerEmail).orElse(null);
+
+        if (caller == null || caller.getRole() != Role.ADMIN) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only admins can change user roles"));
+        }
+
+        Optional<User> targetOpt = userRepository.findById(id);
+        if (targetOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        User target = targetOpt.get();
+
+        if (target.getId().equals(caller.getId())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "You cannot change your own role"));
+        }
+
+        Role newRole;
+        try {
+            newRole = Role.valueOf(request.getRole());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid role"));
+        }
+
+        target.setRole(newRole);
+        userRepository.save(target);
+
+        Map<String, String> body = new HashMap<>();
+        body.put("message", "Role updated");
+        body.put("role", newRole.name());
+        return ResponseEntity.ok().body(body);
     }
 
     @PostMapping("/rooms/update")

@@ -46,4 +46,6 @@ public class User {
     private Instant outOfOfficeStart;
     private Instant outOfOfficeEnd;
 
+    private String title;
+
 }

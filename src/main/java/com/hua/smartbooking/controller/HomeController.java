@@ -54,6 +54,7 @@ public class HomeController {
         model.addAttribute("email", dbUser.getEmail());
         model.addAttribute("avatar", dbUser.getAvatarUrl());
         model.addAttribute("role", dbUser.getRole().name());
+        model.addAttribute("title", dbUser.getTitle());
 
         model.addAttribute("outOfOfficeStart",
                 dbUser.getOutOfOfficeStart() != null

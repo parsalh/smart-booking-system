@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>SmartBooking - Manage Users</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body.light-glass-theme {
+            background: linear-gradient(135deg, #e8edf8 0%, #dbeafe 45%, #d1fae5 100%) !important;
+            background-attachment: fixed !important;
+        }
+
+        .glass-surface {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25) !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+    </style>
+</head>
+<body class="min-h-screen font-sans text-slate-800 selection:bg-blue-100 light-glass-theme">
+
+<nav class="glass-nav py-3 px-8 flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center gap-2">
+        <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" />
+            <span class="text-lg font-bold tracking-tight btn-gradient-text">SmartBooking</span>
+        </a>
+    </div>
+    <div class="flex items-center gap-4">
+        <a href="/"
+           onclick="this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-4 h-4 text-blue-600 animate-spin\'></i> Loading...'; lucide.createIcons(); this.classList.add('opacity-70', 'pointer-events-none');"
+           style="background: rgba(248,250,252,0.80); border: 1px solid rgba(148,163,184,0.20); color: #475569;"
+           class="hover:opacity-80 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
+            <i data-lucide="arrow-left" class="w-4 h-4 text-blue-600"></i> Back to Dashboard
+        </a>
+
+        <div class="text-right hidden md:block">
+            <p class="text-xs font-bold text-slate-900" th:text="${name}">User</p>
+
+            <p sec:authorize="hasAuthority('ADMIN')" class="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Administrator</p>
+
+            <p sec:authorize="!hasAuthority('ADMIN')" class="text-[10px] text-gray-500 uppercase tracking-wider font-bold" th:text="${email}">user@email.com</p>
+        </div>
+
+        <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
+             alt="Profile"
+             class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover">
+
+        <a href="/profile" class="text-slate-400 hover:text-blue-600 transition-colors p-2" title="My Profile">
+            <i data-lucide="user-cog" class="w-5 h-5"></i>
+        </a>
+
+        <a href="/logout" class="text-slate-400 hover:text-red-600 transition-colors p-2" title="Logout">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+        </a>
+    </div>
+</nav>
+
+<main class="p-10">
+    <div class="max-w-6xl mx-auto">
+
+        <div class="flex items-center gap-2 mb-6 border-b border-slate-300/80 ">
+            <a href="/admin/rooms" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
+                Rooms
+            </a>
+            <a href="/admin/bookings" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
+                Bookings
+            </a>
+            <a href="/admin/users" class="px-4 py-2.5 text-sm font-bold text-blue-600 border-b-2 border-blue-600">
+                Users
+            </a>
+        </div>
+
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">Users</h1>
+            <p class="text-slate-500">Manage roles for everyone registered in SmartBooking.</p>
+        </div>
+
+        <div th:if="${#lists.isEmpty(users)}" class="text-center py-20 glass-surface">
+            <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="users" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">No users found</h3>
+            <p class="text-sm text-slate-500">Registered users will appear here.</p>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(users)}" class="glass-surface overflow-hidden">
+            <table class="w-full text-sm">
+                <thead>
+                <tr class="bg-white/40 border-b border-slate-200 text-left">
+                    <th class="px-6 py-3 font-bold text-slate-500 uppercase tracking-wider text-[10px]">User</th>
+                    <th class="px-6 py-3 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Current Role</th>
+                    <th class="px-6 py-3 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Change Role</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${users}" class="border-b border-slate-100 last:border-0 hover:bg-white/40 transition-colors"
+                    th:id="'user-row-' + ${u.id}">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <img th:src="${u.avatarUrl != null and !#strings.isEmpty(u.avatarUrl)} ? ${u.avatarUrl} : 'https://ui-avatars.com/api/?name=' + ${u.fullname} + '&background=dbeafe&color=2563eb'"
+                                 alt="Avatar"
+                                 class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover shrink-0">
+                            <div>
+                                <p class="font-bold text-slate-900" th:text="${u.fullname}">Jane Doe</p>
+                                <p class="text-[11px] text-slate-500" th:text="${u.email}">jane@hua.gr</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span th:id="'role-badge-' + ${u.id}"
+                              th:text="${u.role.name()}"
+                              th:classappend="${u.role.name() == 'ADMIN'} ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                              : (${u.role.name() == 'PROFESSOR'} ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                              : 'bg-slate-100 text-slate-600 border-slate-200')"
+                              class="text-[10px] font-bold px-2.5 py-1 rounded-lg border uppercase tracking-wider">
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <select th:if="${u.email != email}"
+                                th:data-user-id="${u.id}"
+                                onchange="handleRoleChange(this)"
+                                class="user-role-select px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <option value="STUDENT" th:selected="${u.role.name() == 'STUDENT'}">Student</option>
+                            <option value="PROFESSOR" th:selected="${u.role.name() == 'PROFESSOR'}">Professor</option>
+                            <option value="ADMIN" th:selected="${u.role.name() == 'ADMIN'}">Admin</option>
+                        </select>
+                        <span th:if="${u.email == email}" class="text-xs text-slate-400 italic">This is you</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</main>
+
+<div id="roleConfirmModal" class="fixed inset-0 bg-slate-900/35 backdrop-blur-md hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+    <div class="glass-modal rounded-[2.5rem] p-8 max-w-sm w-full transform scale-95 transition-transform duration-300">
+
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-6">
+            <i data-lucide="shield-alert" class="h-8 w-8 text-blue-600"></i>
+        </div>
+
+        <div class="text-center">
+            <h3 class="text-xl font-black text-slate-900 mb-2">Change User Role</h3>
+            <p class="text-sm text-slate-500 font-medium">
+                Are you sure you want to change this user's role to <span id="confirmNewRoleName" class="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100"></span>?
+            </p>
+        </div>
+
+        <div class="flex gap-3 mt-8">
+            <button type="button" onclick="cancelRoleChange()" class="flex-1 py-3 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
+                Cancel
+            </button>
+            <button type="button" onclick="executeRoleChange()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-md shadow-blue-200 transition-all flex items-center justify-center gap-2">
+                <i data-lucide="check" class="w-4 h-4"></i> Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/admin-users.js}"></script>
+</body>
+</html>

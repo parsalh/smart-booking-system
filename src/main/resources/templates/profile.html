@@ -1,31 +1,67 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>SmartBooking - My Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
-<body class="min-h-screen font-sans text-gray-900 selection:bg-blue-100">
+    <style>
+        body.light-glass-theme {
+            background: linear-gradient(135deg, #e8edf8 0%, #dbeafe 45%, #d1fae5 100%) !important;
+            background-attachment: fixed !important;
+        }
 
-<nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
+        .glass-surface {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25) !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans text-slate-800 selection:bg-blue-100 light-glass-theme">
+
+<nav class="glass-nav py-3 px-8 flex justify-between items-center sticky top-0 z-50">
     <div class="flex items-center gap-2">
         <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" />
-            <span class="text-lg font-bold tracking-tight text-gray-900">SmartBooking</span>
+            <span class="text-lg font-bold tracking-tight btn-gradient-text">SmartBooking</span>
         </a>
     </div>
     <div class="flex items-center gap-4">
-        <a th:if="${role == 'ADMIN'}" href="/admin/rooms" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
-            <i data-lucide="shield" class="w-4 h-4 text-purple-600"></i> Admin Panel
+        <a th:if="${role == 'ADMIN'}" href="/admin/rooms" style="background: rgba(167,130,246,0.15); color: #6d28d9;" class="hover:opacity-80 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
+            <i data-lucide="shield" class="w-4 h-4"></i> Admin Panel
         </a>
         <div class="text-right hidden md:block">
-            <p class="text-xs font-bold text-gray-900" th:text="${name}">User</p>
-            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold"
-               th:text="${role == 'ADMIN' ? 'Administrator' : email}">user@email.com</p>
+            <p class="text-xs font-bold text-slate-900" th:text="${name}">User</p>
+
+            <p sec:authorize="hasAuthority('ADMIN')" class="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Administrator</p>
+
+            <p sec:authorize="!hasAuthority('ADMIN')" class="text-[10px] text-gray-500 uppercase tracking-wider font-bold" th:text="${email}">user@email.com</p>
         </div>
         <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
              alt="Profile"
@@ -43,12 +79,49 @@
             <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-2">My Profile</h1>
             <p class="text-gray-600 text-sm font-medium">Manage your availability preferences for SmartBooking.</p>
         </div>
-        <a href="/" class="px-5 py-2.5 bg-white/90 backdrop-blur-md border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-white hover:text-blue-600 transition-all shadow-sm flex items-center gap-2 text-sm">
+        <a href="/" style="background: rgba(248,250,252,0.80); border: 1px solid rgba(148,163,184,0.20); color: #475569;" class="px-5 py-2.5 font-bold rounded-xl hover:bg-white/90 hover:text-blue-600 transition-all shadow-sm flex items-center gap-2 text-sm">
             <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
         </a>
     </div>
 
-    <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 border border-gray-200/80 shadow-sm">
+    <div class="glass-surface p-8 mb-6">
+
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                <i data-lucide="user" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-gray-900">Personal Details</h2>
+                <p class="text-xs text-gray-500 font-medium">Choose how you'd like to be addressed across SmartBooking.</p>
+            </div>
+        </div>
+
+        <form id="titleForm" class="flex flex-col sm:flex-row sm:items-end gap-4" onsubmit="saveTitle(event)">
+            <div class="flex-1 max-w-xs">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Title</label>
+                <select id="userTitle" name="title"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm font-medium bg-white cursor-pointer">
+                    <option value="" th:selected="${title == null or #strings.isEmpty(title)}">No title</option>
+                    <option value="Mr." th:selected="${title == 'Mr.'}">Mr.</option>
+                    <option value="Mrs." th:selected="${title == 'Mrs.'}">Mrs.</option>
+                    <option value="Ms." th:selected="${title == 'Ms.'}">Ms.</option>
+                    <option value="Dr." th:selected="${title == 'Dr.'}">Dr.</option>
+                </select>
+            </div>
+
+            <button type="submit"
+                    class="px-6 py-3 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all text-sm flex items-center gap-2 shrink-0">
+                <i data-lucide="check" class="w-4 h-4"></i> Save
+            </button>
+            <span id="titleSavedMsg" class="hidden text-xs font-bold text-emerald-600 flex items-center gap-1.5">
+                <i data-lucide="check-circle-2" class="w-4 h-4"></i> Saved
+            </span>
+            <span id="titleErrorMsg" class="hidden text-xs font-bold text-red-600"></span>
+        </form>
+
+    </div>
+
+    <div class="glass-surface p-8">
 
         <div class="flex items-center gap-3 mb-6">
             <div class="w-10 h-10 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center">
@@ -103,8 +176,67 @@
 
 </main>
 
+<div id="oooConfirmModal" class="fixed inset-0 bg-slate-900/35 backdrop-blur-md hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+    <div class="glass-modal rounded-[2.5rem] p-8 max-w-sm w-full transform scale-95 transition-transform duration-300">
+
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-6">
+            <i data-lucide="palmtree" class="h-8 w-8 text-orange-600"></i>
+        </div>
+
+        <div class="text-center">
+            <h3 class="text-xl font-black text-slate-900 mb-2">Remove Out of Office?</h3>
+            <p class="text-sm text-slate-500 font-medium">
+                SmartBooking will treat you as available again for future meeting suggestions.
+            </p>
+        </div>
+
+        <div class="flex gap-3 mt-8">
+            <button type="button" onclick="cancelOooClear()" class="flex-1 py-3 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
+                Cancel
+            </button>
+            <button type="button" onclick="executeOooClear()" class="flex-1 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 shadow-md shadow-orange-200 transition-all flex items-center justify-center gap-2">
+                <i data-lucide="check" class="w-4 h-4"></i> Yes, Remove
+            </button>
+        </div>
+    </div>
+</div>
+
 <script th:src="@{/js/date-picker.js}"></script>
 <script th:src="@{/js/profile.js}"></script>
+<script>
+    function saveTitle(event) {
+        event.preventDefault();
+
+        const select = document.getElementById('userTitle');
+        const savedMsg = document.getElementById('titleSavedMsg');
+        const errorMsg = document.getElementById('titleErrorMsg');
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+
+        savedMsg.classList.add('hidden');
+        errorMsg.classList.add('hidden');
+        if (submitBtn) submitBtn.disabled = true;
+
+        fetch('/api/profile/title', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: select.value })
+        })
+            .then(function (res) {
+                if (!res.ok) throw new Error('Request failed');
+                savedMsg.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                setTimeout(function () { savedMsg.classList.add('hidden'); }, 3000);
+            })
+            .catch(function (err) {
+                console.error('Failed to save title:', err);
+                errorMsg.innerText = 'Could not save your title. Please try again.';
+                errorMsg.classList.remove('hidden');
+            })
+            .finally(function () {
+                if (submitBtn) submitBtn.disabled = false;
+            });
+    }
+</script>
 
 </body>
 </html>

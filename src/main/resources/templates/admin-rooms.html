@@ -1,31 +1,66 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>SmartBooking - Manage Rooms</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
-<body class="bg-slate-50 min-h-screen">
+    <style>
+        body.light-glass-theme {
+            background: linear-gradient(135deg, #e8edf8 0%, #dbeafe 45%, #d1fae5 100%) !important;
+            background-attachment: fixed !important;
+        }
 
-<nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 py-3 px-8 flex justify-between items-center shadow-sm sticky top-0 z-50">
+        .glass-surface {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25) !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans text-slate-800 selection:bg-blue-100 light-glass-theme">
+
+<nav class="glass-nav py-3 px-8 flex justify-between items-center sticky top-0 z-50">
     <div class="flex items-center gap-2">
         <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img th:src="@{/images/hua-logo.png}" alt="HUA" class="w-8 h-8 object-contain" />
-            <span class="text-lg font-bold tracking-tight text-slate-900">SmartBooking</span>
+            <span class="text-lg font-bold tracking-tight btn-gradient-text">SmartBooking</span>
         </a>
     </div>
     <div class="flex items-center gap-4">
         <a href="/"
            onclick="this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-4 h-4 text-blue-600 animate-spin\'></i> Loading...'; lucide.createIcons(); this.classList.add('opacity-70', 'pointer-events-none');"
-           class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
+           style="background: rgba(248,250,252,0.80); border: 1px solid rgba(148,163,184,0.20); color: #475569;"
+           class="hover:opacity-80 font-semibold px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
             <i data-lucide="arrow-left" class="w-4 h-4 text-blue-600"></i> Back to Dashboard
         </a>
 
         <div class="text-right hidden md:block">
             <p class="text-xs font-bold text-slate-900" th:text="${name}">User</p>
-            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold"
-               th:text="${role == 'ADMIN' ? 'Administrator' : email}">user@email.com</p>
+
+            <p sec:authorize="hasAuthority('ADMIN')" class="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Administrator</p>
+
+            <p sec:authorize="!hasAuthority('ADMIN')" class="text-[10px] text-gray-500 uppercase tracking-wider font-bold" th:text="${email}">user@email.com</p>
         </div>
 
         <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
@@ -39,12 +74,15 @@
 </nav>
 <main class="p-10">
     <div class="max-w-6xl mx-auto">
-        <div class="flex items-center gap-2 mb-6 border-b border-slate-200">
+        <div class="flex items-center gap-2 mb-6 border-b border-slate-300/80 ">
             <a href="/admin/rooms" class="px-4 py-2.5 text-sm font-bold text-blue-600 border-b-2 border-blue-600">
                 Rooms
             </a>
             <a href="/admin/bookings" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
                 Bookings
+            </a>
+            <a href="/admin/users" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
+                Users
             </a>
         </div>
         <div class="flex justify-between items-center mb-8">
@@ -57,10 +95,10 @@
             </button>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="glass-surface overflow-hidden">
             <table class="w-full text-left border-collapse">
                 <thead>
-                <tr class="border-b border-slate-100 bg-slate-50/50 text-sm font-bold text-slate-700">
+                <tr class="border-b border-slate-100 bg-white/40 text-sm font-bold text-slate-700">
                     <th class="px-6 py-4">Room</th>
                     <th class="px-6 py-4">Location</th>
                     <th class="px-6 py-4">Floor</th>
@@ -70,7 +108,7 @@
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                <tr th:each="room : ${rooms}" class="hover:bg-slate-50/50 transition-colors">
+                <tr th:each="room : ${rooms}" class="hover:bg-white/40 transition-colors">
 
                     <td class="px-6 py-5">
                         <div class="flex items-center gap-5">
@@ -151,8 +189,8 @@
         </div>
     </div>
 
-    <div id="roomModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl p-8 max-w-5xl w-full shadow-2xl overflow-y-auto max-h-[90vh]">
+    <div id="roomModal" class="fixed inset-0 bg-slate-900/35 backdrop-blur-md hidden flex items-center justify-center z-50 p-4">
+        <div class="glass-modal rounded-[2.5rem] p-8 max-w-5xl w-full overflow-y-auto max-h-[90vh]">
 
             <div id="admin-error" class="hidden mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-bold flex items-center gap-3 shadow-sm transition-all text-left">
                 <i data-lucide="alert-octagon" class="w-5 h-5 shrink-0 text-rose-500"></i>
@@ -289,8 +327,8 @@
             </form>
         </div>
     </div>
-    <div id="deleteModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-300">
+    <div id="deleteModal" class="fixed inset-0 bg-slate-900/35 backdrop-blur-md hidden flex items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-modal rounded-[2.5rem] p-8 max-w-sm w-full transform scale-95 transition-transform duration-300">
 
             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
                 <i data-lucide="alert-triangle" class="h-8 w-8 text-red-600"></i>
