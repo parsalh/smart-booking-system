@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>SmartBooking - All Bookings</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -57,10 +56,8 @@
 
         <div class="text-right hidden md:block">
             <p class="text-xs font-bold text-slate-900" th:text="${name}">User</p>
-
-            <p sec:authorize="hasAuthority('ADMIN')" class="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Administrator</p>
-
-            <p sec:authorize="!hasAuthority('ADMIN')" class="text-[10px] text-gray-500 uppercase tracking-wider font-bold" th:text="${email}">user@email.com</p>
+            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold"
+               th:text="${role == 'ADMIN' ? 'Administrator' : email}">user@email.com</p>
         </div>
 
         <img th:src="${avatar != null ? avatar : 'https://ui-avatars.com/api/?name=' + name + '&background=dbeafe&color=2563eb'}"
@@ -80,11 +77,11 @@
 <main class="p-10">
     <div class="max-w-6xl mx-auto">
 
-        <div class="flex items-center gap-2 mb-6 border-b border-slate-300/80 ">
-            <a href="/admin/rooms" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
+        <div class="flex items-center gap-2 mb-6 border-b border-slate-200">
+            <a href="/admin/rooms" class="px-4 py-2.5 text-sm font-bold text-blue-600 border-b-2 border-blue-600">
                 Rooms
             </a>
-            <a href="/admin/bookings" class="px-4 py-2.5 text-sm font-bold text-blue-600 border-b-2 border-blue-600">
+            <a href="/admin/bookings" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
                 Bookings
             </a>
             <a href="/admin/users" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
@@ -138,8 +135,8 @@
                         <p class="text-[11px] text-slate-500" th:text="${booking.user != null ? booking.user.email : ''}">jane@hua.gr</p>
                     </td>
                     <td class="px-6 py-4 text-slate-700">
-                        <p class="font-semibold" th:text="${#temporals.format(booking.startTime, 'd MMM yyyy, HH:mm')}">1 Sep 2026, 10:00</p>
-                        <p class="text-[11px] text-slate-400" th:text="${#temporals.format(booking.endTime, 'HH:mm')} + ' end'">11:00 end</p>
+                        <p class="font-semibold" th:text="${#temporals.format(booking.startTime.atZone(T(java.time.ZoneId).of('Europe/Athens')), 'd MMM yyyy, HH:mm')}">1 Sep 2026, 10:00</p>
+                        <p class="text-[11px] text-slate-400" th:text="${#temporals.format(booking.endTime.atZone(T(java.time.ZoneId).of('Europe/Athens')), 'HH:mm')} + ' end'">11:00 end</p>
                     </td>
                     <td class="px-6 py-4">
                     <span th:text="${booking.status}"

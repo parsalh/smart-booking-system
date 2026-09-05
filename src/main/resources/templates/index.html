@@ -494,8 +494,13 @@
                 const timeStr = formatTimeRange(e.start, e.end);
 
                 let displayTitle = e.title;
-                if (displayTitle.trim() === 'SmartBooking' && e.rawEvent.extendedProps) {
-                    displayTitle = e.rawEvent.extendedProps.fullTitle || e.rawEvent.extendedProps.locationName + ' Meeting' || 'Meeting';
+                const fullTitle = e.rawEvent.extendedProps && e.rawEvent.extendedProps.fullTitle;
+                if (fullTitle && fullTitle.trim() !== '' && fullTitle !== 'Untitled Event') {
+                    displayTitle = fullTitle;
+                } else if (displayTitle.trim() === 'SmartBooking' && e.rawEvent.extendedProps) {
+                    displayTitle = e.rawEvent.extendedProps.locationName
+                        ? e.rawEvent.extendedProps.locationName + ' Meeting'
+                        : 'Meeting';
                 }
 
                 return '' +

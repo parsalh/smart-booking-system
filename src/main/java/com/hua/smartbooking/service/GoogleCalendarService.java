@@ -113,7 +113,8 @@ public class GoogleCalendarService {
                 Map<String, Object> map = new HashMap<>();
 
                 String description = gEvent.getDescription();
-                boolean isSmartBooking = description != null && description.contains("Automatically scheduled via SmartBooking App");
+                Optional<Booking> dbBooking = bookingRepository.findByGoogleEventId(gEvent.getId());
+                boolean isSmartBooking = dbBooking.isPresent();
 
                 if (isSmartBooking) {
                     map.put("title", "SmartBooking");
@@ -141,7 +142,6 @@ public class GoogleCalendarService {
                 extendedProps.put("roomFloor", entity.getRoom() != null ? entity.getRoom().getFloor() : null);
                 extendedProps.put("roomImage", entity.getRoom() != null ? entity.getRoom().getImageUrl() : "/images/default-room.jpg");
                 extendedProps.put("roomAmenities", entity.getRoom() != null ? entity.getRoom().getAmenities() : new ArrayList<>());
-                Optional<Booking> dbBooking = bookingRepository.findByGoogleEventId(gEvent.getId());
 
                 if (dbBooking.isPresent()) {
                     Map<String, RsvpStatus> decryptedParticipants = new HashMap<>();
@@ -164,11 +164,11 @@ public class GoogleCalendarService {
 
                 calendarEvents.add(map);
             } catch (Exception e) {
-                System.err.println("Skipping event due to error.html: " + gEvent.getSummary() + " -> " + e.getMessage());
+                System.err.println("Skipping event due to error: " + gEvent.getSummary() + " -> " + e.getMessage());
             }
         }
 
-        // Fallback - if blocked by Google anti-spam
+        // Fallback, if blocked by Google anti-spam
         List<Booking> allDbBookings = bookingRepository.findAll();
         com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();
 

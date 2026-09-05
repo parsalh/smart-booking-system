@@ -80,6 +80,18 @@
 <main class="p-10">
     <div class="max-w-6xl mx-auto">
 
+        <div class="flex items-center gap-2 mb-6 border-b border-slate-200">
+            <a href="/admin/rooms" class="px-4 py-2.5 text-sm font-bold text-blue-600 border-b-2 border-blue-600">
+                Rooms
+            </a>
+            <a href="/admin/bookings" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
+                Bookings
+            </a>
+            <a href="/admin/users" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
+                Users
+            </a>
+        </div>
+
         <div class="mb-8 flex justify-between items-start gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-slate-900">Rooms</h1>
@@ -98,18 +110,6 @@
         <div th:if="${error}" class="mb-6 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-center gap-3">
             <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0"></i>
             <p class="text-sm font-semibold" th:text="${error}"></p>
-        </div>
-
-        <div class="flex items-center gap-2 mb-6 border-b border-slate-200">
-            <a href="/admin/rooms" class="px-4 py-2.5 text-sm font-bold text-blue-600 border-b-2 border-blue-600">
-                Rooms
-            </a>
-            <a href="/admin/bookings" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
-                Bookings
-            </a>
-            <a href="/admin/users" class="px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
-                Users
-            </a>
         </div>
 
         <div th:if="${#lists.isEmpty(rooms)}" class="text-center py-20 glass-surface">
@@ -283,19 +283,28 @@
                         <input type="checkbox" name="amenities" value="Projector" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Projector
                     </label>
                     <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-                        <input type="checkbox" name="amenities" value="Whiteboard" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Whiteboard
+                        <input type="checkbox" name="amenities" value="Interactive Whiteboard" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Interactive Whiteboard
                     </label>
                     <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-                        <input type="checkbox" name="amenities" value="Video Conferencing" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Video Conf.
+                        <input type="checkbox" name="amenities" value="Video Conferencing" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Video Conferencing
                     </label>
                     <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-                        <input type="checkbox" name="amenities" value="Wi-Fi" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Wi-Fi
+                        <input type="checkbox" name="amenities" value="High-Speed WiFi" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> High-Speed WiFi
                     </label>
                     <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-                        <input type="checkbox" name="amenities" value="Air Conditioning" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> A/C
+                        <input type="checkbox" name="amenities" value="Air Conditioning" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Air Conditioning
                     </label>
                     <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-                        <input type="checkbox" name="amenities" value="Wheelchair Accessible" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Accessible
+                        <input type="checkbox" name="amenities" value="Wheelchair Accessible" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Wheelchair Accessible
+                    </label>
+                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                        <input type="checkbox" name="amenities" value="Power Outlets" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Power Outlets
+                    </label>
+                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                        <input type="checkbox" name="amenities" value="Ethernet Ports" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Ethernet Ports
+                    </label>
+                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                        <input type="checkbox" name="amenities" value="Soundproofing" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Soundproofing
                     </label>
                 </div>
             </div>

@@ -33,7 +33,7 @@ window.openCalendarEventModal = function(eventObj) {
     document.getElementById('modalLocation').innerText = displayLocation;
 
     const descriptionText = props.description || 'No details available.';
-    const isSmartBooking = props.bookingId || descriptionText.includes('Automatically scheduled via SmartBooking App');
+    const isSmartBooking = !!props.bookingId;
 
     const mapSection = document.getElementById('eventMapSection');
     const descSection = document.getElementById('eventDescSection');
@@ -64,19 +64,19 @@ window.openCalendarEventModal = function(eventObj) {
         setTimeout(async () => {
             if (typeof initEventMap === 'function') {
                 initEventMap();
-                if (window.eventMap) {
-                    window.eventMap.invalidateSize();
+                if (eventMap) {
+                    eventMap.invalidateSize();
 
                     const coords = await geocodeAddress(rawLocation || '');
                     const lat = coords ? coords.lat : 37.9575;
                     const lng = coords ? coords.lng : 23.7025;
 
-                    window.eventMap.setView([lat, lng], 17);
-                    if (window.eventMarker) {
-                        window.eventMarker.setLatLng([lat, lng]);
-                        window.eventMarker.bindPopup(`<b>${rawRoomName || 'Unknown Room'}</b><br><span class="text-xs text-gray-500">${rawLocation || ''}</span>`).openPopup();
+                    eventMap.setView([lat, lng], 17);
+                    if (eventMarker) {
+                        eventMarker.setLatLng([lat, lng]);
+                        eventMarker.bindPopup(`<b>${rawRoomName || 'Unknown Room'}</b><br><span class="text-xs text-gray-500">${rawLocation || ''}</span>`).openPopup();
                     }
-                    setTimeout(() => window.eventMap.invalidateSize(), 100);
+                    setTimeout(() => eventMap.invalidateSize(), 100);
                 }
             }
         }, 300);
@@ -423,7 +423,7 @@ async function geocodeAddress(address) {
             return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
         }
     } catch (e) {
-        console.error("Geocoding error.html:", e);
+        console.error("Geocoding error:", e);
     }
     return null;
 }
@@ -444,7 +444,7 @@ function openAllBookingsModal() {
 
     fetch('/api/bookings/my-smartbookings')
         .then(res => {
-            if (!res.ok) throw new Error('Network response error.html');
+            if (!res.ok) throw new Error('Network response error');
             return res.json();
         })
         .then(bookings => {
@@ -562,9 +562,8 @@ function updateEventStatistics() {
 
                 const props = ev.extendedProps || {};
                 const type = props.type || '';
-                const description = props.description || '';
 
-                if (type === 'SMART_BOOKING' || description.includes('Automatically scheduled via SmartBooking App')) {
+                if (type === 'SMART_BOOKING') {
                     stats.smart++;
                 } else if (type === 'LECTURE') {
                     stats.lecture++;
@@ -796,6 +795,10 @@ function handleRsvp(bookingId, status) {
                                     }
                                 }
                             });
+                            // FullCalendar doesn't re-run eventClassNames on setExtendedProp() alone,
+                            // so the pending-stripe styling would otherwise only refresh the next time
+                            // something else forces a re-render (e.g. clicking the event).
+                            window.smartCalendar.render();
                         }
 
                         const remainingCards = document.querySelectorAll('[id^="invite-card-"]').length;
@@ -913,12 +916,6 @@ function renderLiveParticipants(bookingId, fallbackParticipants, containerId) {
                             }
                         }
                     });
-
-                    // eventClassNames (used for the dashed/pending calendar chip style) is only
-                    // re-evaluated on a full render pass — setExtendedProp alone updates the data
-                    // but not the chip's visual class. Force a re-render so the calendar reflects
-                    // the just-reconciled RSVP status immediately, without needing a page reload.
-                    window.smartCalendar.render();
                 }
 
                 for (const [email, status] of Object.entries(freshParticipants)) {

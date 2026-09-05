@@ -19,17 +19,34 @@ if (initialEnd) {
 attachDatePicker('ooo-start');
 attachDatePicker('ooo-end');
 
+function todayIso() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 function updateBanner() {
     const start = startInput.dataset.iso;
     const end = endInput.dataset.iso;
     const banner = document.getElementById('oooActiveBanner');
     const text = document.getElementById('oooActiveText');
 
-    if (start && end) {
-        banner.classList.remove('hidden');
-        text.innerText = `Out of office from ${formatDateDMY(start)} to ${formatDateDMY(end)}`;
-    } else {
+    if (!start || !end) {
         banner.classList.add('hidden');
+        return;
+    }
+
+    banner.classList.remove('hidden');
+
+    const today = todayIso();
+    if (today < start) {
+        text.innerText = `Scheduled: out of office from ${formatDateDMY(start)} to ${formatDateDMY(end)}`;
+    } else if (today > end) {
+        text.innerText = `Out of office ended ${formatDateDMY(end)}`;
+    } else {
+        text.innerText = `Currently out of office until ${formatDateDMY(end)}`;
     }
 }
 
@@ -40,8 +57,8 @@ if (initialStart && initialEnd) {
 async function saveOutOfOffice(event) {
     event.preventDefault();
 
-    const startDate = document.getElementById('ooo-start').value;
-    const endDate = document.getElementById('ooo-end').value;
+    const startDate = startInput.dataset.iso || '';
+    const endDate = endInput.dataset.iso || '';
     const errorMsg = document.getElementById('oooError');
     const savedMsg = document.getElementById('oooSavedMsg');
     const submitBtn = event.target.querySelector('button[type="submit"]');
@@ -78,11 +95,11 @@ async function saveOutOfOffice(event) {
             if (typeof lucide !== 'undefined') lucide.createIcons();
             setTimeout(() => savedMsg.classList.add('hidden'), 3000);
 
-            document.getElementById('oooActiveBanner').classList.remove('hidden');
+            updateBanner();
         })
         .catch((err) => {
             console.error(err);
-            errorMsg.innerText = err.message === 'Failed to fetch' ? 'Network error.html.' : err.message;
+            errorMsg.innerText = err.message === 'Failed to fetch' ? 'Network error.' : err.message;
             errorMsg.classList.remove('hidden');
         })
         .finally(() => {
@@ -134,6 +151,8 @@ function executeOooClear() {
 
             document.getElementById('ooo-start').value = '';
             document.getElementById('ooo-end').value = '';
+            delete startInput.dataset.iso;
+            delete endInput.dataset.iso;
             document.getElementById('oooActiveBanner').classList.add('hidden');
 
             const savedMsg = document.getElementById('oooSavedMsg');
@@ -165,9 +184,15 @@ function saveTitle(event) {
     errorMsg.classList.add('hidden');
     if (submitBtn) submitBtn.disabled = true;
 
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
     fetch('/api/profile/title', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+        },
         body: JSON.stringify({ title: select.value })
     })
         .then(function (res) {

@@ -32,7 +32,8 @@ const amenitiesList = [
     'Video Conferencing',
     'Ethernet Ports',
     'Soundproofing',
-    'Wheelchair Accessible'
+    'Wheelchair Accessible',
+    'Air Conditioning'
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -160,11 +161,11 @@ async function handleSearch(query) {
             <div class="p-4 flex items-center justify-between gap-3">
                 <div class="min-w-0">
                     <div class="text-sm font-bold text-slate-900 truncate">${searchTerm}</div>
-                    <div class="text-[10px] text-slate-500">Not registered yet</div>
+                    <div class="text-[10px] text-slate-500">Not registered yet — they'll get an email invite</div>
                 </div>
-                <button onclick="sendInvite('${searchTerm}', this)"
+                <button onclick="addUnregisteredParticipant('${searchTerm}')"
                         class="shrink-0 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors">
-                    Invite
+                    Add as Guest
                 </button>
             </div>
         `;
@@ -209,6 +210,56 @@ function addParticipantFromDB(id, name, email, avatar, outOfOfficeStart, outOfOf
     renderFrequentCollaborators();
 }
 
+// Adds someone who doesn't have a SmartBooking account yet as a real participant
+// on this meeting. Their calendar can't be checked for availability (no Google
+// Calendar connection), so the scheduling optimizer simply treats them as always
+// free — they're still included in the final booking and get a normal Google
+// Calendar invite once it's confirmed. A separate SmartBooking invite email is
+// also sent in the background, encouraging them to sign up.
+function addUnregisteredParticipant(email) {
+    const normalized = email.trim().toLowerCase();
+    if (state.participants.find(p => p.email.toLowerCase() === normalized)) return;
+
+    state.participants.push({
+        id: normalized,
+        name: normalized,
+        email: normalized,
+        avatar: '',
+        required: true,
+        outOfOfficeStart: null,
+        outOfOfficeEnd: null,
+        registered: false
+    });
+
+    document.getElementById('participant-search').value = '';
+    document.getElementById('search-results-container').classList.add('hidden');
+    renderSelected();
+
+    sendInviteEmailSilently(normalized);
+}
+
+async function sendInviteEmailSilently(email) {
+    try {
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        const res = await fetch('/api/invite/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({ email })
+        });
+
+        if (!res.ok) throw new Error('Failed to send invite email');
+    } catch (error) {
+        // Best-effort: failing to send the nudge email shouldn't block adding
+        // the guest as a participant — just log it.
+        console.error('Failed to send guest invite email:', error);
+    }
+}
+
 async function loadFrequentCollaborators() {
     try {
         const response = await fetch('/api/users/frequent-collaborators');
@@ -245,44 +296,6 @@ function renderFrequentCollaborators() {
         </button>
     `).join('');
     lucide.createIcons();
-}
-
-async function sendInvite(email, buttonEl) {
-    buttonEl.disabled = true;
-    buttonEl.innerText = 'Sending...';
-
-    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-    try {
-        const res = await fetch('/api/invite/send', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                [csrfHeader]: csrfToken
-            },
-            body: JSON.stringify({ email })
-        });
-
-        if (!res.ok) throw new Error('Failed to send invite');
-
-        buttonEl.closest('.p-4').innerHTML = `
-            <div class="flex items-center gap-2 text-emerald-600 text-sm font-bold">
-                <i data-lucide="check-circle-2" class="w-4 h-4"></i> Invitation sent to ${email}
-            </div>
-        `;
-        lucide.createIcons();
-    } catch (error) {
-        buttonEl.disabled = false;
-        buttonEl.innerText = 'Send Invite Link';
-
-        const errDiv = document.getElementById('invite-error.html');
-        document.getElementById('invite-error.html-text').innerText = 'Failed to send invitation. Please try again.';
-        errDiv.classList.remove('hidden');
-        setTimeout(() => errDiv.classList.add('hidden'), 5000);
-
-        console.error(error);
-    }
 }
 
 function addParticipant(id) {
@@ -337,8 +350,13 @@ function renderSelected() {
         <div class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
             <img src="${p.avatar || ''}" referrerpolicy="no-referrer" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb'" class="w-10 h-10 rounded-full object-cover">
             <div class="flex-1 overflow-hidden">
-                <div class="text-sm font-bold text-slate-900 truncate">${p.name}</div>
-                <div class="text-xs text-slate-500 truncate">${p.email}</div>
+                <div class="text-sm font-bold text-slate-900 truncate flex items-center gap-1.5">
+                    <span class="truncate">${p.registered === false ? p.email : p.name}</span>
+                    ${p.registered === false ? '<span class="shrink-0 text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded uppercase tracking-wide">Guest</span>' : ''}
+                </div>
+                ${p.registered === false
+        ? `<div class="text-[11px] text-slate-400 italic truncate">Not on SmartBooking yet — invited by email</div>`
+        : `<div class="text-xs text-slate-500 truncate">${p.email}</div>`}
                 ${p.outOfOfficeStart && p.outOfOfficeEnd ? `
                 <div class="mt-1 inline-flex items-center gap-1 text-[9px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded">
                     <i data-lucide="palmtree" class="w-2.5 h-2.5"></i> Out of office ${formatDateDMY(p.outOfOfficeStart)} to ${formatDateDMY(p.outOfOfficeEnd)}
@@ -421,8 +439,7 @@ async function handleFindBestTimes() {
         const data = await response.json();
 
         if (response.status === 404 && data.status === 'requires_invite') {
-            document.getElementById('invite-email-display').innerText = data.missingEmail;
-            document.getElementById('inviteModal').classList.remove('hidden');
+            showError(`${data.missingEmail} hasn't connected their Google Calendar yet, so their availability can't be checked right now. They can still be added as a guest instead.`, 1);
             return;
         }
 
@@ -700,7 +717,7 @@ function renderFinalReview() {
 
 async function submitFinalBooking() {
     const titleInput = document.getElementById('final-title-input');
-    const errorElement = document.getElementById('title-error.html');
+    const errorElement = document.getElementById('title-error');
     const meetingTitle = titleInput ? titleInput.value.trim() : "";
 
     if (errorElement) {

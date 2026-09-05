@@ -113,6 +113,7 @@ public class BookingService {
         }
     }
 
+    @CacheEvict(value = "calendarEvents", allEntries = true)
     @Transactional
     public void updateRsvpStatus(Long bookingId, String userEmail, RsvpStatus newStatus) {
         Booking booking = bookingRepository.findById(bookingId)

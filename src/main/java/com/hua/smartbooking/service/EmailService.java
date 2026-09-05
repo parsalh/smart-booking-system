@@ -47,15 +47,29 @@ public class EmailService {
                                 </tr>
                                 <tr>
                                     <td style="padding:40px;">
-                                        <p style="margin:0 0 8px 0; font-size:13px; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.08em;">Meeting Invitation</p>
-                                        <h1 style="margin:0 0 20px 0; font-size:24px; font-weight:800; color:#0f172a; letter-spacing:-0.02em;">%s invited you to a meeting</h1>
-                                        <p style="margin:0 0 28px 0; font-size:15px; line-height:1.6; color:#475569;">
-                                            To accept the invitation and let SmartBooking check your availability for future meetings, sign in with your Google account.
+                                        <p style="margin:0 0 8px 0; font-size:13px; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.08em;">You're invited to SmartBooking</p>
+                                        <h1 style="margin:0 0 20px 0; font-size:24px; font-weight:800; color:#0f172a; letter-spacing:-0.02em;">%s wants to schedule a meeting with you</h1>
+                                        <p style="margin:0 0 24px 0; font-size:15px; line-height:1.6; color:#475569;">
+                                            You'll get a separate Google Calendar invite once the meeting is confirmed — no account needed for that. But if you sign up, here's what changes:
                                         </p>
+                                        <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
+                                            <tr>
+                                                <td style="width:28px; vertical-align:top; padding:0 0 14px 0;"><img src="%s/images/icons/refresh-cw.png" width="18" height="18" alt="" style="display:block;"></td>
+                                                <td style="padding:0 0 14px 0; font-size:14px; line-height:1.5; color:#334155;"><strong style="color:#0f172a;">No more "does this time work for you?" emails</strong> — your calendar syncs automatically, so people stop guessing.</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="width:28px; vertical-align:top; padding:0 0 14px 0;"><img src="%s/images/icons/calendar-plus.png" width="18" height="18" alt="" style="display:block;"></td>
+                                                <td style="padding:0 0 14px 0; font-size:14px; line-height:1.5; color:#334155;"><strong style="color:#0f172a;">Book your own meetings and rooms</strong> — find a room and a time that works for everyone in a few clicks.</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="width:28px; vertical-align:top;"><img src="%s/images/icons/bell-ring.png" width="18" height="18" alt="" style="display:block;"></td>
+                                                <td style="font-size:14px; line-height:1.5; color:#334155;"><strong style="color:#0f172a;">One place for every invite</strong> — accept, decline, or see who else is coming, without digging through your inbox.</td>
+                                            </tr>
+                                        </table>
                                         <table role="presentation" cellpadding="0" cellspacing="0">
                                             <tr>
                                                 <td style="border-radius:14px; background:linear-gradient(135deg,#2563eb,#10b981);">
-                                                    <a href="%s/login" style="display:inline-block; padding:14px 32px; font-size:15px; font-weight:700; color:#ffffff; text-decoration:none;">Join SmartBooking</a>
+                                                    <a href="%s/login" style="display:inline-block; padding:14px 32px; font-size:15px; font-weight:700; color:#ffffff; text-decoration:none;">Sign up for SmartBooking</a>
                                                 </td>
                                             </tr>
                                         </table>
@@ -70,7 +84,7 @@ public class EmailService {
                 </table>
             </body>
             </html>
-            """.formatted(organizerName, baseUrl);
+            """.formatted(organizerName, baseUrl, baseUrl, baseUrl, baseUrl);
 
         Map<String, Object> payload = Map.of(
                 "from", fromEmail,

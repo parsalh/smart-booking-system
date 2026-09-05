@@ -240,7 +240,7 @@ Event Blocks & Classifications
 }
 
 .event-office_hours {
-    --evt-bg: rgba(254, 205, 211, 0.9);
+    --evt-bg: rgba(254, 226, 230, 0.75);
     --evt-border: #f43f5e;
     --evt-text: #881337;
 }

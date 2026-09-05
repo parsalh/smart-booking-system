@@ -32,8 +32,6 @@ function openAddModal() {
     document.getElementById('roomFloor').value = "";
     document.getElementById('roomCapacity').value = "";
     document.getElementById('roomImage').value = "";
-    const roomImageFileEl = document.getElementById('roomImageFile');
-    if (roomImageFileEl) roomImageFileEl.value = "";
     document.getElementById('roomIsAvailable').checked = true;
 
     document.querySelectorAll('input[name="amenities"]').forEach(cb => cb.checked = false);
@@ -56,8 +54,6 @@ function openEditModal(id, name, building, location, floor, capacity, imageUrl,i
     document.getElementById('roomFloor').value = floor || '';
     document.getElementById('roomCapacity').value = capacity || '';
     document.getElementById('roomImage').value = imageUrl || '';
-    const roomImageFileEl = document.getElementById('roomImageFile');
-    if (roomImageFileEl) roomImageFileEl.value = "";
 
     const isAvail = (isAvailable === 'true' || isAvailable === true);
     const availableCheckbox = document.getElementById('roomIsAvailable');
@@ -127,8 +123,8 @@ function confirmDelete() {
 }
 
 function showAdminError(message) {
-    const errorDiv = document.getElementById('admin-error.html');
-    const errorText = document.getElementById('admin-error.html-text');
+    const errorDiv = document.getElementById('admin-error');
+    const errorText = document.getElementById('admin-error-text');
 
     if (errorDiv && errorText) {
         errorText.innerText = message;
@@ -147,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
     const roomImageInput = document.getElementById('roomImage');
-    const roomImageFileInput = document.getElementById('roomImageFile');
     const imagePreview = document.getElementById('imagePreview');
     const imagePlaceholder = document.getElementById('imagePlaceholder');
 
@@ -158,21 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateImagePreview(roomImageInput.value);
                 }, 10);
             });
-        });
-    }
-
-    if (roomImageFileInput) {
-        roomImageFileInput.addEventListener('change', () => {
-            const file = roomImageFileInput.files && roomImageFileInput.files[0];
-            if (file) {
-                // An uploaded file takes priority over the URL field — mirror that in
-                // the UI by clearing the URL input so it's clear which one will be used.
-                if (roomImageInput) roomImageInput.value = "";
-                const objectUrl = URL.createObjectURL(file);
-                updateImagePreview(objectUrl);
-            } else {
-                updateImagePreview(roomImageInput ? roomImageInput.value : "");
-            }
         });
     }
 
@@ -213,4 +193,15 @@ document.addEventListener('DOMContentLoaded', () => {
             openDeleteModal(id, name);
         });
     });
+
+    const roomForm = document.getElementById('roomForm');
+    if (roomForm) {
+        roomForm.addEventListener('submit', () => {
+            const submitBtn = roomForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+            }
+        });
+    }
 });
