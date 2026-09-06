@@ -21,8 +21,8 @@ import java.util.Map;
 @Entity
 @Table(name = "bookings", indexes = {
         @Index(name = "idx_booking_time", columnList = "start_time, end_time")
-        }
-    )
+}
+)
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 public class Booking {
@@ -59,7 +59,6 @@ public class Booking {
     @ElementCollection
     @CollectionTable(name = "booking_participants", joinColumns = @JoinColumn(name = "booking_id"))
     @MapKeyColumn(name = "participant_email", length = 500)
-    @Convert(converter = StringCryptoConverter.class, attributeName = "key")
     @Column(name = "rsvp_status", columnDefinition = "TEXT")
     @Enumerated(EnumType.STRING)
     private Map<String, RsvpStatus> participants = new HashMap<>();

@@ -210,19 +210,26 @@ public class MeetingOptimizerService {
         return fraction * 20;
     }
 
-    // Continuous preference curve peaked around 11:00 and 15:00 — every 30-min slot
+    // Continuous preference curve peaked around 11:00 and 15:00, every 30-min slot
     // gets a distinct value based on its distance from the nearest peak, instead of
     // a handful of flat buckets that make separate slots tie on score.
+    // Continuous preference curve with two peaks: late-morning (centered 10:30, so
+    // 10:00-11:00 both score near-maximum) and mid-afternoon (15:00). The morning
+    // peak is intentionally scored higher than the afternoon one, so a 10-11am slot
+    // wins over an otherwise-equal 3-4pm slot instead of the two tying or afternoon
+    // winning outright.
     private double calculateTimeOfDayScore(ZonedDateTime start) {
         ZoneId athensZone = ZoneId.of("Europe/Athens");
         ZonedDateTime local = start.withZoneSameInstant(athensZone);
         double hourFraction = local.getHour() + local.getMinute() / 60.0;
 
-        double distanceToMorningPeak = Math.abs(hourFraction - 11.0);
-        double distanceToAfternoonPeak = Math.abs(hourFraction - 15.0);
-        double distanceToNearestPeak = Math.min(distanceToMorningPeak, distanceToAfternoonPeak);
+        double distanceToMorningPeak = Math.abs(hourFraction - 10.5);
+        double morningScore = 32 - (distanceToMorningPeak * 8);
 
-        return Math.max(-30, 30 - (distanceToNearestPeak * 8));
+        double distanceToAfternoonPeak = Math.abs(hourFraction - 15.0);
+        double afternoonScore = 26 - (distanceToAfternoonPeak * 8);
+
+        return Math.max(-30, Math.max(morningScore, afternoonScore));
     }
 
     // Penalizes slots proportionally to how much of the meeting overlaps the classic
@@ -257,6 +264,6 @@ public class MeetingOptimizerService {
         }
         long minutesFromStart = Duration.between(searchStart, slotStart).toMinutes();
         double fraction = 1.0 - ((double) minutesFromStart / totalRangeMinutes);
-        return Math.max(0, fraction) * 20;
+        return Math.max(0, fraction) * 35;
     }
 }

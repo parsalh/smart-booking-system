@@ -10,6 +10,7 @@ import com.google.api.services.calendar.model.Events;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.UserCredentials;
 import com.hua.smartbooking.enums.RsvpStatus;
+import com.hua.smartbooking.enums.BookingStatus;
 import com.hua.smartbooking.factory.GoogleCalendarClientFactory;
 import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.User;
@@ -168,12 +169,23 @@ public class GoogleCalendarService {
             }
         }
 
-        // Fallback, if blocked by Google anti-spam
         List<Booking> allDbBookings = bookingRepository.findAll();
         com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();
 
         for (Booking dbBooking : allDbBookings) {
+            if (dbBooking.getStatus() == BookingStatus.CANCELLED) {
+                continue;
+            }
+
             if (dbBooking.getGoogleEventId() != null && processedGoogleEventIds.contains(dbBooking.getGoogleEventId())) {
+                continue;
+            }
+
+            String organizerRefreshToken = dbBooking.getUser() != null ? dbBooking.getUser().getRefreshToken() : null;
+            if (dbBooking.getGoogleEventId() != null && organizerRefreshToken != null
+                    && !isEventStillActiveOnGoogle(organizerRefreshToken, dbBooking.getGoogleEventId())) {
+                dbBooking.setStatus(BookingStatus.CANCELLED);
+                bookingRepository.save(dbBooking);
                 continue;
             }
 
@@ -226,6 +238,21 @@ public class GoogleCalendarService {
         }
 
         return new ObjectMapper().writeValueAsString(calendarEvents);
+    }
+
+    /**
+     * Checks Google Calendar directly for a single event, distinguishing "genuinely deleted"
+     * from "just missing from the bulk list fetch" (e.g. Google's anti-spam filtering).
+     * Returns false if the event was deleted/cancelled or can no longer be found.
+     */
+    private boolean isEventStillActiveOnGoogle(String refreshToken, String googleEventId) {
+        try {
+            Calendar calendar = calendarClientFactory.buildClient(refreshToken);
+            Event event = calendar.events().get("primary", googleEventId).execute();
+            return event.getStatus() == null || !event.getStatus().equalsIgnoreCase("cancelled");
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

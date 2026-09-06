@@ -2,7 +2,6 @@ package com.hua.smartbooking.controller;
 
 import com.hua.smartbooking.dto.RoleUpdateRequest;
 import com.hua.smartbooking.dto.RoomDTO;
-import com.hua.smartbooking.enums.BookingStatus;
 import com.hua.smartbooking.enums.Role;
 import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.Room;
@@ -30,6 +29,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +77,9 @@ public class AdminController {
 
     @GetMapping("/bookings")
     public String listBookings(Model model, @AuthenticationPrincipal OAuth2User principal) {
-        List<Booking> bookings = bookingRepository.findByStatusNotOrderByStartTimeDesc(BookingStatus.CANCELLED);
+        List<Booking> bookings = bookingRepository.findAll().stream()
+                .sorted(Comparator.comparing(Booking::getStartTime).reversed())
+                .collect(Collectors.toList());
         model.addAttribute("bookings", bookings);
         addUserAttributes(model, principal);
         return "admin-bookings";

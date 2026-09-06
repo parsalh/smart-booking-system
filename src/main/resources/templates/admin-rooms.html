@@ -71,9 +71,10 @@
             <i data-lucide="user-cog" class="w-5 h-5"></i>
         </a>
 
-        <a href="/logout" class="text-slate-400 hover:text-red-600 transition-colors p-2" title="Logout">
+        <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="text-slate-400 hover:text-red-600 transition-colors p-2" title="Logout">
             <i data-lucide="log-out" class="w-5 h-5"></i>
         </a>
+        <form id="logout-form" th:action="@{/logout}" method="post" class="hidden"></form>
     </div>
 </nav>
 

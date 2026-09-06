@@ -142,8 +142,8 @@ Header Toolbar & Standard Buttons
 }
 
 .fc .fc-button-primary {
-    background: #f1f5f9 !important;
-    border: 1px solid #e2e8f0 !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
     color: #475569 !important;
     border-radius: 14px !important;
     font-weight: 700 !important;
@@ -155,7 +155,7 @@ Header Toolbar & Standard Buttons
 }
 
 .fc .fc-button-primary:not(.fc-today-button):hover {
-    background: rgba(226, 232, 240, 0.9) !important;
+    background: rgba(255, 255, 255, 1) !important;
     color: #1e293b !important;
 }
 
@@ -165,9 +165,11 @@ Header Toolbar & Standard Buttons
 }
 
 .fc .fc-button-primary:not(:disabled).fc-button-active {
-    background: linear-gradient(135deg, #2563eb, #10b981) !important;
-    border: none !important;
-    color: white !important;
+    background-image: linear-gradient(135deg, #2563eb, #10b981), linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)) !important;
+    background-clip: text, padding-box !important;
+    -webkit-background-clip: text, padding-box !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    color: transparent !important;
 }
 
 

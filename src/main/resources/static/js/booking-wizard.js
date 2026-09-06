@@ -607,9 +607,19 @@ async function fetchAvailableRooms() {
 
 function renderRoomCards(rooms) {
     const container = document.getElementById('recommended-rooms-container');
+
+    // Always reset selection state on (re)entry — otherwise a previous room
+    // pick (e.g. before the user went back and changed the time slot) stays
+    // selected in memory, and "Review Booking" stays visible/clickable even
+    // though no room has actually been chosen for the current room list.
+    state.selectedRoomId = null;
+    state.selectedRoomName = '';
+    state.selectedRoomBuilding = '';
+    state.selectedRoomLocation = '';
+    document.getElementById('btn-to-confirm').classList.add('hidden');
+
     if (rooms.length === 0) {
         container.innerHTML = `<div class="p-6 text-red-500 font-bold border-2 border-red-200 rounded-2xl">No rooms available</div>`;
-        document.getElementById('btn-to-confirm').classList.add('hidden');
         return;
     }
 
