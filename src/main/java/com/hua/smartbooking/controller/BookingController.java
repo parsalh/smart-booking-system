@@ -348,6 +348,27 @@ public class BookingController {
         }
     }
 
+    @PostMapping("/{bookingId}/cancel")
+    public ResponseEntity<?> cancelBooking(
+            @PathVariable Long bookingId,
+            @AuthenticationPrincipal OidcUser principal) {
+
+        try {
+            if (principal == null) {
+                return ResponseEntity.status(401).body(java.util.Map.of("error", "Unauthorized access."));
+            }
+
+            String userEmail = principal.getAttribute("email");
+            bookingService.cancelBooking(bookingId, userEmail);
+
+            return ResponseEntity.ok().body(java.util.Map.of("message", "Booking cancelled successfully"));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(java.util.Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/pending-invites")
     public ResponseEntity<List<PendingInviteDTO>> getMyPendingInvites(@AuthenticationPrincipal OidcUser principal) {
         if (principal == null) {

@@ -4,6 +4,64 @@ function closeModal() {
     document.getElementById('eventModal').classList.add('hidden');
 }
 
+function cancelMeeting() {
+    const cancelBtn = document.getElementById('cancelMeetingBtn');
+    const bookingId = cancelBtn.dataset.bookingId;
+    if (!bookingId) return;
+
+    document.getElementById('confirmCancelMeetingBtn').dataset.bookingId = bookingId;
+    document.getElementById('cancelConfirmModal').classList.remove('hidden');
+}
+
+function closeCancelConfirmModal() {
+    document.getElementById('cancelConfirmModal').classList.add('hidden');
+}
+
+async function executeCancelMeeting() {
+    const confirmBtn = document.getElementById('confirmCancelMeetingBtn');
+    const bookingId = confirmBtn.dataset.bookingId;
+    if (!bookingId) return;
+
+    confirmBtn.disabled = true;
+    confirmBtn.innerText = 'Cancelling...';
+
+    try {
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
+            method: 'POST',
+            headers: { [csrfHeader]: csrfToken }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to cancel the meeting.');
+        }
+
+        if (window.smartCalendar) {
+            const events = window.smartCalendar.getEvents();
+            events.forEach(ev => {
+                if (ev.extendedProps && String(ev.extendedProps.bookingId) === String(bookingId)) {
+                    ev.remove();
+                }
+            });
+        }
+
+        closeCancelConfirmModal();
+        closeModal();
+        showToast('Meeting cancelled.', false);
+    } catch (error) {
+        closeCancelConfirmModal();
+        showToast(error.message, true);
+    } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = `<i data-lucide="calendar-x" class="w-4 h-4"></i> Cancel Meeting`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+}
+
 window.openCalendarEventModal = function(eventObj) {
     if (eventObj.display === 'background') return;
 
@@ -50,6 +108,20 @@ window.openCalendarEventModal = function(eventObj) {
 
     document.getElementById('eventModal').classList.remove('hidden');
     if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    const cancelBtn = document.getElementById('cancelMeetingBtn');
+    const emailInput = document.getElementById('currentUserEmail');
+    const currentUserEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+    const isOrganizer = isSmartBooking && props.organizerEmail
+        && props.organizerEmail.trim().toLowerCase() === currentUserEmail;
+
+    if (isOrganizer && props.bookingId) {
+        cancelBtn.classList.remove('hidden');
+        cancelBtn.dataset.bookingId = props.bookingId;
+    } else {
+        cancelBtn.classList.add('hidden');
+        delete cancelBtn.dataset.bookingId;
+    }
 
     const participantsContainer = document.getElementById('modalParticipantsContainer');
     participantsContainer.classList.remove('hidden');
@@ -234,6 +306,88 @@ document.addEventListener('DOMContentLoaded', function() {
                 display: info.event.display,
                 extendedProps: info.event.extendedProps
             });
+
+            // if (info.event.display === 'background') {
+            //     return;
+            // }
+            //
+            // const props = info.event.extendedProps;
+            //
+            // document.getElementById('modalTitle').innerText = props['fullTitle'] || info.event.title || 'Untitled Event';
+            //
+            // const startTime = info.event.start ? info.event.start.toLocaleTimeString([], {
+            //     hour: '2-digit',
+            //     minute: '2-digit'
+            // }) : '';
+            // const endTime = info.event.end ? info.event.end.toLocaleTimeString([], {
+            //     hour: '2-digit',
+            //     minute: '2-digit'
+            // }) : '';
+            // document.getElementById('modalTime').innerText = endTime ? `${startTime} - ${endTime}` : startTime;
+            //
+            // const rawRoomName = props['locationName'];
+            // const rawLocation = props['roomLocation'] || props['fullLocation'];
+            //
+            // let displayLocation = 'No location specified';
+            //
+            // if (rawRoomName && rawRoomName !== 'No location specified' && rawLocation && rawLocation !== 'No location specified') {
+            //     displayLocation = `${rawRoomName} - ${rawLocation}`;
+            // } else if (rawRoomName && rawRoomName !== 'No location specified') {
+            //     displayLocation = rawRoomName;
+            // } else if (rawLocation && rawLocation !== 'No location specified') {
+            //     displayLocation = rawLocation;
+            // }
+            //
+            // document.getElementById('modalLocation').innerText = displayLocation;
+            //
+            // document.getElementById('modalLocation').innerText = displayLocation;
+            //
+            // const descriptionText = props.description || 'No details available.';
+            // const isSmartBooking = props.bookingId || descriptionText.includes('Automatically scheduled via SmartBooking App');
+            //
+            // const mapSection = document.getElementById('eventMapSection');
+            // const descSection = document.getElementById('eventDescSection');
+            //
+            // if (isSmartBooking) {
+            //     mapSection.classList.remove('hidden');
+            //     descSection.classList.add('hidden');
+            //     document.getElementById('modalDescription').innerText = descriptionText;
+            // } else {
+            //     mapSection.classList.add('hidden');
+            //     descSection.classList.remove('hidden');
+            //     document.getElementById('modalDescriptionFull').innerText = descriptionText;
+            // }
+            //
+            // document.getElementById('eventModal').classList.remove('hidden');
+            // lucide.createIcons();
+            // document.getElementById('modalParticipantsContainer').classList.remove('hidden');
+            //
+            // if (isSmartBooking && props.bookingId) {
+            //     renderLiveParticipants(props.bookingId, props.participants, 'modalParticipantsList');
+            // } else {
+            //     document.getElementById('modalParticipantsContainer').classList.add('hidden');
+            // }
+            //
+            // if (isSmartBooking) {
+            //     setTimeout(async () => {
+            //         if (typeof initEventMap === 'function') {
+            //             initEventMap();
+            //             if (eventMap) {
+            //                 eventMap.invalidateSize();
+            //
+            //                 const coords = await geocodeAddress(roomLocation);
+            //                 const lat = coords ? coords.lat : 37.9575;
+            //                 const lng = coords ? coords.lng : 23.7025;
+            //
+            //                 eventMap.setView([lat, lng], 17);
+            //                 eventMarker.setLatLng([lat, lng]);
+            //                 eventMarker.bindPopup(`<b>${roomName}</b><br><span class="text-xs text-gray-500">${roomLocation}</span>`).openPopup();
+            //
+            //                 setTimeout(() => eventMap.invalidateSize(), 100);
+            //             }
+            //         }
+            //     }, 300);
+            // }
         }
     });
 
@@ -713,6 +867,9 @@ function handleRsvp(bookingId, status) {
                                     }
                                 }
                             });
+                            // FullCalendar doesn't re-run eventClassNames on setExtendedProp() alone,
+                            // so the pending-stripe styling would otherwise only refresh the next time
+                            // something else forces a re-render (e.g. clicking the event).
                             window.smartCalendar.render();
                         }
 

@@ -393,6 +393,12 @@ async function handleFindBestTimes() {
         return;
     }
 
+    const todayIso = new Date().toISOString().split('T')[0];
+    if (state.preferences.endDate < todayIso) {
+        showError("The selected date range is entirely in the past. Please choose a range that includes today or a future date.", 1);
+        return;
+    }
+
     const advancedEnabled = isAdvancedOptionsOpen;
     if (advancedEnabled) {
         const startTime = document.getElementById('dailyStartTime').value;

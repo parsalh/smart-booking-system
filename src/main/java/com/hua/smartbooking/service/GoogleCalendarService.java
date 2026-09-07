@@ -163,6 +163,7 @@ public class GoogleCalendarService {
                     }
                     extendedProps.put("participants", decryptedParticipants);
                     extendedProps.put("bookingId", dbBooking.get().getId());
+                    extendedProps.put("organizerEmail", dbBooking.get().getUser() != null ? dbBooking.get().getUser().getEmail() : null);
                 } else {
                     extendedProps.put("participants", entity.getParticipants());
                 }
@@ -175,6 +176,7 @@ public class GoogleCalendarService {
             }
         }
 
+        // Fallback, if blocked by Google anti-spam
         List<Booking> allDbBookings = bookingRepository.findAll();
         com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();
 
@@ -187,6 +189,12 @@ public class GoogleCalendarService {
                 continue;
             }
 
+            // Not present in the bulk fetch — either Google's anti-spam filtering hid it
+            // (still exists, show it anyway), or the event was genuinely deleted on Google's
+            // side (stop showing it, and stop it from resurrecting on every future load).
+            // Use the organizer's own refresh token for this check (not the current viewer's) —
+            // the same convention already used by reconcileRsvpFromGoogle/getAttendeeResponseStatus,
+            // since a participant's token isn't a reliable way to verify another user's event.
             String organizerRefreshToken = dbBooking.getUser() != null ? dbBooking.getUser().getRefreshToken() : null;
             if (dbBooking.getGoogleEventId() != null && organizerRefreshToken != null
                     && !isEventStillActiveOnGoogle(organizerRefreshToken, dbBooking.getGoogleEventId())) {
@@ -235,6 +243,7 @@ public class GoogleCalendarService {
                 extendedProps.put("type", "SMART_BOOKING");
                 extendedProps.put("locationName", roomName);
                 extendedProps.put("bookingId", dbBooking.getId());
+                extendedProps.put("organizerEmail", dbBooking.getUser() != null ? dbBooking.getUser().getEmail() : null);
                 extendedProps.put("participants", decryptedParticipants);
 
                 map.put("extendedProps", extendedProps);
@@ -257,6 +266,7 @@ public class GoogleCalendarService {
             Event event = calendar.events().get("primary", googleEventId).execute();
             return event.getStatus() == null || !event.getStatus().equalsIgnoreCase("cancelled");
         } catch (Exception e) {
+            // 404/410 (or any other failure to fetch it) — treat as no longer existing.
             return false;
         }
     }
@@ -298,6 +308,14 @@ public class GoogleCalendarService {
     /**
      * Updates the RSVP status of a specific attendee directly on Google Calendar.
      */
+    /**
+     * Deletes an event directly from the organizer's Google Calendar.
+     */
+    public void deleteMeetingEvent(String refreshToken, String googleEventId) throws GeneralSecurityException, IOException {
+        Calendar calendar = calendarClientFactory.buildClient(refreshToken);
+        calendar.events().delete("primary", googleEventId).execute();
+    }
+
     public void updateEventRsvpOnGoogleCalendar(String refreshToken, String googleEventId, String userEmail, String responseStatus) throws GeneralSecurityException, IOException {
         Calendar calendar = calendarClientFactory.buildClient(refreshToken);
 

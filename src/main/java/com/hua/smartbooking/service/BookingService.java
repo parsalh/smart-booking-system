@@ -8,6 +8,7 @@ import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.model.Room;
 import com.hua.smartbooking.model.User;
 import com.hua.smartbooking.repository.BookingRepository;
+import com.hua.smartbooking.repository.EventRepository;
 import com.hua.smartbooking.repository.RoomRepository;
 import com.hua.smartbooking.repository.UserRepository;
 import com.hua.smartbooking.util.StringCryptoConverter;
@@ -36,15 +37,18 @@ public class BookingService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
     private final GoogleCalendarService googleCalendarService;
+    private final EventRepository eventRepository;
 
     public BookingService(BookingRepository bookingRepository,
                           RoomRepository roomRepository,
                           UserRepository userRepository,
-                          GoogleCalendarService googleCalendarService) {
+                          GoogleCalendarService googleCalendarService,
+                          EventRepository eventRepository) {
         this.bookingRepository = bookingRepository;
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
         this.googleCalendarService = googleCalendarService;
+        this.eventRepository = eventRepository;
     }
 
     @CacheEvict(value = "calendarEvents", key = "#organizer.refreshToken")
@@ -149,6 +153,42 @@ public class BookingService {
                 );
             } catch (Exception e) {
                 System.err.println("Failed to sync RSVP with Google: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Cancels a booking: only the organizer may do this. Marks the booking as
+     * CANCELLED and deletes the corresponding event on the organizer's Google
+     * Calendar, which also removes it from every participant's calendar.
+     */
+    @CacheEvict(value = "calendarEvents", allEntries = true)
+    @Transactional
+    public void cancelBooking(Long bookingId, String userEmail) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        boolean isOrganizer = booking.getUser() != null
+                && booking.getUser().getEmail().equalsIgnoreCase(userEmail);
+
+        if (!isOrganizer) {
+            throw new SecurityException("Only the organizer can cancel this booking.");
+        }
+
+        booking.setStatus(BookingStatus.CANCELLED);
+        bookingRepository.save(booking);
+
+        if (booking.getGoogleEventId() != null) {
+            // Cleans up any stale copy from before the EventMappingService fix
+            // that made it skip syncing events already tracked as a Booking.
+            eventRepository.deleteByGoogleEventId(booking.getGoogleEventId());
+        }
+
+        if (booking.getGoogleEventId() != null && booking.getUser().getRefreshToken() != null) {
+            try {
+                googleCalendarService.deleteMeetingEvent(booking.getUser().getRefreshToken(), booking.getGoogleEventId());
+            } catch (Exception e) {
+                System.err.println("Failed to delete event on Google Calendar: " + e.getMessage());
             }
         }
     }

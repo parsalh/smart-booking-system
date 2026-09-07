@@ -17,4 +17,5 @@ import java.util.List;
 public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByUser(User user);
     boolean existsByGoogleEventId(String googleEventId);
+    void deleteByGoogleEventId(String googleEventId);
 }

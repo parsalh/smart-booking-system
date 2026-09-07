@@ -5,6 +5,7 @@ import com.hua.smartbooking.enums.EventType;
 import com.hua.smartbooking.model.Event;
 import com.hua.smartbooking.mapper.EventMapper;
 import com.hua.smartbooking.model.User;
+import com.hua.smartbooking.repository.BookingRepository;
 import com.hua.smartbooking.repository.EventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,11 +32,14 @@ public class EventMappingService {
 
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
+    private final BookingRepository bookingRepository;
 
     public EventMappingService(EventRepository eventRepository,
-                               EventMapper eventMapper) {
+                               EventMapper eventMapper,
+                               BookingRepository bookingRepository) {
         this.eventRepository = eventRepository;
         this.eventMapper = eventMapper;
+        this.bookingRepository = bookingRepository;
     }
 
     @Transactional
@@ -43,10 +47,21 @@ public class EventMappingService {
         if (googleEvents == null) return;
 
         for (com.google.api.services.calendar.model.Event gEvent : googleEvents) {
-            if (!eventRepository.existsByGoogleEventId(gEvent.getId())) {
-                Event entity = eventMapper.googleToEntity(gEvent, user);
-                eventRepository.save(entity);
+            if (eventRepository.existsByGoogleEventId(gEvent.getId())) {
+                continue;
             }
+            // Events created through SmartBooking are already tracked in full
+            // (including their live status) via the bookings table. Syncing a
+            // second, untracked copy here would go stale the moment the
+            // booking is cancelled, since this Event table has no status field
+            // to reflect that, and would keep blocking the room forever in
+            // availability checks.
+            if (bookingRepository.findByGoogleEventId(gEvent.getId()).isPresent()) {
+                continue;
+            }
+
+            Event entity = eventMapper.googleToEntity(gEvent, user);
+            eventRepository.save(entity);
         }
     }
 
