@@ -164,13 +164,6 @@ async function handleSearch(query) {
                     <div class="text-[10px] text-slate-500">Not registered yet — they'll get an email invite</div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <div class="relative group/tooltip">
-                        <i data-lucide="info" class="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help"></i>
-                        <div class="hidden group-hover/tooltip:block absolute bottom-full right-0 mb-2 w-56 p-2.5 bg-slate-900 text-white text-[11px] leading-relaxed rounded-lg shadow-lg z-10">
-                            They'll receive an invite by email so they can sign up. If it doesn't arrive within a few minutes, ask them to check their spam or junk folder.
-                            <div class="absolute top-full right-1.5 w-2 h-2 bg-slate-900 rotate-45 -mt-1"></div>
-                        </div>
-                    </div>
                     <button onclick="addUnregisteredParticipant('${searchTerm}')"
                             class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors">
                         Add as Guest
@@ -199,8 +192,8 @@ async function handleSearch(query) {
                     <i data-lucide="plus-circle" class="w-4 h-4 text-slate-300 group-hover:text-blue-500"></i>
                 </div>
             `).join('');
-            lucide.createIcons();
         }
+        lucide.createIcons();
         container.classList.remove('hidden');
     } catch (error) {
         console.error("Database search failed:", error);
