@@ -163,10 +163,19 @@ async function handleSearch(query) {
                     <div class="text-sm font-bold text-slate-900 truncate">${searchTerm}</div>
                     <div class="text-[10px] text-slate-500">Not registered yet — they'll get an email invite</div>
                 </div>
-                <button onclick="addUnregisteredParticipant('${searchTerm}')"
-                        class="shrink-0 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors">
-                    Add as Guest
-                </button>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <div class="relative group/tooltip">
+                        <i data-lucide="info" class="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help"></i>
+                        <div class="hidden group-hover/tooltip:block absolute bottom-full right-0 mb-2 w-56 p-2.5 bg-slate-900 text-white text-[11px] leading-relaxed rounded-lg shadow-lg z-10">
+                            They'll receive an invite by email so they can sign up. If it doesn't arrive within a few minutes, ask them to check their spam or junk folder.
+                            <div class="absolute top-full right-1.5 w-2 h-2 bg-slate-900 rotate-45 -mt-1"></div>
+                        </div>
+                    </div>
+                    <button onclick="addUnregisteredParticipant('${searchTerm}')"
+                            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors">
+                        Add as Guest
+                    </button>
+                </div>
             </div>
         `;
             } else {
@@ -210,6 +219,12 @@ function addParticipantFromDB(id, name, email, avatar, outOfOfficeStart, outOfOf
     renderFrequentCollaborators();
 }
 
+// Adds someone who doesn't have a SmartBooking account yet as a real participant
+// on this meeting. Their calendar can't be checked for availability (no Google
+// Calendar connection), so the scheduling optimizer simply treats them as always
+// free — they're still included in the final booking and get a normal Google
+// Calendar invite once it's confirmed. A separate SmartBooking invite email is
+// also sent in the background, encouraging them to sign up.
 function addUnregisteredParticipant(email) {
     const normalized = email.trim().toLowerCase();
     if (state.participants.find(p => p.email.toLowerCase() === normalized)) return;
@@ -248,6 +263,8 @@ async function sendInviteEmailSilently(email) {
 
         if (!res.ok) throw new Error('Failed to send invite email');
     } catch (error) {
+        // Best-effort: failing to send the nudge email shouldn't block adding
+        // the guest as a participant — just log it.
         console.error('Failed to send guest invite email:', error);
     }
 }
@@ -600,6 +617,10 @@ async function fetchAvailableRooms() {
 function renderRoomCards(rooms) {
     const container = document.getElementById('recommended-rooms-container');
 
+    // Always reset selection state on (re)entry — otherwise a previous room
+    // pick (e.g. before the user went back and changed the time slot) stays
+    // selected in memory, and "Review Booking" stays visible/clickable even
+    // though no room has actually been chosen for the current room list.
     state.selectedRoomId = null;
     state.selectedRoomName = '';
     state.selectedRoomBuilding = '';
