@@ -16,6 +16,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
+/**
+ * Syncs a user's Google Calendar events into SmartBooking's local
+ * Event table (skipping ones already synced), and provides simple
+ * queries over those events, such as the user's upcoming meeting
+ * count.
+ *
+ * @author Stavroula Parsali
+ */
 @Service
 public class EventMappingService {
 

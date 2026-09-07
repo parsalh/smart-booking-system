@@ -14,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * Configuration class for Spring Security.
  * This class defines the security filters, authorization rules,
  * and handles the OAuth2 login flow with Google integration.
+ *
  * @author Stavroula Parsali
  */
 @Configuration

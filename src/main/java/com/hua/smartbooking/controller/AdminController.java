@@ -36,6 +36,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+
+/**
+ * Controller for admin-only management pages and actions.
+ * Handles listing and editing meeting rooms (including image uploads),
+ * viewing all bookings ever made (including cancelled ones, for audit
+ * purposes), and managing registered users' roles. Every route here is
+ * restricted to users with the ADMIN authority via SecurityConfig.
+ *
+ * @author Stavroula Parsali
+ */
 @Controller
 @RequestMapping("/admin")
 @Tag(name = "Admin - Users", description = "Admin-only: manage registered users' roles")

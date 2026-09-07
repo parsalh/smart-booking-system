@@ -4,6 +4,12 @@ import com.hua.smartbooking.dto.RoomDTO;
 import com.hua.smartbooking.model.Room;
 import org.springframework.stereotype.Component;
 
+/**
+ * Converts a Room entity into its RoomDTO representation for use
+ * in API responses and admin forms.
+ *
+ * @author Stavroula Parsali
+ */
 @Component
 public class RoomMapper {
 

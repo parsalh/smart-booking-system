@@ -18,6 +18,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A booking made through SmartBooking, mirroring a real Google
+ * Calendar event: the organizer, room, time range, status, and each
+ * participant's RSVP status. The meeting title is encrypted at rest;
+ * participant emails are stored in plain text after an earlier
+ * version's non-deterministic encryption on the map key made RSVP
+ * lookups unreliable.
+ *
+ * @author Stavroula Parsali
+ */
 @Entity
 @Table(name = "bookings", indexes = {
         @Index(name = "idx_booking_time", columnList = "start_time, end_time")

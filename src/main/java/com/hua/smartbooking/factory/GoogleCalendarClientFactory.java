@@ -13,6 +13,13 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+/**
+ * Builds an authenticated Google Calendar API client from a user's
+ * stored refresh token, so services elsewhere in the app don't need
+ * to deal with the underlying OAuth2 credential setup themselves.
+ *
+ * @author Stavroula Parsali
+ */
 @Component
 public class GoogleCalendarClientFactory {
 

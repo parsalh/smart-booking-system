@@ -10,6 +10,15 @@ import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+/**
+ * JPA attribute converter that encrypts and decrypts entity fields
+ * with AES-256-GCM, using a random IV per encryption. Because of that
+ * random IV, encrypting the same value twice never produces the same
+ * ciphertext, so this converter should only be used on fields that
+ * are read back as-is, never on ones matched or looked up by value.
+ *
+ * @author Stavroula Parsali
+ */
 @Converter
 public class StringCryptoConverter implements AttributeConverter<String, String> {
 

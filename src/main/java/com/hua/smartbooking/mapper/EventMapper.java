@@ -12,6 +12,14 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 
+/**
+ * Converts a raw Google Calendar API event into SmartBooking's
+ * internal Event entity: parsing start/end times, attendees, and
+ * matching the event's location text to a known Room, and
+ * classifying the event's type from its title.
+ *
+ * @author Stavroula Parsali
+ */
 @Component
 public class EventMapper {
 

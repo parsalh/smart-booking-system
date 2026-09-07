@@ -15,6 +15,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A calendar event synced from a user's Google Calendar for
+ * classification and display purposes, distinct from a Booking (a
+ * meeting created through SmartBooking itself). Stores the event's
+ * title, description, time range, classified type, and any matched
+ * room, with sensitive text fields encrypted at rest.
+ *
+ * @author Stavroula Parsali
+ */
 @Entity
 @Table(name = "events")
 @Getter @Setter

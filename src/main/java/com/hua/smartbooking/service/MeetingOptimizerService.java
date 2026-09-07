@@ -14,7 +14,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Service responsible for calculating the optimal meeting times.
+ * Scores candidate meeting time slots for a given organizer and set
+ * of participants: filtering out slots that are too soon, outside
+ * business hours, outside the user's preferred daily window, or in
+ * conflict with anyone required, then ranking the rest by room
+ * availability, participant availability, time-of-day preference,
+ * distance from lunch, and how soon the slot falls within the
+ * requested date range.
+ *
+ * @author Stavroula Parsali
  */
 @Service
 public class MeetingOptimizerService {

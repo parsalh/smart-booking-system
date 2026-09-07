@@ -17,6 +17,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+
+/**
+ * REST controller for inviting people to SmartBooking by email.
+ * Lets the frontend check whether an email already belongs to a
+ * registered user, and sends invitation emails to those who aren't
+ * registered yet, subject to {@link InviteRateLimiterService}'s
+ * per-email cooldown and per-organizer daily cap.
+ *
+ * @author Stavroula Parsali
+ */
 @RestController
 @Tag(name = "Invitations", description = "Invite unregistered users to SmartBooking by email")
 public class InviteController {

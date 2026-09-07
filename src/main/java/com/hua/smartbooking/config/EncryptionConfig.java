@@ -6,6 +6,16 @@ import org.springframework.stereotype.Component;
 
 import java.util.Base64;
 
+
+/**
+ * Configuration class for the application's field-level encryption.
+ * Reads the Base64-encoded AES-256 key from application properties,
+ * validates its length, and exposes it as a static key for
+ * {@link com.hua.smartbooking.util.StringCryptoConverter} to use
+ * when encrypting and decrypting sensitive entity fields.
+ *
+ * @author Stavroula Parsali
+ */
 @Component
 public class EncryptionConfig {
 

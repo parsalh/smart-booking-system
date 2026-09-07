@@ -6,6 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.util.List;
 
+/**
+ * Data transfer object for creating and editing rooms in the admin
+ * panel.
+ *
+ * @author Stavroula Parsali
+ */
 @Data
 public class RoomDTO {
     private Long id;

@@ -6,6 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
+/**
+ * Spring Data repository for Event entities: finding a user's synced
+ * calendar events and checking whether a given Google event has
+ * already been synced.
+ *
+ * @author Stavroula Parsali
+ */
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByUser(User user);

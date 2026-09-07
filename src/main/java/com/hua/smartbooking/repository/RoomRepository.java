@@ -11,6 +11,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Spring Data repository for Room entities: case-insensitive name
+ * lookup, and finding rooms that meet a minimum capacity and have no
+ * conflicting bookings or synced calendar events in a given time
+ * range.
+ *
+ * @author Stavroula Parsali
+ */
 @Repository
 public interface RoomRepository extends JpaRepository<Room, Long> {
     Optional<Room> findByNameIgnoreCase(String name);

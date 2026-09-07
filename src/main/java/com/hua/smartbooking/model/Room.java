@@ -1,11 +1,17 @@
 package com.hua.smartbooking.model;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.List;
 
+/**
+ * A physical meeting room that can be booked through SmartBooking:
+ * its name, image, capacity, campus location, building, floor,
+ * amenities, and whether it's currently available for booking.
+ *
+ * @author Stavroula Parsali
+ */
 @Entity
 @Table(name = "rooms", uniqueConstraints = {
         @UniqueConstraint(name = "uk_room_name", columnNames = "name")

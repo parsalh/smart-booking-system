@@ -6,6 +6,13 @@ import org.springframework.web.client.RestClient;
 
 import java.util.Map;
 
+/**
+ * Sends SmartBooking's invitation emails via the Resend API, inviting
+ * unregistered guests to sign up after being added as a meeting
+ * participant.
+ *
+ * @author Stavroula Parsali
+ */
 @Service
 public class EmailService {
 

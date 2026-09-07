@@ -6,6 +6,14 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * Request body for POST /api/bookings/suggest-times: the meeting's
+ * required and optional participants, desired duration, the date
+ * range to search within, an optional daily time window, and how
+ * many candidate slots to return.
+ *
+ * @author Stavroula Parsali
+ */
 @Data
 public class BookingRequest {
 

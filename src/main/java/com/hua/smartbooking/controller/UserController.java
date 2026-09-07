@@ -23,6 +23,15 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * REST controller for finding other SmartBooking users when adding
+ * meeting participants: searching registered users by name or email,
+ * and suggesting frequent collaborators (people the current user has
+ * organized meetings with or been invited by at least
+ * {@value #FREQUENT_COLLABORATOR_THRESHOLD} times).
+ *
+ * @author Stavroula Parsali
+ */
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "Users", description = "Search for other SmartBooking users when adding meeting participants")

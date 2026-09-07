@@ -20,6 +20,15 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Core business logic for bookings: creating a booking and its real
+ * Google Calendar event, updating a participant's RSVP status,
+ * listing a user's pending invites and upcoming SmartBooking
+ * meetings, and reconciling RSVP status from Google when it's
+ * changed there directly instead of through the app.
+ *
+ * @author Stavroula Parsali
+ */
 @Service
 public class BookingService {
 

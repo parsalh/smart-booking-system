@@ -8,6 +8,14 @@ import com.hua.smartbooking.enums.Role;
 
 import java.time.Instant;
 
+/**
+ * A registered SmartBooking user, authenticated via Google OAuth2.
+ * Stores their role, Google refresh token (used to access their
+ * Calendar), avatar, Out-of-Office period, and preferred title.
+ * The full name and refresh token are encrypted at rest.
+ *
+ * @author Stavroula Parsali
+ */
 @Entity
 @Table(name = "users",
     uniqueConstraints = {

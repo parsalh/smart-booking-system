@@ -6,6 +6,15 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * Request body for creating one or more actual bookings once a time
+ * slot and room have been chosen: the room, meeting title, start/end
+ * time, participant list, and optionally a number of weeks to repeat
+ * the booking on the same weekday/time, with a flag to force booking
+ * whichever weeks succeed even if some conflict.
+ *
+ * @author Stavroula Parsali
+ */
 @Data
 public class FinalBookingRequest {
 

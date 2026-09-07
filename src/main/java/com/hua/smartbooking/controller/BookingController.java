@@ -28,6 +28,17 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 
+/**
+ * REST controller for the booking workflow: suggesting available time
+ * slots and rooms based on participant availability and requested
+ * amenities, creating one or more bookings (including recurring
+ * weekly bookings with partial-conflict handling), and managing a
+ * booking's participants after creation, RSVP responses, pending
+ * invites for the current user, and the current user's own upcoming
+ * SmartBooking meetings.
+ *
+ * @author Stavroula Parsali
+ */
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {
@@ -84,7 +95,7 @@ public class BookingController {
 
             // Only registered users can have their Google Calendar checked. Unregistered
             // guest emails are simply left out of availability scoring (the optimizer
-            // treats anyone missing from busyBlocks as always free) — they still get
+            // treats anyone missing from busyBlocks as always free), they still get
             // included in the final booking's participant list and receive a normal
             // Google Calendar invite once it's confirmed.
             List<String> registeredEmailsToFetch = new ArrayList<>();

@@ -234,88 +234,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 display: info.event.display,
                 extendedProps: info.event.extendedProps
             });
-
-            // if (info.event.display === 'background') {
-            //     return;
-            // }
-            //
-            // const props = info.event.extendedProps;
-            //
-            // document.getElementById('modalTitle').innerText = props['fullTitle'] || info.event.title || 'Untitled Event';
-            //
-            // const startTime = info.event.start ? info.event.start.toLocaleTimeString([], {
-            //     hour: '2-digit',
-            //     minute: '2-digit'
-            // }) : '';
-            // const endTime = info.event.end ? info.event.end.toLocaleTimeString([], {
-            //     hour: '2-digit',
-            //     minute: '2-digit'
-            // }) : '';
-            // document.getElementById('modalTime').innerText = endTime ? `${startTime} - ${endTime}` : startTime;
-            //
-            // const rawRoomName = props['locationName'];
-            // const rawLocation = props['roomLocation'] || props['fullLocation'];
-            //
-            // let displayLocation = 'No location specified';
-            //
-            // if (rawRoomName && rawRoomName !== 'No location specified' && rawLocation && rawLocation !== 'No location specified') {
-            //     displayLocation = `${rawRoomName} - ${rawLocation}`;
-            // } else if (rawRoomName && rawRoomName !== 'No location specified') {
-            //     displayLocation = rawRoomName;
-            // } else if (rawLocation && rawLocation !== 'No location specified') {
-            //     displayLocation = rawLocation;
-            // }
-            //
-            // document.getElementById('modalLocation').innerText = displayLocation;
-            //
-            // document.getElementById('modalLocation').innerText = displayLocation;
-            //
-            // const descriptionText = props.description || 'No details available.';
-            // const isSmartBooking = props.bookingId || descriptionText.includes('Automatically scheduled via SmartBooking App');
-            //
-            // const mapSection = document.getElementById('eventMapSection');
-            // const descSection = document.getElementById('eventDescSection');
-            //
-            // if (isSmartBooking) {
-            //     mapSection.classList.remove('hidden');
-            //     descSection.classList.add('hidden');
-            //     document.getElementById('modalDescription').innerText = descriptionText;
-            // } else {
-            //     mapSection.classList.add('hidden');
-            //     descSection.classList.remove('hidden');
-            //     document.getElementById('modalDescriptionFull').innerText = descriptionText;
-            // }
-            //
-            // document.getElementById('eventModal').classList.remove('hidden');
-            // lucide.createIcons();
-            // document.getElementById('modalParticipantsContainer').classList.remove('hidden');
-            //
-            // if (isSmartBooking && props.bookingId) {
-            //     renderLiveParticipants(props.bookingId, props.participants, 'modalParticipantsList');
-            // } else {
-            //     document.getElementById('modalParticipantsContainer').classList.add('hidden');
-            // }
-            //
-            // if (isSmartBooking) {
-            //     setTimeout(async () => {
-            //         if (typeof initEventMap === 'function') {
-            //             initEventMap();
-            //             if (eventMap) {
-            //                 eventMap.invalidateSize();
-            //
-            //                 const coords = await geocodeAddress(roomLocation);
-            //                 const lat = coords ? coords.lat : 37.9575;
-            //                 const lng = coords ? coords.lng : 23.7025;
-            //
-            //                 eventMap.setView([lat, lng], 17);
-            //                 eventMarker.setLatLng([lat, lng]);
-            //                 eventMarker.bindPopup(`<b>${roomName}</b><br><span class="text-xs text-gray-500">${roomLocation}</span>`).openPopup();
-            //
-            //                 setTimeout(() => eventMap.invalidateSize(), 100);
-            //             }
-            //         }
-            //     }, 300);
-            // }
         }
     });
 
@@ -795,9 +713,6 @@ function handleRsvp(bookingId, status) {
                                     }
                                 }
                             });
-                            // FullCalendar doesn't re-run eventClassNames on setExtendedProp() alone,
-                            // so the pending-stripe styling would otherwise only refresh the next time
-                            // something else forces a re-render (e.g. clicking the event).
                             window.smartCalendar.render();
                         }
 

@@ -141,12 +141,12 @@ bash run-tests.sh
 
 This script starts the database container if it isn't already running,
 loads `.env`, and runs the full Maven test suite (`mvn test`).
-
+ 
 ---
 
 ## Testing
 
-The project has **50 automated tests** across five areas:
+The project has **58 automated tests** across six areas:
 
 | Test class | What it covers |
 |---|---|
@@ -156,6 +156,7 @@ The project has **50 automated tests** across five areas:
 | `MeetingOptimizerServiceTest` | Time slot scoring (time-of-day preference, lunch penalty, soonest-first) |
 | `InviteRateLimiterServiceTest` | Per-email cooldown and per-organizer daily cap for invites |
 | `BookingServiceTest` | RSVP status updates, participant matching, Google Calendar sync behavior |
+| `StringCryptoConverterTest` | AES-GCM encrypt/decrypt round-trip, non-deterministic ciphertext, malformed input handling |
 
 Run the whole suite with `bash run-tests.sh`, or `mvn test` if the database
 and environment variables are already set up in your shell.

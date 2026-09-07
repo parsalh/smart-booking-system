@@ -16,6 +16,13 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+/**
+ * Runs after a successful Google OAuth2 login: if Google returned a
+ * fresh refresh token, saves it on the matching User, then redirects
+ * to the homepage.
+ *
+ * @author Stavroula Parsali
+ */
 @Component
 public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 

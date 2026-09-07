@@ -12,6 +12,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Spring Data repository for Booking entities: conflict checking for
+ * a given room and time range, lookups by room, Google event id, and
+ * status, and finding a user's upcoming bookings.
+ *
+ * @author Stavroula Parsali
+ */
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 

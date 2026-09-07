@@ -17,7 +17,16 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import java.util.List;
 
-
+/**
+ * Controller for the app's main user-facing pages: the dashboard
+ * (syncing and rendering the current user's Google Calendar events
+ * alongside their profile info), the booking wizard, room browsing,
+ * login, and the privacy/terms pages. Also handles refreshing and
+ * persisting a user's Google OAuth2 refresh token whenever a fresh
+ * one becomes available.
+ *
+ * @author Stavroula Parsali
+ */
 @Controller
 public class HomeController {
 

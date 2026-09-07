@@ -5,6 +5,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
 
+/**
+ * A room returned from POST /api/bookings/suggest-rooms, with its
+ * basic details plus which of the requested amenities it's missing.
+ *
+ * @author Stavroula Parsali
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

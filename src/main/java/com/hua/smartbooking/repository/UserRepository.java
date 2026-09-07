@@ -7,6 +7,12 @@ import java.util.List;
 
 import java.util.Optional;
 
+/**
+ * Spring Data repository for User entities: lookup by email, and
+ * searching users by name or email for the participant picker.
+ *
+ * @author Stavroula Parsali
+ */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 

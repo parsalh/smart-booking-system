@@ -6,6 +6,13 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.util.List;
 
+/**
+ * Request body for POST /api/bookings/suggest-rooms: the time
+ * window, minimum capacity, and requested amenities to match rooms
+ * against.
+ *
+ * @author Stavroula Parsali
+ */
 @Data
 public class RoomSuggestionRequest {
     @NotBlank(message = "Start time is required")

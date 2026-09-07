@@ -32,7 +32,13 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 /**
- * Service for interacting with Google Calendar API and mapping to internal Entities.
+ * Service for interacting with the Google Calendar API and mapping
+ * results into SmartBooking's internal entities: fetching a user's
+ * upcoming events, building the JSON the calendar view renders,
+ * creating meeting events, and syncing RSVP status in both
+ * directions between SmartBooking and Google Calendar.
+ *
+ * @author Stavroula Parsali
  */
 @Service
 public class GoogleCalendarService {

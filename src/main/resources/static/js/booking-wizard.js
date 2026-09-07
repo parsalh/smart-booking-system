@@ -210,12 +210,6 @@ function addParticipantFromDB(id, name, email, avatar, outOfOfficeStart, outOfOf
     renderFrequentCollaborators();
 }
 
-// Adds someone who doesn't have a SmartBooking account yet as a real participant
-// on this meeting. Their calendar can't be checked for availability (no Google
-// Calendar connection), so the scheduling optimizer simply treats them as always
-// free — they're still included in the final booking and get a normal Google
-// Calendar invite once it's confirmed. A separate SmartBooking invite email is
-// also sent in the background, encouraging them to sign up.
 function addUnregisteredParticipant(email) {
     const normalized = email.trim().toLowerCase();
     if (state.participants.find(p => p.email.toLowerCase() === normalized)) return;
@@ -254,8 +248,6 @@ async function sendInviteEmailSilently(email) {
 
         if (!res.ok) throw new Error('Failed to send invite email');
     } catch (error) {
-        // Best-effort: failing to send the nudge email shouldn't block adding
-        // the guest as a participant — just log it.
         console.error('Failed to send guest invite email:', error);
     }
 }
@@ -608,10 +600,6 @@ async function fetchAvailableRooms() {
 function renderRoomCards(rooms) {
     const container = document.getElementById('recommended-rooms-container');
 
-    // Always reset selection state on (re)entry — otherwise a previous room
-    // pick (e.g. before the user went back and changed the time slot) stays
-    // selected in memory, and "Review Booking" stays visible/clickable even
-    // though no room has actually been chosen for the current room list.
     state.selectedRoomId = null;
     state.selectedRoomName = '';
     state.selectedRoomBuilding = '';

@@ -23,6 +23,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for the user's profile page: displaying and updating
+ * personal preferences that don't belong on the calendar itself,
+ * namely a preferred title (Mr./Mrs./Ms./Dr.) and an Out-of-Office
+ * date range that the meeting time optimizer treats as unavailable.
+ *
+ * @author Stavroula Parsali
+ */
 @Controller
 @Tag(name = "Profile", description = "Manage the logged-in user's own SmartBooking preferences")
 public class ProfileController {
