@@ -470,6 +470,9 @@ async function handleFindBestTimes() {
             countSpan.innerText = data.length;
         }
 
+        state.selectedTimeSlot = null;
+        document.getElementById('btn-to-room').classList.add('hidden');
+
         renderTrafficLightTimeSlots(data);
         goToStep(2);
 
@@ -588,6 +591,12 @@ function selectTimeSlot(start, end, element) {
 }
 
 async function fetchAvailableRooms() {
+
+    if (!state.selectedTimeSlot) {
+        showError("Please select a time slot first.", 2);
+        return;
+    }
+
     const payload = {
         startTime: state.selectedTimeSlot.start, endTime: state.selectedTimeSlot.end,
         minCapacity: state.preferences.minCapacity, requiredAmenities: state.preferences.requiredAmenities
@@ -606,6 +615,10 @@ async function fetchAvailableRooms() {
             body: JSON.stringify(payload)
         });
         const rooms = await res.json();
+
+        state.selectedRoomId = null;
+        document.getElementById('btn-to-confirm').classList.add('hidden');
+
         renderRoomCards(rooms);
         const dateObj = new Date(state.selectedTimeSlot.start);
         document.getElementById('step3-time-text').innerText = dateObj.toLocaleString();
@@ -616,10 +629,6 @@ async function fetchAvailableRooms() {
 function renderRoomCards(rooms) {
     const container = document.getElementById('recommended-rooms-container');
 
-    // Always reset selection state on (re)entry — otherwise a previous room
-    // pick (e.g. before the user went back and changed the time slot) stays
-    // selected in memory, and "Review Booking" stays visible/clickable even
-    // though no room has actually been chosen for the current room list.
     state.selectedRoomId = null;
     state.selectedRoomName = '';
     state.selectedRoomBuilding = '';
