@@ -464,6 +464,7 @@ async function handleFindBestTimes() {
         document.getElementById('summary-synced-count').innerText = state.participants.length + 1;
         document.getElementById('summary-options-count').innerText = data.length;
         document.getElementById('summary-duration').innerText = state.preferences.durationMinutes + 'm';
+        renderSummaryParticipants();
 
         const countSpan = document.getElementById('dynamic-results-count');
         if (countSpan) {
@@ -484,6 +485,23 @@ async function handleFindBestTimes() {
         btn.innerHTML = `Find Best Times <i data-lucide="arrow-right" class="w-5 h-5"></i>`;
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
+}
+
+function renderSummaryParticipants() {
+    const container = document.getElementById('summary-participants-list');
+    if (!container) return;
+
+    const emailInput = document.getElementById('currentUserEmail');
+    const you = emailInput ? { name: 'You', email: emailInput.value } : null;
+    const allParticipants = you ? [you, ...state.participants] : state.participants;
+
+    container.innerHTML = allParticipants.map(p => `
+        <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-lg text-xs font-bold">
+            <i data-lucide="user" class="w-3 h-3"></i> ${p.name || p.email}
+        </span>
+    `).join('');
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function renderTrafficLightTimeSlots(slots) {
@@ -778,11 +796,13 @@ async function submitFinalBooking() {
         forcePartial: false
     };
 
-    await executeBookingRequest(payload);
+    const confirmBtn = document.getElementById('final-confirm-btn');
+    if (confirmBtn.disabled) return;
+
+    await executeBookingRequest(payload, confirmBtn);
 }
 
-async function executeBookingRequest(payload) {
-    const btn = document.getElementById('find-times-btn');
+async function executeBookingRequest(payload, btn) {
     const originalBtnText = btn.innerHTML;
 
     btn.disabled = true;
@@ -855,13 +875,9 @@ function showPartialConflictModal(conflictData, originalPayload) {
     countSpan.innerText = conflictData.successfulDates.length;
 
     forceBtn.onclick = async () => {
-        forceBtn.disabled = true;
-        forceBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...`;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-
         originalPayload.forcePartial = true;
 
-        await executeBookingRequest(originalPayload);
+        await executeBookingRequest(originalPayload, forceBtn);
         modal.classList.add('hidden');
     };
 

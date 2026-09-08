@@ -277,7 +277,10 @@ public class BookingController {
                 if (isUserBusy) {
                     Map<String, String> conflict = new HashMap<>();
                     conflict.put("date", currentStart.toLocalDate().toString());
-                    conflict.put("reason", "Participant " + busyUserEmail + " has a scheduling conflict.");
+                    String conflictReason = busyUserEmail.equalsIgnoreCase(organizerEmail)
+                            ? "You have a scheduling conflict."
+                            : "Participant " + busyUserEmail + " has a scheduling conflict.";
+                    conflict.put("reason", conflictReason);
                     failedDates.add(conflict);
                 } else {
                     successfulStarts.add(currentStart);

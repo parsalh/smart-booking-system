@@ -813,7 +813,30 @@ function renderPendingInvites(invites) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
+let pendingDeclineBookingId = null;
+
 function handleRsvp(bookingId, status) {
+    if (status === 'DECLINED') {
+        pendingDeclineBookingId = bookingId;
+        document.getElementById('declineConfirmModal').classList.remove('hidden');
+        return;
+    }
+    sendRsvp(bookingId, status);
+}
+
+function closeDeclineConfirmModal() {
+    pendingDeclineBookingId = null;
+    document.getElementById('declineConfirmModal').classList.add('hidden');
+}
+
+function executeDeclineRsvp() {
+    const bookingId = pendingDeclineBookingId;
+    document.getElementById('declineConfirmModal').classList.add('hidden');
+    pendingDeclineBookingId = null;
+    if (bookingId) sendRsvp(bookingId, 'DECLINED');
+}
+
+function sendRsvp(bookingId, status) {
     const card = document.getElementById(`invite-card-${bookingId}`);
     if(card) {
         card.style.opacity = '0.5';
@@ -867,9 +890,6 @@ function handleRsvp(bookingId, status) {
                                     }
                                 }
                             });
-                            // FullCalendar doesn't re-run eventClassNames on setExtendedProp() alone,
-                            // so the pending-stripe styling would otherwise only refresh the next time
-                            // something else forces a re-render (e.g. clicking the event).
                             window.smartCalendar.render();
                         }
 
@@ -880,10 +900,14 @@ function handleRsvp(bookingId, status) {
                     }, 2000);
                 }
             } else {
-                alert("Failed to send RSVP. Please try again.");
-                if(card) {
+                if (card) {
                     card.style.opacity = '1';
                     card.style.pointerEvents = 'auto';
+                    const errorBanner = document.createElement('div');
+                    errorBanner.className = 'mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2';
+                    errorBanner.innerHTML = '<i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i><span>Failed to send RSVP. Please try again.</span>';
+                    card.appendChild(errorBanner);
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
             }
         })
