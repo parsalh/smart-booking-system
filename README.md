@@ -146,7 +146,7 @@ loads `.env`, and runs the full Maven test suite (`mvn test`).
 
 ## Testing
 
-The project has **58 automated tests** across six areas:
+The project has **61 automated tests** across six areas:
 
 | Test class | What it covers |
 |---|---|
