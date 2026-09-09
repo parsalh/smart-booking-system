@@ -1,8 +1,6 @@
 package com.hua.smartbooking.dto;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.util.List;
 
@@ -21,10 +19,12 @@ public class RoomDTO {
 
     private String building;
     private String location;
+    @Pattern(regexp = "^(-?[0-9]|10|-10)?$", message = "Floor must be a whole number from -10 to 10")
     private String floor;
 
     @NotNull(message = "Capacity is required")
     @Min(value = 1, message = "Capacity must be at least 1")
+    @Max(value = 100, message = "Capacity must be 100 or less")
     private Integer capacity;
 
     private String imageUrl;

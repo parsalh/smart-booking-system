@@ -15,6 +15,38 @@ function updateImagePreview(url) {
     }
 }
 
+function hideRoomFormError() {
+    const errorDiv = document.getElementById('roomFormError');
+    if (errorDiv) errorDiv.classList.add('hidden');
+}
+
+function showRoomFormError(message) {
+    const errorDiv = document.getElementById('roomFormError');
+    const errorText = document.getElementById('roomFormErrorText');
+    if (errorDiv && errorText) {
+        errorText.innerText = message;
+        errorDiv.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+}
+
+function validateRoomForm(e) {
+    hideRoomFormError();
+
+    const capacity = parseInt(document.getElementById('roomCapacity').value, 10);
+    if (isNaN(capacity) || capacity < 1 || capacity > 100) {
+        e.preventDefault();
+        showRoomFormError("Capacity must be a number between 1 and 100.");
+        return;
+    }
+
+    const floor = document.getElementById('roomFloor').value.trim();
+    if (floor !== '' && !/^-?([0-9]|10)$/.test(floor)) {
+        e.preventDefault();
+        showRoomFormError("Floor must be a whole number from -10 to 10.");
+    }
+}
+
 function openAddModal() {
     const modalTitle = document.getElementById('modalTitle');
     const form = document.getElementById('roomForm');
@@ -25,6 +57,7 @@ function openAddModal() {
         form.reset();
     }
 
+    hideRoomFormError();
     document.getElementById('roomId').value = "";
     document.getElementById('roomName').value = "";
     document.getElementById('roomBuilding').value = "";
@@ -46,6 +79,8 @@ function openEditModal(id, name, building, location, floor, capacity, imageUrl,i
 
     if (modalTitle) modalTitle.innerText = "Edit Room";
     if (form) form.action = "/admin/rooms/update";
+
+    hideRoomFormError();
 
     document.getElementById('roomId').value = id || '';
     document.getElementById('roomName').value = name || '';
@@ -142,6 +177,8 @@ function showAdminError(message) {
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
+    const roomForm = document.getElementById('roomForm');
+
     const roomImageInput = document.getElementById('roomImage');
     const imagePreview = document.getElementById('imagePreview');
     const imagePlaceholder = document.getElementById('imagePlaceholder');
@@ -194,9 +231,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const roomForm = document.getElementById('roomForm');
     if (roomForm) {
-        roomForm.addEventListener('submit', () => {
+        roomForm.addEventListener('submit', validateRoomForm);
+
+        roomForm.addEventListener('submit', (e) => {
+            if (e.defaultPrevented) return;
+
             const submitBtn = roomForm.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = true;

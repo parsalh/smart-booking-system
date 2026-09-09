@@ -45,6 +45,7 @@
 <body class="min-h-screen font-sans text-slate-800 selection:bg-blue-100 light-glass-theme">
 
 <input type="hidden" id="current-user-email" th:value="${email}">
+<input type="hidden" id="current-user-avatar" th:value="${avatar}">
 
 <svg width="0" height="0" style="position:absolute">
     <defs>
@@ -272,25 +273,15 @@
 
     <div id="step-2-container" class="wizard-step-container hidden transition-all duration-300">
 
-        <div class="grid grid-cols-3 gap-4 mb-6">
-            <div class="glass-surface p-4 text-center">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Calendars Synced</p>
-                <p class="text-2xl font-black text-blue-600" id="summary-synced-count">-</p>
+        <div class="glass-surface p-5 mb-6">
+            <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="users" class="w-3.5 h-3.5 text-blue-500"></i> Booking For
+                </p>
+                <p class="text-xs font-bold text-slate-500">
+                    <span id="summary-options-count" class="text-emerald-600">-</span> options found &middot; <span id="summary-duration" class="text-slate-700">-</span> each
+                </p>
             </div>
-            <div class="glass-surface p-4 text-center">
-                <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Top Options</p>
-                <p class="text-2xl font-black text-emerald-600" id="summary-options-count">-</p>
-            </div>
-            <div class="glass-surface p-4 text-center">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Target Duration</p>
-                <p class="text-2xl font-black text-slate-700" id="summary-duration">-</p>
-            </div>
-        </div>
-
-        <div class="glass-surface p-4 mb-6">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <i data-lucide="users" class="w-3.5 h-3.5 text-blue-500"></i> Booking For
-            </p>
             <div id="summary-participants-list" class="flex flex-wrap gap-2"></div>
         </div>
 
@@ -298,6 +289,13 @@
             <div class="flex items-center gap-3 mb-2">
                 <h2 class="text-2xl font-black btn-gradient-text">Top <span id="dynamic-results-count">15</span> Available Slots</h2>
                 <span class="text-sm font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md">Ranked by availability</span>
+                <div class="relative group">
+                    <i data-lucide="info" class="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help"></i>
+                    <div class="hidden group-hover:block absolute top-full left-0 mt-2 w-64 p-3 bg-slate-900 text-white text-xs font-medium leading-relaxed rounded-lg shadow-xl z-20">
+                        Higher score = better slot. Based on how close it is to preferred hours (10-11am or 3pm), whether it overlaps lunch, and how soon it falls in your date range.
+                        <div class="absolute bottom-full left-3 w-2 h-2 bg-slate-900 rotate-45 mb-[-4px]"></div>
+                    </div>
+                </div>
             </div>
             <div id="recommended-times-container" class="space-y-4 max-h-[500px] overflow-y-auto pt-4 px-2 pb-4">
             </div>

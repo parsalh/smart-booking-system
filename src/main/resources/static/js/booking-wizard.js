@@ -399,15 +399,12 @@ async function handleFindBestTimes() {
         return;
     }
 
-    const advancedEnabled = isAdvancedOptionsOpen;
-    if (advancedEnabled) {
-        const startTime = document.getElementById('dailyStartTime').value;
-        const endTime = document.getElementById('dailyEndTime').value;
+    const startTime = document.getElementById('dailyStartTime').value;
+    const endTime = document.getElementById('dailyEndTime').value;
 
-        if (startTime && endTime && endTime <= startTime) {
-            showError("The 'To Time' must be later than the 'From Time' in Advanced Options.", 1);
-            return;
-        }
+    if (startTime && endTime && endTime <= startTime) {
+        showError("The 'To Time' must be later than the 'From Time' in Advanced Options.", 1);
+        return;
     }
 
     const payload = {
@@ -416,9 +413,9 @@ async function handleFindBestTimes() {
         durationMinutes: state.preferences.durationMinutes,
         dateRangeStart: state.preferences.startDate,
         dateRangeEnd: state.preferences.endDate,
-        dailyStartTime: advancedEnabled ? document.getElementById('dailyStartTime').value : null,
-        dailyEndTime: advancedEnabled ? document.getElementById('dailyEndTime').value : null,
-        maxResults: advancedEnabled ? parseInt(document.getElementById('maxResults').value) : 15
+        dailyStartTime: startTime || null,
+        dailyEndTime: endTime || null,
+        maxResults: parseInt(document.getElementById('maxResults').value) || 15
     };
 
     const btn = document.getElementById('find-times-btn');
@@ -461,7 +458,6 @@ async function handleFindBestTimes() {
             throw new Error(data.message || data.error || "Unexpected response format from server");
         }
 
-        document.getElementById('summary-synced-count').innerText = state.participants.length + 1;
         document.getElementById('summary-options-count').innerText = data.length;
         document.getElementById('summary-duration').innerText = state.preferences.durationMinutes + 'm';
         renderSummaryParticipants();
@@ -491,15 +487,26 @@ function renderSummaryParticipants() {
     const container = document.getElementById('summary-participants-list');
     if (!container) return;
 
-    const emailInput = document.getElementById('currentUserEmail');
-    const you = emailInput ? { name: 'You', email: emailInput.value } : null;
-    const allParticipants = you ? [you, ...state.participants] : state.participants;
+    const avatarInput = document.getElementById('current-user-avatar');
+    const organizerAvatar = avatarInput ? avatarInput.value : '';
 
-    container.innerHTML = allParticipants.map(p => `
-        <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-lg text-xs font-bold">
-            <i data-lucide="user" class="w-3 h-3"></i> ${p.name || p.email}
-        </span>
-    `).join('');
+    const rows = [
+        { name: 'You (Organizer)', avatar: organizerAvatar, isOrganizer: true },
+        ...state.participants.map(p => ({ name: p.name || p.email, avatar: p.avatar, isOrganizer: false }))
+    ];
+
+    container.innerHTML = rows.map(p => {
+        const displayName = p.name.replace(' (Organizer)', '');
+        const fallbackBg = p.isOrganizer ? '1e40af' : 'dbeafe';
+        const fallbackColor = p.isOrganizer ? 'ffffff' : '2563eb';
+        return `
+        <span class="inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full text-xs font-bold ${p.isOrganizer ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 border border-blue-100'}">
+            <img src="${p.avatar || ''}" referrerpolicy="no-referrer"
+                 onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=${fallbackBg}&color=${fallbackColor}'"
+                 class="w-5 h-5 rounded-full object-cover shrink-0 ${p.isOrganizer ? 'ring-2 ring-white/40' : ''}">
+            ${p.name}
+        </span>`;
+    }).join('');
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
