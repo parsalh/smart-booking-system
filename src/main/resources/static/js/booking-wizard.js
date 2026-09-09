@@ -483,8 +483,8 @@ async function handleFindBestTimes() {
     }
 }
 
-function renderSummaryParticipants() {
-    const container = document.getElementById('summary-participants-list');
+function renderSummaryParticipants(containerId = 'summary-participants-list') {
+    const container = document.getElementById(containerId);
     if (!container) return;
 
     const avatarInput = document.getElementById('current-user-avatar');
@@ -760,6 +760,8 @@ function renderFinalReview() {
     document.getElementById('review-datetime').innerText = start.toLocaleString();
     document.getElementById('review-room').innerHTML =
         `${state.selectedRoomName} <br> <span class="text-xs font-normal text-slate-500">${state.selectedRoomBuilding ? state.selectedRoomBuilding + ', ' : ''}${state.selectedRoomLocation || ''}</span>`;
+
+    renderSummaryParticipants('confirm-participants-list');
 
     const titleInput = document.getElementById('final-title-input');
     if (titleInput) {

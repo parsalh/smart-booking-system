@@ -231,17 +231,21 @@ public class BookingController {
                 emailsToCheck.addAll(request.getParticipants());
             }
 
+            List<String> registeredEmailsToCheck = new ArrayList<>();
             for (String email : emailsToCheck) {
                 User participant = userRepository.findByEmail(email).orElse(null);
-                if (participant != null && participant.getRefreshToken() != null) {
-                    List<com.google.api.services.calendar.model.Event> googleEvents = googleCalendarService.getUpcomingEvents(participant.getRefreshToken());
-                    eventMappingService.syncEvents(googleEvents, participant);
+                if (participant != null) {
+                    registeredEmailsToCheck.add(email);
+                    if (participant.getRefreshToken() != null) {
+                        List<com.google.api.services.calendar.model.Event> googleEvents = googleCalendarService.getUpcomingEvents(participant.getRefreshToken());
+                        eventMappingService.syncEvents(googleEvents, participant);
+                    }
                 }
             }
 
             ZonedDateTime maxSearchEnd = baseEnd.plusWeeks(weeks);
             Map<String, List<TimePeriod>> busyBlocks = availabilityService.fetchGroupAvailability(
-                    emailsToCheck, baseStart, maxSearchEnd, organizer
+                    registeredEmailsToCheck, baseStart, maxSearchEnd, organizer
             );
 
             for (int i = 0; i < weeks; i++) {
