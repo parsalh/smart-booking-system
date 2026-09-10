@@ -976,7 +976,7 @@ function renderLiveParticipants(bookingId, fallbackParticipants, containerId) {
                 const displayLabel = isUser ? `${email} (You)` : email;
 
                 const span = document.createElement('div');
-                span.className = `flex items-center gap-2 px-3 py-2 ${colorClass} rounded-xl text-[10px] font-bold border truncate max-w-[200px]`;
+                span.className = `flex items-center gap-2 px-3 py-2 ${colorClass} rounded-xl text-[10px] font-bold border max-w-full`;
                 span.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 ${iconColor}"></i> ${displayLabel}`;
                 container.appendChild(span);
             });

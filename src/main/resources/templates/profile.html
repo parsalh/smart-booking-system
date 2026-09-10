@@ -204,5 +204,58 @@
 <script th:src="@{/js/date-picker.js}"></script>
 <script th:src="@{/js/profile.js}"></script>
 
+<button id="helpFabBtn" onclick="document.getElementById('helpModal').classList.remove('hidden')"
+        class="fixed bottom-6 right-6 z-[90] w-14 h-14 rounded-full bg-gradient-to-r from-blue-600 to-emerald-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+        title="Help & FAQ">
+    <i data-lucide="help-circle" class="w-6 h-6"></i>
+</button>
+
+<div id="helpModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md hidden flex items-center justify-center z-[95] p-4">
+    <div class="glass-modal rounded-[2.5rem] max-w-lg w-full max-h-[85vh] overflow-y-auto p-8 relative">
+        <button onclick="document.getElementById('helpModal').classList.add('hidden')" class="absolute top-6 right-6 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                <i data-lucide="help-circle" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-900">Help &amp; FAQ</h3>
+        </div>
+
+        <div class="space-y-5 text-sm">
+            <div>
+                <p class="font-bold text-slate-900 mb-1">The time slot suggestions don't reflect my real availability</p>
+                <p class="text-slate-600 leading-relaxed">Availability is checked based on how your events show up on Google Calendar. If an event is set to "Free" instead of "Busy", SmartBooking will treat you as available during that time. Make sure your important events have "Busy" enabled on Google Calendar.</p>
+            </div>
+
+            <div>
+                <p class="font-bold text-slate-900 mb-1">What does "Out of Office" do on my profile?</p>
+                <p class="text-slate-600 leading-relaxed">While an Out of Office period is active, SmartBooking treats you as unavailable for the entire duration when suggesting meeting times, useful for vacations or periods when you don't want meetings scheduled on your behalf.</p>
+            </div>
+
+            <div>
+                <p class="font-bold text-slate-900 mb-1">I invited someone without a SmartBooking account</p>
+                <p class="text-slate-600 leading-relaxed">They'll receive a sign-up invitation email, and separately, a normal Google Calendar invite once the meeting is confirmed, no account is needed to respond via Google Calendar. If the sign-up email doesn't arrive within a few minutes, ask them to check their spam or junk folder.</p>
+            </div>
+
+            <div>
+                <p class="font-bold text-slate-900 mb-1">How does responding (RSVP) to an invite work?</p>
+                <p class="text-slate-600 leading-relaxed">You can respond either from within SmartBooking or directly from Gmail/Google Calendar, your response syncs automatically in both directions.</p>
+            </div>
+
+            <div>
+                <p class="font-bold text-slate-900 mb-1">I cancelled a meeting directly on Google Calendar, why does it still show up?</p>
+                <p class="text-slate-600 leading-relaxed">Give it a moment until your calendar next reloads, the system periodically checks whether bookings are still active on Google Calendar and updates accordingly.</p>
+            </div>
+
+            <div>
+                <p class="font-bold text-slate-900 mb-1">I got a Google security alert about book-a-meeting.site accessing my account</p>
+                <p class="text-slate-600 leading-relaxed">This is expected and not a security concern. Google automatically sends this notification whenever you grant a new app access to your account through Google Sign-In, exactly what happens the first time you log in to SmartBooking with your Google account. It confirms that SmartBooking can read and manage your Calendar on your behalf, the same permission you approved during sign-in. You can review or revoke this access anytime from your <a href="https://myaccount.google.com/connections" target="_blank" class="text-blue-600 font-semibold hover:underline">Google Account's third-party access settings</a>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
