@@ -128,13 +128,13 @@ class MeetingOptimizerServiceTest {
                 null, null, 100
         );
 
-        ZonedDateTime lunchSlotStart = searchStart.withHour(12).withMinute(30);
+        ZonedDateTime lunchSlotStart = searchStart.withHour(13).withMinute(30);
         ZonedDateTime morningSlotStart = searchStart.withHour(9).withMinute(0);
 
         TimeSlotScore lunchSlot = slots.stream()
                 .filter(s -> s.startTime().equals(lunchSlotStart))
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("Expected a 12:30 slot in results"));
+                .orElseThrow(() -> new AssertionError("Expected a 13:30 slot in results"));
         TimeSlotScore morningSlot = slots.stream()
                 .filter(s -> s.startTime().equals(morningSlotStart))
                 .findFirst()

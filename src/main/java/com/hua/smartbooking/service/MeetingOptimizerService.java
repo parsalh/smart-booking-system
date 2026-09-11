@@ -222,9 +222,9 @@ public class MeetingOptimizerService {
     // gets a distinct value based on its distance from the nearest peak, instead of
     // a handful of flat buckets that make separate slots tie on score.
     // Continuous preference curve with two peaks: late-morning (centered 10:30, so
-    // 10:00-11:00 both score near-maximum) and mid-afternoon (15:00). The morning
+    // 10:00-11:00 both score near-maximum) and mid-afternoon (16:00). The morning
     // peak is intentionally scored higher than the afternoon one, so a 10-11am slot
-    // wins over an otherwise-equal 3-4pm slot instead of the two tying or afternoon
+    // wins over an otherwise-equal 4-5pm slot instead of the two tying or afternoon
     // winning outright.
     private double calculateTimeOfDayScore(ZonedDateTime start) {
         ZoneId athensZone = ZoneId.of("Europe/Athens");
@@ -234,22 +234,22 @@ public class MeetingOptimizerService {
         double distanceToMorningPeak = Math.abs(hourFraction - 10.5);
         double morningScore = 32 - (distanceToMorningPeak * 8);
 
-        double distanceToAfternoonPeak = Math.abs(hourFraction - 15.0);
+        double distanceToAfternoonPeak = Math.abs(hourFraction - 16.0);
         double afternoonScore = 26 - (distanceToAfternoonPeak * 8);
 
         return Math.max(-30, Math.max(morningScore, afternoonScore));
     }
 
-    // Penalizes slots proportionally to how much of the meeting overlaps the classic
-    // lunch break (12:00-14:00) , a 5-minute overlap is barely penalized, a fully
+    // Penalizes slots proportionally to how much of the meeting overlaps the local
+    // lunch break (13:00-15:00), a 5-minute overlap is barely penalized, a fully
     // contained lunch meeting gets the full penalty, instead of one flat number for any overlap.
     private double calculateLunchOverlapPenalty(ZonedDateTime start, ZonedDateTime end) {
         ZoneId athensZone = ZoneId.of("Europe/Athens");
         ZonedDateTime localStart = start.withZoneSameInstant(athensZone);
         ZonedDateTime localEnd = end.withZoneSameInstant(athensZone);
 
-        ZonedDateTime lunchStart = localStart.withHour(12).withMinute(0).withSecond(0).withNano(0);
-        ZonedDateTime lunchEnd = localStart.withHour(14).withMinute(0).withSecond(0).withNano(0);
+        ZonedDateTime lunchStart = localStart.withHour(13).withMinute(0).withSecond(0).withNano(0);
+        ZonedDateTime lunchEnd = localStart.withHour(15).withMinute(0).withSecond(0).withNano(0);
 
         long overlapSeconds = Math.max(0,
                 Math.min(localEnd.toEpochSecond(), lunchEnd.toEpochSecond())
