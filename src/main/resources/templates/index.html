@@ -506,6 +506,17 @@
             return false;
         }
 
+        function isPendingByCurrentUser(e, currentUserEmail) {
+            if (!currentUserEmail) return false;
+            const parts = e.participants || {};
+            for (const email of Object.keys(parts)) {
+                if (email.trim().toLowerCase() === currentUserEmail) {
+                    return String(parts[email]).toUpperCase() === 'PENDING';
+                }
+            }
+            return false;
+        }
+
         function formatTimeRange(start, end) {
             const opts = { hour: '2-digit', minute: '2-digit', hour12: false };
             const dateStr = start.toLocaleDateString([], { day: 'numeric', month: 'short' });
@@ -554,15 +565,18 @@
                         : 'Meeting';
                 }
 
+                const pending = isPendingByCurrentUser(e, currentUserEmail);
+
                 return '' +
                     '<div onclick="window.openCalendarEventModal(window.upNextRawEvents[' + index + '])" ' +
-                    'class="px-3 py-2 rounded-xl mb-2 border border-white/60 shadow-sm cursor-pointer hover:scale-[1.01] hover:shadow-md transition-all flex items-center gap-2" style="background:' + colors.bg + '">' +
+                    'class="px-3 py-2 rounded-xl mb-2 border shadow-sm cursor-pointer hover:scale-[1.01] hover:shadow-md transition-all flex items-center gap-2 ' + (pending ? 'border-dashed border-amber-300' : 'border-white/60') + '" style="background:' + colors.bg + '">' +
                     '<div class="w-1.5 h-1.5 rounded-full shrink-0" style="background:' + colors.dot + '"></div>' +
                     '<div class="flex-1 min-w-0 text-xs truncate" style="color:' + colors.text + '">' +
                     '<span class="font-bold">' + escapeHtml(displayTitle) + '</span>' +
                     '<span class="opacity-40 mx-1.5">-</span>' +
                     '<span class="text-[10px] font-semibold opacity-80">' + timeStr + '</span>' +
                     '</div>' +
+                    (pending ? '<span class="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full shrink-0">Pending</span>' : '') +
                     '</div>';
             }).join('');
         }
