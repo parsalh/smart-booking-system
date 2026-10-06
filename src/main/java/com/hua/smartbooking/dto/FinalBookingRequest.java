@@ -1,5 +1,6 @@
 package com.hua.smartbooking.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -34,6 +35,7 @@ public class FinalBookingRequest {
     private Integer repeatWeeks;
     private Boolean forcePartial;
 
+    @JsonProperty("isOnline")
     private boolean isOnline;
 
 }

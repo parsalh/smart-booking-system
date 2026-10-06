@@ -106,6 +106,15 @@ window.openCalendarEventModal = function(eventObj) {
         document.getElementById('modalDescriptionFull').innerText = descriptionText;
     }
 
+    const meetBtn = document.getElementById('modalMeetLink');
+    if (props.isOnline && props.meetLink) {
+        meetBtn.href = props.meetLink;
+        meetBtn.classList.remove('hidden');
+    } else {
+        meetBtn.classList.add('hidden');
+        meetBtn.href = "#";
+    }
+
     document.getElementById('eventModal').classList.remove('hidden');
     if (typeof lucide !== 'undefined') lucide.createIcons();
 

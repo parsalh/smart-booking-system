@@ -226,12 +226,6 @@ function addParticipantFromDB(id, name, email, avatar, outOfOfficeStart, outOfOf
     renderFrequentCollaborators();
 }
 
-// Adds someone who doesn't have a SmartBooking account yet as a real participant
-// on this meeting. Their calendar can't be checked for availability (no Google
-// Calendar connection), so the scheduling optimizer simply treats them as always
-// free — they're still included in the final booking and get a normal Google
-// Calendar invite once it's confirmed. A separate SmartBooking invite email is
-// also sent in the background, encouraging them to sign up.
 function addUnregisteredParticipant(email) {
     const normalized = email.trim().toLowerCase();
     if (state.participants.find(p => p.email.toLowerCase() === normalized)) return;
@@ -945,7 +939,7 @@ function renderSuccessScreen(bookingData) {
 
     const calendarBtn = bookingData.googleEventLink || bookingData.htmlLink
         ? `<a href="${bookingData.googleEventLink || bookingData.htmlLink}" target="_blank" 
-              class="inline-flex items-center justify-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-3 px-6 rounded-xl transition-all shadow-sm">
+              class="inline-flex items-center justify-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-3.5 px-6 rounded-xl transition-all shadow-sm">
                 <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i> View in Google Calendar
            </a>`
         : '';
@@ -953,12 +947,6 @@ function renderSuccessScreen(bookingData) {
     const participantList = state.participants.map(p => p.name || p.email);
     const participantsHtml = participantList.length > 0 ? participantList.join(', ') : 'You (Organizer)';
 
-    const meetBtn = bookingData.isOnline && bookingData.meetLink
-        ? `<a href="${bookingData.meetLink}" target="_blank" 
-              class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-xl hover:scale-[1.02]">
-                <i data-lucide="video" class="w-5 h-5 text-white"></i> Join Google Meet
-           </a>`
-        : '';
 
     container.innerHTML = `
         <div class="text-center py-8 px-4 max-w-lg mx-auto">
@@ -993,9 +981,8 @@ function renderSuccessScreen(bookingData) {
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                ${meetBtn}
                 ${calendarBtn}
-                <a href="/" class="inline-flex items-center justify-center gap-2 bg-slate-800 text-white font-bold py-3.5 px-6 rounded-xl transition-all hover:scale-[1.02] active:scale-95">
+                <a href="/" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95">
                     <i data-lucide="home" class="w-5 h-5"></i> Back to Dashboard
                 </a>
             </div>

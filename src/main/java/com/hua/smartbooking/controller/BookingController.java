@@ -252,12 +252,15 @@ public class BookingController {
                 ZonedDateTime currentStart = baseStart.plusWeeks(i);
                 ZonedDateTime currentEnd = currentStart.plusMinutes(durationMinutes);
 
-                List<Room> availableRooms = roomRepository.findAvailableRooms(
-                        request.getParticipants().size() + 1,
-                        currentStart.toInstant(),
-                        currentEnd.toInstant()
-                );
-                boolean isRoomFree = availableRooms.stream().anyMatch(r -> r.getId().equals(request.getRoomId()));
+                boolean isRoomFree = true;
+                if (!request.isOnline()) {
+                    List<Room> availableRooms = roomRepository.findAvailableRooms(
+                            request.getParticipants().size() + 1,
+                            currentStart.toInstant(),
+                            currentEnd.toInstant()
+                    );
+                    isRoomFree = availableRooms.stream().anyMatch(r -> r.getId().equals(request.getRoomId()));
+                }
 
                 if (!isRoomFree) {
                     Map<String, String> conflict = new HashMap<>();

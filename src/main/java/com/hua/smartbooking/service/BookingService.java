@@ -198,8 +198,6 @@ public class BookingService {
         bookingRepository.save(booking);
 
         if (booking.getGoogleEventId() != null) {
-            // Cleans up any stale copy from before the EventMappingService fix
-            // that made it skip syncing events already tracked as a Booking.
             eventRepository.deleteByGoogleEventId(booking.getGoogleEventId());
         }
 
@@ -228,7 +226,14 @@ public class BookingService {
                 .map(booking -> {
                     String orgName = booking.getUser() != null && booking.getUser().getFullname() != null
                             ? booking.getUser().getFullname() : "Unknown";
-                    String rName = booking.getRoom() != null ? booking.getRoom().getName() : "Unknown Room";
+
+                    String rName;
+                    if (booking.isOnline()) {
+                        rName = "Online Meeting (Google Meet)";
+                    } else {
+                        rName = booking.getRoom() != null ? booking.getRoom().getName() : "Unknown Room";
+                    }
+
                     String meetingTitle = booking.getTitle() != null ? booking.getTitle() : "SmartBooking Meeting";
 
                     return new PendingInviteDTO(
@@ -314,7 +319,13 @@ public class BookingService {
                     map.put("endTime", booking.getEndTime() != null ? booking.getEndTime().toString() : null);
 
                     Map<String, Object> roomMap = new HashMap<>();
-                    if (booking.getRoom() != null) roomMap.put("name", booking.getRoom().getName());
+                    if (booking.isOnline()) {
+                        roomMap.put("name", "Online Meeting (Google Meet)");
+                    } else if (booking.getRoom() != null) {
+                        roomMap.put("name", booking.getRoom().getName());
+                    } else {
+                        roomMap.put("name", "Unknown Room");
+                    }
                     map.put("room", roomMap);
 
                     Map<String, RsvpStatus> decryptedParticipants = new HashMap<>();
