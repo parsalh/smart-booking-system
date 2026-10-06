@@ -22,14 +22,19 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.calendar.model.ConferenceData;
+import com.google.api.services.calendar.model.CreateConferenceRequest;
+import com.google.api.services.calendar.model.ConferenceSolutionKey;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.UUID;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service for interacting with the Google Calendar API and mapping
@@ -92,8 +97,21 @@ public class GoogleCalendarService {
     @Transactional
     public String getEventsAsJsonForCalendar(String refreshToken, User user) throws Exception {
         List<com.google.api.services.calendar.model.Event> googleEvents = getUpcomingEvents(refreshToken);
-        List<Map<String, Object>> calendarEvents = new ArrayList<>();
 
+        List<String> googleIds = googleEvents.stream()
+                .map(com.google.api.services.calendar.model.Event::getId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+
+        Map<String, Booking> bookingMap = new HashMap<>();
+        if (!googleIds.isEmpty()) {
+            List<Booking> matchedBookings = bookingRepository.findByGoogleEventIdIn(googleIds);
+            for (Booking b : matchedBookings) {
+                bookingMap.put(b.getGoogleEventId(), b);
+            }
+        }
+
+        List<Map<String, Object>> calendarEvents = new ArrayList<>();
         Set<String> processedGoogleEventIds = new HashSet<>();
 
         for (com.google.api.services.calendar.model.Event gEvent : googleEvents) {
@@ -120,7 +138,10 @@ public class GoogleCalendarService {
                 Map<String, Object> map = new HashMap<>();
 
                 String description = gEvent.getDescription();
-                Optional<Booking> dbBooking = bookingRepository.findByGoogleEventId(gEvent.getId());
+
+                Booking foundBooking = bookingMap.get(gEvent.getId());
+                Optional<Booking> dbBooking = Optional.ofNullable(foundBooking);
+
                 boolean isSmartBooking = dbBooking.isPresent();
 
                 if (isSmartBooking) {
@@ -146,6 +167,15 @@ public class GoogleCalendarService {
                 extendedProps.put("description", description != null ? description : "No description available.");
                 extendedProps.put("type", isSmartBooking ? "SMART_BOOKING" : entity.getType().toString());
                 extendedProps.put("locationName", entity.getRoom() != null ? entity.getRoom().getName() : "No location specified");
+
+                if (dbBooking.isPresent()) {
+                    extendedProps.put("isOnline", dbBooking.get().isOnline());
+                    extendedProps.put("meetLink", dbBooking.get().getMeetLink());
+                } else {
+                    extendedProps.put("isOnline", entity.isOnline());
+                    extendedProps.put("meetLink", entity.getMeetLink());
+                }
+
                 extendedProps.put("roomFloor", entity.getRoom() != null ? entity.getRoom().getFloor() : null);
                 extendedProps.put("roomImage", entity.getRoom() != null ? entity.getRoom().getImageUrl() : "/images/default-room.jpg");
                 extendedProps.put("roomAmenities", entity.getRoom() != null ? entity.getRoom().getAmenities() : new ArrayList<>());
@@ -177,7 +207,7 @@ public class GoogleCalendarService {
         }
 
         // Fallback, if blocked by Google anti-spam
-        List<Booking> allDbBookings = bookingRepository.findAll();
+        List<Booking> allDbBookings = bookingRepository.findAllWithUserAndRoom();
         com.hua.smartbooking.util.StringCryptoConverter crypto = new com.hua.smartbooking.util.StringCryptoConverter();
 
         for (Booking dbBooking : allDbBookings) {
@@ -189,12 +219,6 @@ public class GoogleCalendarService {
                 continue;
             }
 
-            // Not present in the bulk fetch — either Google's anti-spam filtering hid it
-            // (still exists, show it anyway), or the event was genuinely deleted on Google's
-            // side (stop showing it, and stop it from resurrecting on every future load).
-            // Use the organizer's own refresh token for this check (not the current viewer's) —
-            // the same convention already used by reconcileRsvpFromGoogle/getAttendeeResponseStatus,
-            // since a participant's token isn't a reliable way to verify another user's event.
             String organizerRefreshToken = dbBooking.getUser() != null ? dbBooking.getUser().getRefreshToken() : null;
             if (dbBooking.getGoogleEventId() != null && organizerRefreshToken != null
                     && !isEventStillActiveOnGoogle(organizerRefreshToken, dbBooking.getGoogleEventId())) {
@@ -266,20 +290,24 @@ public class GoogleCalendarService {
             Event event = calendar.events().get("primary", googleEventId).execute();
             return event.getStatus() == null || !event.getStatus().equalsIgnoreCase("cancelled");
         } catch (Exception e) {
-            // 404/410 (or any other failure to fetch it) — treat as no longer existing.
+            // 404/410 (or any other failure to fetch it), treat as no longer existing.
             return false;
         }
     }
 
     /**
      * Creates a new meeting directly on the user's Google Calendar and sends invites.
+     * Automatically generates a Google Meet link if isOnline is true.
      */
-    public Event createMeetingEvent(String refreshToken, String summary, Instant start, Instant end, String location, List<String> attendeeEmails, String organizerEmail) throws GeneralSecurityException, IOException {
+    public Event createMeetingEvent(String refreshToken, String summary, Instant start, Instant end, String location, List<String> attendeeEmails, String organizerEmail, boolean isOnline) throws GeneralSecurityException, IOException {
 
         Event event = new Event()
                 .setSummary(summary)
-                .setLocation(location)
                 .setDescription("Automatically scheduled via SmartBooking App");
+
+        if (!isOnline && location != null) {
+            event.setLocation(location);
+        }
 
         EventDateTime startDateTime = new EventDateTime().setDateTime(new DateTime(start.toEpochMilli()));
         event.setStart(startDateTime);
@@ -301,13 +329,27 @@ public class GoogleCalendarService {
             event.setAttendees(attendees);
         }
 
+        if (isOnline) {
+            ConferenceSolutionKey conferenceSolutionKey = new ConferenceSolutionKey()
+                    .setType("hangoutsMeet");
+
+            CreateConferenceRequest createConferenceRequest = new CreateConferenceRequest()
+                    .setRequestId(UUID.randomUUID().toString())
+                    .setConferenceSolutionKey(conferenceSolutionKey);
+
+            ConferenceData conferenceData = new ConferenceData()
+                    .setCreateRequest(createConferenceRequest);
+
+            event.setConferenceData(conferenceData);
+        }
+
         Calendar calendar = calendarClientFactory.buildClient(refreshToken);
-        return calendar.events().insert("primary", event).execute();
+
+        return calendar.events().insert("primary", event)
+                .setConferenceDataVersion(1)
+                .execute();
     }
 
-    /**
-     * Updates the RSVP status of a specific attendee directly on Google Calendar.
-     */
     /**
      * Deletes an event directly from the organizer's Google Calendar.
      */
@@ -316,6 +358,9 @@ public class GoogleCalendarService {
         calendar.events().delete("primary", googleEventId).execute();
     }
 
+    /**
+     * Updates the RSVP status of a specific attendee directly on Google Calendar.
+     */
     public void updateEventRsvpOnGoogleCalendar(String refreshToken, String googleEventId, String userEmail, String responseStatus) throws GeneralSecurityException, IOException {
         Calendar calendar = calendarClientFactory.buildClient(refreshToken);
 

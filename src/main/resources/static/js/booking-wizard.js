@@ -1,5 +1,6 @@
 const state = {
     step: 1,
+    isOnline: false,
     participants: [],
     preferences: {
         durationMinutes: 60,
@@ -108,6 +109,7 @@ function updateProgressBar(activeStep) {
     for(let i=1; i<=4; i++) {
         const circle = document.getElementById(`step-circle-${i}`);
         if(!circle) continue;
+
         if(i < activeStep) {
             circle.className = "w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shrink-0 transition-all";
             circle.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i>`;
@@ -118,16 +120,28 @@ function updateProgressBar(activeStep) {
             circle.className = "w-11 h-11 rounded-2xl bg-white border-2 border-slate-300 text-slate-400 flex items-center justify-center shrink-0 transition-all";
             circle.innerHTML = `<i data-lucide="${stepIcons[i]}" class="w-5 h-5"></i>`;
         }
+
+        if (state.isOnline && i === 3) {
+            circle.classList.add('hidden');
+        }
     }
 
     for (let i=1; i<=3; i++) {
         const segment = document.getElementById(`progress-segment-${i}`);
+        const segmentContainer = segment ? segment.parentElement : null;
+
         if (segment) {
             segment.style.width = (activeStep > i) ? '100%' : '0%';
         }
+
+        if (state.isOnline && i === 3 && segmentContainer) {
+            segmentContainer.classList.add('hidden');
+        } else if (segmentContainer) {
+            segmentContainer.classList.remove('hidden');
+        }
     }
 
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 let currentSearchId = 0;
@@ -256,8 +270,6 @@ async function sendInviteEmailSilently(email) {
 
         if (!res.ok) throw new Error('Failed to send invite email');
     } catch (error) {
-        // Best-effort: failing to send the nudge email shouldn't block adding
-        // the guest as a participant — just log it.
         console.error('Failed to send guest invite email:', error);
     }
 }
@@ -415,7 +427,8 @@ async function handleFindBestTimes() {
         dateRangeEnd: state.preferences.endDate,
         dailyStartTime: startTime || null,
         dailyEndTime: endTime || null,
-        maxResults: parseInt(document.getElementById('maxResults').value) || 15
+        maxResults: parseInt(document.getElementById('maxResults').value) || 15,
+        isOnline: state.isOnline
     };
 
     const btn = document.getElementById('find-times-btn');
@@ -796,7 +809,8 @@ async function submitFinalBooking() {
     const repeatWeeks = repeatWeeksSelect ? parseInt(repeatWeeksSelect.value) : 1;
 
     const payload = {
-        roomId: state.selectedRoomId,
+        roomId: state.isOnline ? null : state.selectedRoomId,
+        isOnline: state.isOnline,
         title: meetingTitle,
         startTime: state.selectedTimeSlot.start,
         endTime: state.selectedTimeSlot.end,
@@ -843,7 +857,9 @@ async function executeBookingRequest(payload, btn) {
             }
 
             showError("Conflict Error: " + (data.error || "Room is no longer available at this time."), 4);
-            goToStep(3);
+            if (!state.isOnline) {
+                goToStep(3);
+            }
             return;
         }
 
@@ -870,10 +886,7 @@ function showPartialConflictModal(conflictData, originalPayload) {
     const modal = document.getElementById('partialConflictModal');
     const list = document.getElementById('conflict-list');
     const forceBtn = document.getElementById('btn-force-partial');
-    const countSpan = document.getElementById('conflict-success-count');
-
-    forceBtn.disabled = false;
-    forceBtn.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> Book Partial`;
+    const msgContainer = document.getElementById('conflict-success-msg');
 
     list.innerHTML = conflictData.failedDates.map(f => {
         const dateObj = new Date(f.date);
@@ -881,14 +894,21 @@ function showPartialConflictModal(conflictData, originalPayload) {
         return `<li class="flex items-start gap-2"><i data-lucide="x-circle" class="w-4 h-4 mt-0.5 text-amber-500 shrink-0"></i> <span><strong>${niceDate}:</strong> ${f.reason}</span></li>`;
     }).join('');
 
-    countSpan.innerText = conflictData.successfulDates.length;
+    if (conflictData.successfulDates.length === 0) {
+        forceBtn.classList.add('hidden');
+        msgContainer.innerHTML = "No available dates remaining to book. Please cancel and try a different time.";
+    } else {
+        forceBtn.classList.remove('hidden');
+        forceBtn.disabled = false;
+        forceBtn.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> Book Partial`;
+        msgContainer.innerHTML = `Do you want to book the remaining <span id="conflict-success-count" class="text-emerald-600">${conflictData.successfulDates.length}</span> available weeks?`;
 
-    forceBtn.onclick = async () => {
-        originalPayload.forcePartial = true;
-
-        await executeBookingRequest(originalPayload, forceBtn);
-        modal.classList.add('hidden');
-    };
+        forceBtn.onclick = async () => {
+            originalPayload.forcePartial = true;
+            await executeBookingRequest(originalPayload, forceBtn);
+            modal.classList.add('hidden');
+        };
+    }
 
     modal.classList.remove('hidden');
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -933,6 +953,13 @@ function renderSuccessScreen(bookingData) {
     const participantList = state.participants.map(p => p.name || p.email);
     const participantsHtml = participantList.length > 0 ? participantList.join(', ') : 'You (Organizer)';
 
+    const meetBtn = bookingData.isOnline && bookingData.meetLink
+        ? `<a href="${bookingData.meetLink}" target="_blank" 
+              class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-xl hover:scale-[1.02]">
+                <i data-lucide="video" class="w-5 h-5 text-white"></i> Join Google Meet
+           </a>`
+        : '';
+
     container.innerHTML = `
         <div class="text-center py-8 px-4 max-w-lg mx-auto">
             <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-bounce">
@@ -966,8 +993,9 @@ function renderSuccessScreen(bookingData) {
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                ${meetBtn}
                 ${calendarBtn}
-                <a href="/" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95">
+                <a href="/" class="inline-flex items-center justify-center gap-2 bg-slate-800 text-white font-bold py-3.5 px-6 rounded-xl transition-all hover:scale-[1.02] active:scale-95">
                     <i data-lucide="home" class="w-5 h-5"></i> Back to Dashboard
                 </a>
             </div>
@@ -975,4 +1003,52 @@ function renderSuccessScreen(bookingData) {
     `;
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function toggleOnlineStatus(checked) {
+    state.isOnline = checked;
+
+    document.getElementById('physical-room-prefs').classList.toggle('hidden', checked);
+
+    const btnToRoom = document.getElementById('btn-to-room');
+    if (btnToRoom) {
+        btnToRoom.innerHTML = checked
+            ? 'Review Booking <i data-lucide="arrow-right" class="w-4 h-4 ml-2 inline"></i>'
+            : 'Continue to Room Selection';
+    }
+
+    const step3Circle = document.getElementById('step-circle-3');
+    const step3SegmentContainer = document.getElementById('progress-segment-3')?.parentElement;
+
+    const labelsRow = document.getElementById('step-circle-1').parentElement.nextElementSibling;
+    const step3Label = labelsRow ? labelsRow.children[4] : null;
+    const step3Space = labelsRow ? labelsRow.children[5] : null;
+
+    if (checked) {
+        if (step3Circle) step3Circle.classList.add('hidden');
+        if (step3SegmentContainer) step3SegmentContainer.classList.add('hidden');
+        if (step3Label) step3Label.classList.add('hidden');
+        if (step3Space) step3Space.classList.add('hidden');
+    } else {
+        if (step3Circle) step3Circle.classList.remove('hidden');
+        if (step3SegmentContainer) step3SegmentContainer.classList.remove('hidden');
+        if (step3Label) step3Label.classList.remove('hidden');
+        if (step3Space) step3Space.classList.remove('hidden');
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function handleContinueFromTimes() {
+    if (state.isOnline) {
+        state.selectedRoomId = null;
+        state.selectedRoomName = 'Online Meeting (Google Meet)';
+        state.selectedRoomBuilding = '';
+        state.selectedRoomLocation = 'Virtual';
+
+        renderFinalReview();
+        goToStep(4);
+    } else {
+        fetchAvailableRooms();
+    }
 }

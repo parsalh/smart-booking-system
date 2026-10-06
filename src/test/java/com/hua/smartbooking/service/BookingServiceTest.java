@@ -60,9 +60,6 @@ class BookingServiceTest {
 
     @Test
     void matchingIsCaseInsensitiveAndTrimmed() {
-        // Stored key has different case/whitespace than what the caller passes in —
-        // this is exactly the class of bug we found with the old encrypted-key
-        // matching, so it's worth pinning down explicitly for plain-text keys too.
         Booking booking = bookingWithParticipant("Guest@HUA.gr", RsvpStatus.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
@@ -135,8 +132,6 @@ class BookingServiceTest {
 
     @Test
     void doesNotPropagateWhenGoogleSyncFails() throws Exception {
-        // The DB update already succeeded by this point — a Google API hiccup
-        // shouldn't turn a successful RSVP into a user-facing error.
         Booking booking = bookingWithParticipant("guest@hua.gr", RsvpStatus.PENDING);
         booking.setGoogleEventId("google-event-123");
         User organizer = new User();

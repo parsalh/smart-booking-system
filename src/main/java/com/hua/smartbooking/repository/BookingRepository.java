@@ -2,13 +2,13 @@ package com.hua.smartbooking.repository;
 
 import com.hua.smartbooking.enums.BookingStatus;
 import com.hua.smartbooking.model.Booking;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +36,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByRoomId(Long roomId);
 
+    @EntityGraph(attributePaths = {"user", "room"})
+    List<Booking> findByGoogleEventIdIn(List<String> ids);
+
     Optional<Booking> findByGoogleEventId(String googleEventId);
 
     List<Booking> findByStartTimeAfterAndStatusNot(Instant now, BookingStatus excludedStatus);
@@ -43,4 +46,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByStatusNotOrderByStartTimeDesc(BookingStatus excludedStatus);
 
     List<Booking> findByStatusNot(BookingStatus excludedStatus);
+
+    @EntityGraph(attributePaths = {"user", "room"})
+    @Query("SELECT b FROM Booking b")
+    List<Booking> findAllWithUserAndRoom();
 }

@@ -5,6 +5,7 @@ import com.hua.smartbooking.enums.EventType;
 import com.hua.smartbooking.model.Event;
 import com.hua.smartbooking.mapper.EventMapper;
 import com.hua.smartbooking.model.User;
+import com.hua.smartbooking.model.Booking;
 import com.hua.smartbooking.repository.BookingRepository;
 import com.hua.smartbooking.repository.EventRepository;
 import org.springframework.stereotype.Service;
@@ -13,9 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Syncs a user's Google Calendar events into SmartBooking's local
@@ -44,19 +46,29 @@ public class EventMappingService {
 
     @Transactional
     public void syncEvents(List<com.google.api.services.calendar.model.Event> googleEvents, User user) {
-        if (googleEvents == null) return;
+        if (googleEvents == null || googleEvents.isEmpty()) return;
+
+        List<String> googleIds = googleEvents.stream()
+                .map(com.google.api.services.calendar.model.Event::getId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+
+        Set<String> existingEventIds = eventRepository.findByGoogleEventIdIn(googleIds).stream()
+                .map(Event::getGoogleEventId)
+                .collect(Collectors.toSet());
+
+        Set<String> existingBookingIds = bookingRepository.findByGoogleEventIdIn(googleIds).stream()
+                .map(Booking::getGoogleEventId)
+                .collect(Collectors.toSet());
 
         for (com.google.api.services.calendar.model.Event gEvent : googleEvents) {
-            if (eventRepository.existsByGoogleEventId(gEvent.getId())) {
+            String eventId = gEvent.getId();
+
+            if (existingEventIds.contains(eventId)) {
                 continue;
             }
-            // Events created through SmartBooking are already tracked in full
-            // (including their live status) via the bookings table. Syncing a
-            // second, untracked copy here would go stale the moment the
-            // booking is cancelled, since this Event table has no status field
-            // to reflect that, and would keep blocking the room forever in
-            // availability checks.
-            if (bookingRepository.findByGoogleEventId(gEvent.getId()).isPresent()) {
+
+            if (existingBookingIds.contains(eventId)) {
                 continue;
             }
 
@@ -93,5 +105,4 @@ public class EventMappingService {
 
         return null;
     }
-
 }

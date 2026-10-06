@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import com.hua.smartbooking.enums.RsvpStatus;
+import com.google.api.services.calendar.model.EntryPoint;
 
 import java.time.Instant;
 import java.util.*;
@@ -58,12 +59,15 @@ public class BookingService {
         Instant startInstant = Instant.parse(request.getStartTime());
         Instant endInstant = Instant.parse(request.getEndTime());
 
-        Room room = roomRepository.findById(request.getRoomId())
-                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+        Room room = null;
+        if (!request.isOnline()) {
+            room = roomRepository.findById(request.getRoomId())
+                    .orElseThrow(() -> new IllegalArgumentException("Room not found"));
 
-        boolean isOccupied = bookingRepository.hasConflictingBookings(room.getId(), startInstant, endInstant);
-        if (isOccupied) {
-            throw new IllegalStateException("Room " + room.getName() + " was just booked by someone else. Please select another time or room.");
+            boolean isOccupied = bookingRepository.hasConflictingBookings(room.getId(), startInstant, endInstant);
+            if (isOccupied) {
+                throw new IllegalStateException("Room " + room.getName() + " was just booked by someone else. Please select another time or room.");
+            }
         }
 
         Booking newBooking = new Booking();
@@ -73,6 +77,7 @@ public class BookingService {
         newBooking.setEndTime(endInstant);
         newBooking.setStatus(BookingStatus.PENDING);
         newBooking.setTitle(request.getTitle());
+        newBooking.setOnline(request.isOnline());
 
         Map<String, RsvpStatus> rsvpMap = new HashMap<>();
         List<String> googleAttendees = new ArrayList<>();
@@ -101,13 +106,25 @@ public class BookingService {
                     request.getTitle(),
                     startInstant,
                     endInstant,
-                    room.getName(),
+                    request.isOnline() ? null : room.getName(),
                     googleAttendees,
-                    organizerEmail
+                    organizerEmail,
+                    request.isOnline()
             );
 
             newBooking.setGoogleEventId(googleEvent.getId());
             newBooking.setStatus(BookingStatus.APPROVED);
+
+            String meetUrl = null;
+            if (googleEvent.getConferenceData() != null && googleEvent.getConferenceData().getEntryPoints() != null) {
+                for (EntryPoint ep : googleEvent.getConferenceData().getEntryPoints()) {
+                    if ("video".equals(ep.getEntryPointType())) {
+                        meetUrl = ep.getUri();
+                        break;
+                    }
+                }
+            }
+            newBooking.setMeetLink(meetUrl);
 
             bookingRepository.save(newBooking);
 
@@ -116,6 +133,8 @@ public class BookingService {
             response.put("title", request.getTitle());
             response.put("status", "APPROVED");
             response.put("htmlLink", googleEvent.getHtmlLink());
+            response.put("isOnline", request.isOnline());
+            response.put("meetLink", meetUrl);
 
             return response;
 

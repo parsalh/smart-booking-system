@@ -73,4 +73,11 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     private Map<String, RsvpStatus> participants = new HashMap<>();
 
+    @Column(name = "is_online", nullable = false, columnDefinition = "boolean default false")
+    private boolean isOnline = false;
+
+    @Convert(converter = StringCryptoConverter.class)
+    @Column(name = "meet_link", columnDefinition = "TEXT")
+    private String meetLink;
+
 }

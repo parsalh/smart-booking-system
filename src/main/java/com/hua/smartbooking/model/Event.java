@@ -65,4 +65,11 @@ public class Event {
     @Column(name = "participant_email", columnDefinition = "TEXT")
     private List<String> participants = new ArrayList<>();
 
+    @Column(name = "is_online", nullable = false, columnDefinition = "boolean default false")
+    private boolean isOnline = false;
+
+    @Convert(converter = StringCryptoConverter.class)
+    @Column(name = "meet_link", columnDefinition = "TEXT")
+    private String meetLink;
+
 }

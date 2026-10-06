@@ -49,9 +49,31 @@ public class EventMapper {
             entity.setParticipants(attendeeEmails);
         }
 
+        boolean isOnline = false;
+        String meetUrl = null;
+
+        if (gEvent.getConferenceData() != null && gEvent.getConferenceData().getEntryPoints() != null) {
+            for (com.google.api.services.calendar.model.EntryPoint ep : gEvent.getConferenceData().getEntryPoints()) {
+                if ("video".equals(ep.getEntryPointType())) {
+                    isOnline = true;
+                    meetUrl = ep.getUri();
+                    break;
+                }
+            }
+        }
+
         String rawGoogleLocation = gEvent.getLocation();
 
-        if (rawGoogleLocation != null && !rawGoogleLocation.isEmpty()) {
+        if (!isOnline && rawGoogleLocation != null && rawGoogleLocation.trim().startsWith("http")) {
+            isOnline = true;
+            meetUrl = rawGoogleLocation.trim();
+            rawGoogleLocation = null;
+        }
+
+        entity.setOnline(isOnline);
+        entity.setMeetLink(meetUrl);
+
+        if (rawGoogleLocation != null && !rawGoogleLocation.isEmpty() && !isOnline) {
             String searchName = rawGoogleLocation.trim().replaceAll("\\s+", " ");
             Room room = roomRepository.findByNameIgnoreCase(searchName).orElse(null);
             entity.setRoom(room);
@@ -79,5 +101,4 @@ public class EventMapper {
 
         return null;
     }
-
 }

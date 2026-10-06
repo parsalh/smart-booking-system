@@ -34,4 +34,6 @@ public class FinalBookingRequest {
     private Integer repeatWeeks;
     private Boolean forcePartial;
 
+    private boolean isOnline;
+
 }
